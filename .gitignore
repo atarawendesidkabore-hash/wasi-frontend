@@ -1,0 +1,14 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Documents (not needed for deployment)
+*.docx
+*.md
+
+# Claude
+.claude/

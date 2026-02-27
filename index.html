@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WASI — West African Shipping Intelligence</title>
+
+  <!-- React 18 + Babel (no Node/npm required) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #root { height: 100%; }
+    body { background: #030d1a; }
+  </style>
+
+  <!-- Optional: set WASI_API_URL to override the default backend URL -->
+  <!-- <script>window.WASI_API_URL = "https://api.wasi.io";</script> -->
+</head>
+<body>
+  <div id="root"></div>
+
+  <!--
+    Babel will transpile this JSX in the browser.
+    The first line of wasi_agent.jsx (import statement) is replaced by
+    destructuring from the global React UMD bundle.
+  -->
+  <script type="text/babel" data-type="module" src="./wasi_agent_app.jsx"></script>
+
+  <!--
+    Fallback inline loader: fetches wasi_agent.jsx, strips the ES-module
+    import/export lines, and evaluates it with Babel so it works
+    without a bundler.
+  -->
+  <script>
+    // Wait for Babel to be ready, then load + patch the JSX
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch("./wasi_agent.jsx");
+        let src = await res.text();
+
+        // Replace ES-module import with UMD global destructuring
+        src = src.replace(
+          /^import\s+\{[^}]+\}\s+from\s+["']react["'];?\s*/m,
+          "const { useState, useEffect, useRef } = React;\n"
+        );
+
+        // Remove "export default" so the function is globally accessible
+        src = src.replace(/^export\s+default\s+/m, "");
+
+        // Transpile JSX → JS using Babel standalone
+        const transformed = Babel.transform(src, {
+          presets: ["react"],
+          filename: "wasi_agent.jsx",
+        }).code;
+
+        // Append the mount call inside the same scope so WASIAgent is accessible
+        const withMount =
+          transformed +
+          '\nReactDOM.createRoot(document.getElementById("root")).render(React.createElement(WASIAgent));';
+
+        // Execute everything in one scope
+        // eslint-disable-next-line no-new-func
+        new Function("React", "ReactDOM", withMount)(React, ReactDOM);
+      } catch (err) {
+        document.getElementById("root").innerHTML =
+          `<div style="color:#ef4444;padding:40px;font-family:monospace;">
+            <h2>⚠️ Failed to load WASI Agent</h2>
+            <pre>${err.message}</pre>
+            <p style="margin-top:16px;color:#94a3b8;">
+              Make sure you are running this via a local HTTP server:<br/>
+              <code style="color:#f0b429;">python -m http.server 3000</code><br/>
+              then open <a href="http://localhost:3000" style="color:#38bdf8;">http://localhost:3000</a>
+            </p>
+          </div>`;
+      }
+    });
+  </script>
+</body>
+</html>
