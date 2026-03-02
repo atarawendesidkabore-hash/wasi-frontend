@@ -1186,27 +1186,33 @@ function TransportModePanel({ transportData }) {
       <div style={{ fontSize: 13, color: "#0ea5e9", letterSpacing: 3, marginBottom: 10 }}>🚢 MODULE TRANSPORT MULTI-MODAL</div>
 
       {/* Mode selector tabs */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 12, flexWrap: "wrap" }}>
-        {MODES.map(m => (
-          <button key={m.key} onClick={() => setActiveMode(m.key)} style={{
-            padding: "4px 10px", borderRadius: 4, fontSize: 13, letterSpacing: 1.5,
-            cursor: "pointer", fontFamily: "'Space Mono', monospace",
-            background: activeMode === m.key ? m.color + "22" : "transparent",
-            border: `1px solid ${activeMode === m.key ? m.color : "#0f2a45"}`,
-            color: activeMode === m.key ? m.color : "#64748b",
-            transition: "all 0.15s",
-          }}>{m.label}</button>
-        ))}
+      <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+        {MODES.map(m => {
+          const val = getModeIndex(m.key);
+          const label = m.key === "composite"
+            ? m.label
+            : `${m.label}${val !== null ? val.toFixed(0) : " N/D"}`;
+          return (
+            <button key={m.key} onClick={() => setActiveMode(m.key)} style={{
+              padding: "6px 10px", borderRadius: 4, fontSize: 12, letterSpacing: 1,
+              cursor: "pointer", fontFamily: "'Space Mono', monospace",
+              background: activeMode === m.key ? m.color + "22" : "transparent",
+              border: `1px solid ${activeMode === m.key ? m.color : "#0f2a45"}`,
+              color: activeMode === m.key ? m.color : "#64748b",
+              transition: "all 0.15s", whiteSpace: "nowrap",
+            }}>{label}</button>
+          );
+        })}
       </div>
 
       {/* 4-bar chart */}
-      <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 80, marginBottom: 12 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 90, marginBottom: 12 }}>
         {MODES.filter(m => m.key !== "composite").map(m => {
           const val = getModeIndex(m.key);
           const barHeight = val !== null ? Math.max(4, (val / 100) * 72) : 0;
           return (
-            <div key={m.key} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-              <div style={{ fontSize: 13, color: m.color, fontFamily: "'Space Mono',monospace" }}>
+            <div key={m.key} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: m.color, fontFamily: "'Space Mono',monospace", whiteSpace: "nowrap" }}>
                 {val !== null ? val.toFixed(1) : "N/D"}
               </div>
               <div style={{ width: "100%", height: 72, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
@@ -1224,7 +1230,7 @@ function TransportModePanel({ transportData }) {
                   }} />
                 )}
               </div>
-              <div style={{ fontSize: 12, color: "#64748b", letterSpacing: 1, textAlign: "center" }}>{m.label}</div>
+              <div style={{ fontSize: 11, color: "#64748b", letterSpacing: 1, textAlign: "center" }}>{m.label}</div>
             </div>
           );
         })}
@@ -1825,6 +1831,11 @@ function CountryDashboard({ country, indexValue, onClose, bankContext, transport
           const indicativeScoreNum = bankContext.indicative_score ?? 45.0;
           const indicativeScore = indicativeScoreNum.toFixed(1);
           const rating = bankContext.indicative_rating || "CCC";
+          // Derive score components from bankContext
+          const wasiPts = (wasi?.value ?? 50) * 0.4;
+          const tradeBalance = trade ? (trade.total_exports || 0) - (trade.total_imports || 0) : 0;
+          const tradePts = tradeBalance > 0 ? Math.min(20, (tradeBalance / 1e9) * 2) : Math.max(0, 10 + (tradeBalance / 1e9) * 0.5);
+          const polPenalty = pol ? pol * 1.0 : 0;
           const ratingColor = RATING_COLOR[rating] || "#94a3b8";
           const premiumBps = { AAA: 50, AA: 100, A: 150, BBB: 250, BB: 400, B: 600, CCC: 1000 }[rating] || 1000;
           const fmtUsd = (v) => { if (!v) return "N/D"; if (v >= 1e12) return `${(v/1e12).toFixed(1)} Bil USD`; if (v >= 1e9) return `${(v/1e9).toFixed(1)} Mrd USD`; if (v >= 1e6) return `${(v/1e6).toFixed(0)} M USD`; return `${v.toLocaleString()} USD`; };
@@ -2604,7 +2615,7 @@ function LoginPage({ onAuth }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.detail || "Erreur lors de l'inscription.");
+        setError(typeof data.detail === "string" ? data.detail : Array.isArray(data.detail) ? data.detail.map(e => e.msg || JSON.stringify(e)).join("; ") : "Erreur lors de l'inscription.");
         setLoading(false); return;
       }
       // Auto-login after register
@@ -2625,7 +2636,7 @@ function LoginPage({ onAuth }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.detail || "Identifiants incorrects.");
+        setError(typeof data.detail === "string" ? data.detail : Array.isArray(data.detail) ? data.detail.map(e => e.msg || JSON.stringify(e)).join("; ") : "Identifiants incorrects.");
         setLoading(false); return;
       }
       const token = data.access_token;
@@ -2736,7 +2747,7 @@ function LoginPage({ onAuth }) {
             {/* Error */}
             {error && (
               <div style={{ padding: "14px 16px", background: "rgba(239,68,68,0.08)", border: "1px solid #ef444444", borderRadius: 4, fontSize: 14, color: "#ef4444", lineHeight: 1.6 }}>
-                ⚠ {error}
+                ⚠ {typeof error === "string" ? error : JSON.stringify(error)}
               </div>
             )}
 
@@ -3300,29 +3311,29 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
         ) : (
         <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "10px 28px" }}>
             {showCapabilities && (
-              <div style={{ marginBottom: 20, animation: "fadeUp 0.5s ease" }}>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#f0b429", marginBottom: 4 }}>
+              <div style={{ marginBottom: 10, animation: "fadeUp 0.5s ease" }}>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#f0b429", marginBottom: 2 }}>
                   Intelligence Économique d'Afrique de l'Ouest
                 </div>
-                <div style={{ fontSize: 14, color: "#94a3b8", letterSpacing: 2, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, color: "#94a3b8", letterSpacing: 2, marginBottom: 8 }}>
                   PROPULSÉ PAR WASI IA · INTELLIGENCE ÉCONOMIQUE EN TEMPS RÉEL
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginBottom: 8 }}>
                   {AGENT_CAPABILITIES.map((cap, i) => (
-                    <div key={i} style={{ background: "rgba(15,42,69,0.5)", border: "1px solid #0f2a45", borderRadius: 4, padding: "12px 14px", fontSize: 14, color: "#94a3b8", lineHeight: 1.5 }}>
+                    <div key={i} style={{ background: "rgba(15,42,69,0.5)", border: "1px solid #0f2a45", borderRadius: 4, padding: "8px 12px", fontSize: 13, color: "#94a3b8", lineHeight: 1.4 }}>
                       {cap}
                     </div>
                   ))}
                 </div>
-                <div style={{ fontSize: 14, color: "#64748b", marginBottom: 10, letterSpacing: 2, textTransform: "uppercase" }}>Requêtes suggérées</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <div style={{ fontSize: 13, color: "#64748b", marginBottom: 6, letterSpacing: 2, textTransform: "uppercase" }}>Requêtes suggérées</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                   {SUGGESTED_QUERIES.map((q, i) => (
                     <button key={i} className="sugg-btn" onClick={() => sendMessage(q)} style={{
                       background: "transparent", border: "1px solid #1e3a5f", borderRadius: 4,
-                      padding: "12px 16px", textAlign: "left", cursor: "pointer", color: "#64748b",
-                      fontSize: 14, fontFamily: "'Space Mono', monospace", transition: "all 0.2s", lineHeight: 1.4
+                      padding: "8px 14px", textAlign: "left", cursor: "pointer", color: "#64748b",
+                      fontSize: 13, fontFamily: "'Space Mono', monospace", transition: "all 0.2s", lineHeight: 1.3
                     }}>
                       → {q}
                     </button>
@@ -3594,6 +3605,29 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
   );
 }
 
+// ── Error Boundary — catches render crashes ──────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return React.createElement("div", {
+        style: { padding: 40, background: "#030d1a", color: "#ef4444", fontFamily: "monospace", minHeight: "100vh" }
+      },
+        React.createElement("h2", { style: { color: "#f0b429", marginBottom: 16 } }, "WASI — Render Error"),
+        React.createElement("pre", { style: { whiteSpace: "pre-wrap", color: "#ef4444" } },
+          this.state.error.message + "\n\n" + (this.state.error.stack || "")
+        ),
+        React.createElement("button", {
+          onClick: () => { sessionStorage.clear(); window.location.reload(); },
+          style: { marginTop: 20, padding: "10px 20px", background: "#f0b429", color: "#030d1a", border: "none", borderRadius: 4, cursor: "pointer", fontFamily: "monospace", fontWeight: 700 }
+        }, "Clear Session & Reload")
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ── App root — handles auth state ─────────────────────────────────────────
 export default function App() {
   const [token, setToken] = React.useState(() => {
@@ -3636,14 +3670,16 @@ export default function App() {
   };
 
   if (!token) {
-    return <LoginPage onAuth={handleAuth} />;
+    return <ErrorBoundary><LoginPage onAuth={handleAuth} /></ErrorBoundary>;
   }
 
   return (
-    <WASIAgent
-      authToken={token}
-      userInfo={userInfo}
-      onLogout={handleLogout}
-    />
+    <ErrorBoundary>
+      <WASIAgent
+        authToken={token}
+        userInfo={userInfo}
+        onLogout={handleLogout}
+      />
+    </ErrorBoundary>
   );
 }
