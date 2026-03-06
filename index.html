@@ -1,155 +1,74 @@
-<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <title>WASI — West African Shipping Intelligence</title>
-
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; }
-    body { background: #030d1a; }
-    #boot-log {
-      color: #f0b429; padding: 40px; font-family: monospace; font-size: 14px;
-      position: fixed; top: 0; left: 0; z-index: 99999; background: #030d1a; width: 100%;
-    }
-    #boot-log .step { color: #64748b; margin: 4px 0; }
-    #boot-log .step.done { color: #4ade80; }
-    #boot-log .step.fail { color: #ef4444; }
-    #error-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95); color: #ef4444; padding: 40px;
-      font-family: monospace; font-size: 14px; z-index: 999999;
-      white-space: pre-wrap; overflow: auto; display: none;
-    }
-  </style>
-
-  <script>
-    // Auto-detect: localhost → local backend, otherwise → Render backend
-    window.WASI_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-      ? "http://localhost:8000"
-      : "https://wasi-backend-api.onrender.com";
-  </script>
-</head>
-<body>
-  <div id="boot-log">
-    <h2 style="margin-bottom:16px;">WASI — Booting...</h2>
-    <div id="s1" class="step">[ ] Loading React from CDN...</div>
-    <div id="s2" class="step">[ ] Loading Babel from CDN...</div>
-    <div id="s3" class="step">[ ] Fetching wasi_agent.jsx...</div>
-    <div id="s4" class="step">[ ] Transpiling JSX...</div>
-    <div id="s5" class="step">[ ] Mounting App...</div>
-  </div>
-  <div id="error-overlay"></div>
-  <div id="root"></div>
-
-  <script>
-    // Global error handler — catches ANYTHING
-    window.onerror = function(msg, src, line, col, err) {
-      var overlay = document.getElementById("error-overlay");
-      if (overlay) {
-        overlay.style.display = "block";
-        overlay.textContent += "RUNTIME ERROR:\n" + msg + "\nFile: " + src + "\nLine: " + line + "\n\n";
-      }
-    };
-    window.addEventListener("unhandledrejection", function(e) {
-      var overlay = document.getElementById("error-overlay");
-      if (overlay) {
-        overlay.style.display = "block";
-        overlay.textContent += "UNHANDLED PROMISE:\n" + (e.reason ? (e.reason.stack || e.reason) : e) + "\n\n";
-      }
-    });
-
-    function markStep(id, ok, msg) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      el.className = "step " + (ok ? "done" : "fail");
-      el.textContent = (ok ? "[OK] " : "[FAIL] ") + msg;
-    }
-
-    function loadScript(url) {
-      return new Promise(function(resolve, reject) {
-        var s = document.createElement("script");
-        s.src = url;
-        s.crossOrigin = "anonymous";
-        s.onload = resolve;
-        s.onerror = function() { reject(new Error("Failed to load: " + url)); };
-        document.head.appendChild(s);
-      });
-    }
-
-    (async function boot() {
-      try {
-        await loadScript("https://unpkg.com/react@18/umd/react.development.js");
-        await loadScript("https://unpkg.com/react-dom@18/umd/react-dom.development.js");
-        markStep("s1", true, "React 18 loaded");
-      } catch(e) {
-        markStep("s1", false, "React failed: " + e.message);
-        return;
-      }
-
-      try {
-        await loadScript("https://unpkg.com/@babel/standalone/babel.min.js");
-        markStep("s2", true, "Babel loaded");
-      } catch(e) {
-        markStep("s2", false, "Babel failed: " + e.message);
-        return;
-      }
-
-      var src;
-      try {
-        var res = await fetch("./wasi_agent.jsx?" + Date.now());
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        src = await res.text();
-        markStep("s3", true, "Fetched wasi_agent.jsx (" + src.length + " chars)");
-      } catch(e) {
-        markStep("s3", false, "Fetch failed: " + e.message);
-        return;
-      }
-
-      var code;
-      try {
-        src = src.replace(
-          /^import\s+\{[^}]+\}\s+from\s+["']react["'];?\s*/m,
-          "const { useState, useEffect, useRef } = React;\n"
-        );
-        src = src.replace(/^export\s+default\s+/m, "");
-
-        var result = Babel.transform(src, { presets: ["react"], filename: "wasi_agent.jsx" });
-        code = result.code;
-        markStep("s4", true, "Transpiled (" + code.length + " chars)");
-      } catch(e) {
-        markStep("s4", false, "Babel transform failed: " + e.message);
-        var overlay = document.getElementById("error-overlay");
-        if (overlay) {
-          overlay.style.display = "block";
-          overlay.textContent = "BABEL ERROR:\n" + e.message;
-          if (e.loc) overlay.textContent += "\nLine " + e.loc.line + ", Column " + e.loc.column;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="WASI - West African Shipping Intelligence"
+    />
+    <title>WASI - West African Shipping Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module">
+      (async () => {
+        if (window.location.protocol === "file:") {
+          document.getElementById("root").innerHTML =
+            '<div style="color:#f0b429;font-family:monospace;padding:40px;text-align:center">' +
+            '<h1>WASI</h1>' +
+            '<p style="color:#e2e8f0">Ce fichier ne peut pas être ouvert directement.</p>' +
+            '<p style="color:#94a3b8">Lancez le serveur de développement :</p>' +
+            '<pre style="color:#4ade80;background:#0f2a45;padding:16px;border-radius:8px;display:inline-block">' +
+            'cd C:\\Users\\KaboreTarawendesida\\OneDrive\\Desktop\\WASI\nnpm run dev\n\nPuis ouvrez : http://localhost:3000</pre>' +
+            '<p style="color:#94a3b8;margin-top:20px">Ou double-cliquez sur <b>start_frontend.bat</b></p></div>';
+          return;
         }
-        return;
-      }
+        const LOCAL_API_URL = "http://localhost:8000";
+        const PROD_API_URL = "https://wasi-backend-api.onrender.com";
+        const params = new URLSearchParams(window.location.search);
+        const forcedApi = params.get("api");
+        const storedApi = window.localStorage.getItem("WASI_API_URL");
+        const isLocalHost =
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
 
-      try {
-        var withMount = code +
-          '\nReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));';
-        new Function("React", "ReactDOM", withMount)(React, ReactDOM);
-        markStep("s5", true, "App mounted — hiding boot log in 2s");
-        setTimeout(function() {
-          var bl = document.getElementById("boot-log");
-          if (bl) bl.style.display = "none";
-        }, 2000);
-      } catch(e) {
-        markStep("s5", false, "Mount failed: " + e.message);
-        var overlay = document.getElementById("error-overlay");
-        if (overlay) {
-          overlay.style.display = "block";
-          overlay.textContent = "MOUNT ERROR:\n" + (e.stack || e.message);
+        async function resolveApiUrl() {
+          if (forcedApi) return forcedApi;
+          if (storedApi) return storedApi;
+          if (!isLocalHost) return PROD_API_URL;
+
+          try {
+            const health = await fetch(`${LOCAL_API_URL}/api/health`, {
+              method: "GET",
+              cache: "no-store",
+            });
+            return health.ok ? LOCAL_API_URL : PROD_API_URL;
+          } catch (_) {
+            return PROD_API_URL;
+          }
         }
+
+        window.WASI_API_URL = await resolveApiUrl();
+        await import("/src/main.jsx");
+      })();
+    </script>
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
       }
-    })();
-  </script>
-</body>
+      body {
+        margin: 0;
+        background: #030d1a;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
