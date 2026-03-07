@@ -292,6 +292,25 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#030d1a", color: "#e2e8f0", fontFamily: "'Space Mono', monospace", display: "flex", flexDirection: "column" }}>
+      <a
+        href="?app=banking"
+        style={{
+          position: "fixed",
+          top: 12,
+          right: 12,
+          zIndex: 120,
+          textDecoration: "none",
+          color: "#030d1a",
+          background: "#4ade80",
+          border: "1px solid #4ade80",
+          borderRadius: 8,
+          padding: "6px 10px",
+          fontWeight: 700,
+          fontSize: 12,
+        }}
+      >
+        Open Banking App
+      </a>
       {/* Sidebar detail modal (markets + news) */}
       <SidebarDetailModal
         data={sidebarModal}
