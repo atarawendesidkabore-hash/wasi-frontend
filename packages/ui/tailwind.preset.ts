@@ -1,0 +1,18 @@
+﻿import type { Config } from "tailwindcss";
+
+const config: Partial<Config> = {
+  theme: {
+    extend: {
+      colors: {
+        "wasi-primary": "#1A7A4A",
+        "wasi-secondary": "#C9A84C",
+        "wasi-dark": "#0D2B1A",
+        "wasi-light": "#E8F5EE",
+        "wasi-danger": "#DC2626",
+        "wasi-warning": "#F59E0B",
+      },
+    },
+  },
+};
+
+export default config;

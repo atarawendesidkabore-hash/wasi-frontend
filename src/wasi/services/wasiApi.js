@@ -6,6 +6,7 @@ const _IS_LOCAL_HOST =
   window.location.hostname === "127.0.0.1";
 
 export const BACKEND_API_URL =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_WASI_API_URL) ||
   window.WASI_API_URL ||
   window.localStorage.getItem("WASI_API_URL") ||
   (_IS_LOCAL_HOST ? _LOCAL_URL : _RENDER_URL);
