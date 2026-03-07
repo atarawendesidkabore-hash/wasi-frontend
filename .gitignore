@@ -20,6 +20,8 @@ pnpm-debug.log*
 
 # Local banking persistence
 server/data/*.sqlite
+server/data/*.sqlite-wal
+server/data/*.sqlite-shm
 server/data/*.db
 server/data/*.db-wal
 server/data/*.db-shm

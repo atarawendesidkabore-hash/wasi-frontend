@@ -7,6 +7,7 @@
     "dev": "vite",
     "server": "node server/index.mjs",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
+    "diagnose:all": "powershell -ExecutionPolicy Bypass -File .\\ops\\diagnose_all.ps1",
     "build": "vite build",
     "preview": "vite preview",
     "test": "jest --runInBand"
@@ -15,6 +16,7 @@
     "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "@vitejs/plugin-react": "^5.1.4",
     "decimal.js": "^10.6.0",
     "react": "^18.3.1",

@@ -4,17 +4,23 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
+import jwt from "jsonwebtoken";
 import Database from "better-sqlite3";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Run banking API on a dedicated port to avoid clashing with wasi-backend-api.
 const PORT = Number(process.env.BANKING_API_PORT ?? process.env.PORT ?? 8010);
 const MAX_SAFE_AMOUNT_CENTIMES = BigInt(Number.MAX_SAFE_INTEGER);
+const JWT_SECRET = process.env.BANKING_JWT_SECRET ?? "wasi-dev-insecure-secret";
+const JWT_EXPIRES_IN = process.env.BANKING_JWT_EXPIRES_IN ?? "12h";
 const DB_PATH =
   process.env.BANKING_DB_PATH ??
   path.join(__dirname, "data", "wasi_banking.sqlite");
+
+const ROLE_CLIENT = "CLIENT";
+const ROLE_TELLER = "TELLER";
+const ROLE_MANAGER = "MANAGER";
 
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
@@ -52,6 +58,45 @@ db.exec(`
   ON transactions(created_at_utc DESC);
 `);
 
+const ACCOUNT_ID_MAIN = "fd43f43e-d0f7-4be3-9769-34bd4eebbc0b";
+const ACCOUNT_ID_SAVINGS = "05729563-6d54-4742-9d16-d2f29e5fd2e9";
+const ACCOUNT_ID_BUSINESS = "7f3ec2be-3f2d-4994-9fdc-9603d2f12950";
+
+const AUTH_USERS = [
+  {
+    id: "usr-client-demo",
+    username: "client_demo",
+    password: "client123",
+    displayName: "Client Demo",
+    role: ROLE_CLIENT,
+    accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS],
+  },
+  {
+    id: "usr-teller-demo",
+    username: "teller_demo",
+    password: "teller123",
+    displayName: "Teller Demo",
+    role: ROLE_TELLER,
+    accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS, ACCOUNT_ID_BUSINESS],
+  },
+  {
+    id: "usr-manager-demo",
+    username: "manager_demo",
+    password: "manager123",
+    displayName: "Manager Demo",
+    role: ROLE_MANAGER,
+    accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS, ACCOUNT_ID_BUSINESS],
+  },
+];
+
+const sanitizeUser = (user) => ({
+  id: user.id,
+  username: user.username,
+  displayName: user.displayName,
+  role: user.role,
+  accountIds: user.accountIds,
+});
+
 const ensureSeedData = () => {
   const countRow = db.prepare("SELECT COUNT(*) AS count FROM accounts").get();
   if (Number(countRow?.count ?? 0) > 0) {
@@ -61,21 +106,21 @@ const ensureSeedData = () => {
   const now = new Date().toISOString();
   const seedAccounts = [
     {
-      id: "fd43f43e-d0f7-4be3-9769-34bd4eebbc0b",
+      id: ACCOUNT_ID_MAIN,
       holder: "Thomas Kabore",
       type: "CHECKING",
       currency: "XOF",
       balanceCentimes: "125000000",
     },
     {
-      id: "05729563-6d54-4742-9d16-d2f29e5fd2e9",
+      id: ACCOUNT_ID_SAVINGS,
       holder: "Thomas Kabore",
       type: "SAVINGS",
       currency: "XOF",
       balanceCentimes: "345500000",
     },
     {
-      id: "7f3ec2be-3f2d-4994-9fdc-9603d2f12950",
+      id: ACCOUNT_ID_BUSINESS,
       holder: "WASI SARL",
       type: "BUSINESS",
       currency: "XOF",
@@ -178,17 +223,31 @@ const serializeTransaction = (row) => ({
   createdAtUtc: row.created_at_utc,
 });
 
-const getState = (limit = 100) => {
+const getState = (limit = 100, authUser = null) => {
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 500) : 100;
-  const accounts = db
+  const allAccounts = db
     .prepare("SELECT * FROM accounts ORDER BY holder ASC, type ASC")
     .all()
     .map(serializeAccount);
-  const transactions = db
-    .prepare("SELECT * FROM transactions ORDER BY created_at_utc DESC LIMIT ?")
-    .all(safeLimit)
+  const allTransactions = db
+    .prepare("SELECT * FROM transactions ORDER BY created_at_utc DESC")
+    .all()
     .map(serializeTransaction);
-  return { accounts, transactions };
+
+  if (!authUser || authUser.role !== ROLE_CLIENT) {
+    return {
+      accounts: allAccounts,
+      transactions: allTransactions.slice(0, safeLimit),
+    };
+  }
+
+  const allowedAccountSet = new Set(authUser.accountIds || []);
+  return {
+    accounts: allAccounts.filter((account) => allowedAccountSet.has(account.id)),
+    transactions: allTransactions
+      .filter((transaction) => allowedAccountSet.has(transaction.accountId))
+      .slice(0, safeLimit),
+  };
 };
 
 const updateAccountBalance = db.prepare(`
@@ -205,138 +264,239 @@ const insertTransaction = db.prepare(`
   )
 `);
 
+const getUserByUsername = (username) =>
+  AUTH_USERS.find((user) => user.username.toLowerCase() === username.toLowerCase());
+
+const signAccessToken = (user) =>
+  jwt.sign(
+    {
+      sub: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      role: user.role,
+      accountIds: user.accountIds,
+    },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+
+const parseBearerToken = (authorizationHeader) => {
+  if (!authorizationHeader || typeof authorizationHeader !== "string") {
+    return null;
+  }
+  const [scheme, token] = authorizationHeader.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) {
+    return null;
+  }
+  return token;
+};
+
+const requireAuth = (req, _res, next) => {
+  try {
+    const token = parseBearerToken(req.headers.authorization);
+    if (!token) {
+      throw new ApiError(401, "Authentication token missing.");
+    }
+
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.authUser = payload;
+    next();
+  } catch (error) {
+    const statusCode =
+      error instanceof ApiError || error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError"
+        ? 401
+        : 500;
+    next(new ApiError(statusCode, "Unauthorized."));
+  }
+};
+
+const requireRoles = (roles) => (req, _res, next) => {
+  const currentRole = req.authUser?.role;
+  if (!currentRole || !roles.includes(currentRole)) {
+    next(new ApiError(403, "Insufficient permissions."));
+    return;
+  }
+  next();
+};
+
 app.get("/api/health", (_req, res) => {
   success(res, {
     service: "wasi-banking-api",
     status: "ok",
     database: DB_PATH,
+    auth: "jwt-rbac-enabled",
   });
 });
 
-app.get("/api/v1/banking/state", (req, res) => {
+app.post("/api/v1/banking/auth/login", (req, res, next) => {
+  try {
+    const { username, password } = req.body ?? {};
+    if (!username || !password) {
+      throw new ApiError(400, "username and password are required.");
+    }
+
+    const user = getUserByUsername(String(username));
+    if (!user || user.password !== String(password)) {
+      throw new ApiError(401, "Invalid credentials.");
+    }
+
+    const accessToken = signAccessToken(user);
+    success(res, {
+      accessToken,
+      tokenType: "Bearer",
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/banking/auth/me", requireAuth, (req, res) => {
+  success(res, {
+    id: req.authUser.sub,
+    username: req.authUser.username,
+    displayName: req.authUser.displayName,
+    role: req.authUser.role,
+    accountIds: req.authUser.accountIds,
+  });
+});
+
+app.get("/api/v1/banking/state", requireAuth, (req, res, next) => {
   try {
     const limit = Number(req.query.limit ?? 100);
-    success(res, getState(limit));
+    success(res, getState(limit, req.authUser));
   } catch (error) {
-    const statusCode = error instanceof ApiError ? error.statusCode : 500;
-    failure(res, statusCode, error.message ?? "Unknown error");
+    next(error);
   }
 });
 
-app.post("/api/v1/banking/deposit", (req, res) => {
-  try {
-    const { accountId, amountCentimes, description } = req.body ?? {};
-    if (!accountId || typeof accountId !== "string") {
-      throw new ApiError(400, "accountId is required.");
-    }
-
-    const amount = parseAmountCentimes(amountCentimes);
-    const note = typeof description === "string" && description.trim()
-      ? description.trim()
-      : "Manual deposit";
-
-    const transactionResult = db.transaction(() => {
-      const account = getAccountOrThrow(accountId);
-      const nextBalance = BigInt(account.balance_centimes) + amount;
-
-      if (nextBalance > MAX_SAFE_AMOUNT_CENTIMES) {
-        throw new ApiError(400, "Resulting balance exceeds supported bounds.");
+app.post(
+  "/api/v1/banking/deposit",
+  requireAuth,
+  requireRoles([ROLE_TELLER, ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const { accountId, amountCentimes, description } = req.body ?? {};
+      if (!accountId || typeof accountId !== "string") {
+        throw new ApiError(400, "accountId is required.");
       }
 
-      const now = new Date().toISOString();
-      updateAccountBalance.run({
-        id: accountId,
-        balanceCentimes: nextBalance.toString(),
-        updatedAtUtc: now,
+      const amount = parseAmountCentimes(amountCentimes);
+      const note =
+        typeof description === "string" && description.trim()
+          ? description.trim()
+          : "Manual deposit";
+
+      const transactionResult = db.transaction(() => {
+        const account = getAccountOrThrow(accountId);
+        const nextBalance = BigInt(account.balance_centimes) + amount;
+
+        if (nextBalance > MAX_SAFE_AMOUNT_CENTIMES) {
+          throw new ApiError(400, "Resulting balance exceeds supported bounds.");
+        }
+
+        const now = new Date().toISOString();
+        updateAccountBalance.run({
+          id: accountId,
+          balanceCentimes: nextBalance.toString(),
+          updatedAtUtc: now,
+        });
+
+        const transaction = {
+          id: randomUUID(),
+          accountId,
+          kind: "DEPOSIT",
+          amountCentimes: amount.toString(),
+          description: note,
+          transferGroupId: null,
+          createdAtUtc: now,
+        };
+        insertTransaction.run(transaction);
+        return transaction;
+      })();
+
+      success(res, {
+        transaction: serializeTransaction({
+          ...transactionResult,
+          account_id: transactionResult.accountId,
+          amount_centimes: transactionResult.amountCentimes,
+          transfer_group_id: transactionResult.transferGroupId,
+          created_at_utc: transactionResult.createdAtUtc,
+        }),
+        state: getState(100, req.authUser),
       });
-      const transaction = {
-        id: randomUUID(),
-        accountId,
-        kind: "DEPOSIT",
-        amountCentimes: amount.toString(),
-        description: note,
-        transferGroupId: null,
-        createdAtUtc: now,
-      };
-      insertTransaction.run(transaction);
-      return transaction;
-    })();
-
-    success(res, {
-      transaction: serializeTransaction({
-        ...transactionResult,
-        account_id: transactionResult.accountId,
-        amount_centimes: transactionResult.amountCentimes,
-        transfer_group_id: transactionResult.transferGroupId,
-        created_at_utc: transactionResult.createdAtUtc,
-      }),
-      state: getState(100),
-    });
-  } catch (error) {
-    const statusCode = error instanceof ApiError ? error.statusCode : 500;
-    failure(res, statusCode, error.message ?? "Unknown error");
-  }
-});
-
-app.post("/api/v1/banking/withdraw", (req, res) => {
-  try {
-    const { accountId, amountCentimes, description } = req.body ?? {};
-    if (!accountId || typeof accountId !== "string") {
-      throw new ApiError(400, "accountId is required.");
+    } catch (error) {
+      next(error);
     }
+  }
+);
 
-    const amount = parseAmountCentimes(amountCentimes);
-    const note = typeof description === "string" && description.trim()
-      ? description.trim()
-      : "Manual withdrawal";
-
-    const transactionResult = db.transaction(() => {
-      const account = getAccountOrThrow(accountId);
-      const currentBalance = BigInt(account.balance_centimes);
-
-      if (currentBalance < amount) {
-        throw new ApiError(400, "Insufficient funds.");
+app.post(
+  "/api/v1/banking/withdraw",
+  requireAuth,
+  requireRoles([ROLE_TELLER, ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const { accountId, amountCentimes, description } = req.body ?? {};
+      if (!accountId || typeof accountId !== "string") {
+        throw new ApiError(400, "accountId is required.");
       }
 
-      const nextBalance = currentBalance - amount;
-      const now = new Date().toISOString();
-      updateAccountBalance.run({
-        id: accountId,
-        balanceCentimes: nextBalance.toString(),
-        updatedAtUtc: now,
+      const amount = parseAmountCentimes(amountCentimes);
+      const note =
+        typeof description === "string" && description.trim()
+          ? description.trim()
+          : "Manual withdrawal";
+
+      const transactionResult = db.transaction(() => {
+        const account = getAccountOrThrow(accountId);
+        const currentBalance = BigInt(account.balance_centimes);
+
+        if (currentBalance < amount) {
+          throw new ApiError(400, "Insufficient funds.");
+        }
+
+        const nextBalance = currentBalance - amount;
+        const now = new Date().toISOString();
+        updateAccountBalance.run({
+          id: accountId,
+          balanceCentimes: nextBalance.toString(),
+          updatedAtUtc: now,
+        });
+
+        const transaction = {
+          id: randomUUID(),
+          accountId,
+          kind: "WITHDRAWAL",
+          amountCentimes: amount.toString(),
+          description: note,
+          transferGroupId: null,
+          createdAtUtc: now,
+        };
+        insertTransaction.run(transaction);
+        return transaction;
+      })();
+
+      success(res, {
+        transaction: serializeTransaction({
+          ...transactionResult,
+          account_id: transactionResult.accountId,
+          amount_centimes: transactionResult.amountCentimes,
+          transfer_group_id: transactionResult.transferGroupId,
+          created_at_utc: transactionResult.createdAtUtc,
+        }),
+        state: getState(100, req.authUser),
       });
-      const transaction = {
-        id: randomUUID(),
-        accountId,
-        kind: "WITHDRAWAL",
-        amountCentimes: amount.toString(),
-        description: note,
-        transferGroupId: null,
-        createdAtUtc: now,
-      };
-      insertTransaction.run(transaction);
-      return transaction;
-    })();
-
-    success(res, {
-      transaction: serializeTransaction({
-        ...transactionResult,
-        account_id: transactionResult.accountId,
-        amount_centimes: transactionResult.amountCentimes,
-        transfer_group_id: transactionResult.transferGroupId,
-        created_at_utc: transactionResult.createdAtUtc,
-      }),
-      state: getState(100),
-    });
-  } catch (error) {
-    const statusCode = error instanceof ApiError ? error.statusCode : 500;
-    failure(res, statusCode, error.message ?? "Unknown error");
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-app.post("/api/v1/banking/transfer", (req, res) => {
+app.post("/api/v1/banking/transfer", requireAuth, (req, res, next) => {
   try {
     const { fromAccountId, toAccountId, amountCentimes, description } = req.body ?? {};
+    const currentRole = req.authUser?.role;
 
     if (!fromAccountId || typeof fromAccountId !== "string") {
       throw new ApiError(400, "fromAccountId is required.");
@@ -348,10 +508,21 @@ app.post("/api/v1/banking/transfer", (req, res) => {
       throw new ApiError(400, "Cannot transfer to the same account.");
     }
 
+    if (![ROLE_CLIENT, ROLE_TELLER, ROLE_MANAGER].includes(currentRole)) {
+      throw new ApiError(403, "Insufficient permissions.");
+    }
+    if (
+      currentRole === ROLE_CLIENT &&
+      !(req.authUser.accountIds || []).includes(fromAccountId)
+    ) {
+      throw new ApiError(403, "Client cannot transfer from this account.");
+    }
+
     const amount = parseAmountCentimes(amountCentimes);
-    const note = typeof description === "string" && description.trim()
-      ? description.trim()
-      : "Internal transfer";
+    const note =
+      typeof description === "string" && description.trim()
+        ? description.trim()
+        : "Internal transfer";
 
     const transferResult = db.transaction(() => {
       const fromAccount = getAccountOrThrow(fromAccountId);
@@ -423,12 +594,16 @@ app.post("/api/v1/banking/transfer", (req, res) => {
           created_at_utc: transferResult.transferIn.createdAtUtc,
         }),
       ],
-      state: getState(100),
+      state: getState(100, req.authUser),
     });
   } catch (error) {
-    const statusCode = error instanceof ApiError ? error.statusCode : 500;
-    failure(res, statusCode, error.message ?? "Unknown error");
+    next(error);
   }
+});
+
+app.use((error, _req, res, _next) => {
+  const statusCode = error instanceof ApiError ? error.statusCode : 500;
+  failure(res, statusCode, error.message ?? "Unknown error");
 });
 
 app.use((_req, res) => {
