@@ -232,12 +232,16 @@ export function RightSidebar({
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <WASICard title="Matieres Premieres" subtitle="WB Pink Sheet" accentColor="#C9A84C">
+        <WASICard title="Matieres Premieres" subtitle="Flux multi-source" accentColor="#C9A84C">
           {commodityPrices.length === 0 ? (
-            <DemoLabel text="Chargement WB Pink Sheet..." />
+            <DemoLabel text="Chargement Commodity Feed..." />
           ) : (
             <div style={{ display: "grid", gap: 6 }}>
-              {commodityPrices.slice(0, 6).map((p, i) => {
+              <div style={{ fontSize: 12, color: "#64748b" }}>
+                {commodityPrices.length} commodities chargees
+              </div>
+              <div style={{ display: "grid", gap: 6, maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
+              {[...commodityPrices].sort((a, b) => String(a.code).localeCompare(String(b.code))).map((p, i) => {
                 const trend = p.mom_pct === null ? "flat" : p.mom_pct > 0 ? "up" : "down";
                 const deltaText = p.mom_pct === null ? "MoM n/a" : `${p.mom_pct > 0 ? "+" : ""}${p.mom_pct.toFixed(1)}% MoM`;
                 return (
@@ -254,8 +258,9 @@ export function RightSidebar({
                   </div>
                 );
               })}
+              </div>
               <div style={{ fontSize: 11, color: "#64748b", textAlign: "right" }}>
-                Source: World Bank Pink Sheet
+                Source: WASI Commodity Feed (Stooq + WB fallback)
               </div>
             </div>
           )}

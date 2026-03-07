@@ -87,6 +87,20 @@ function fmt(val) {
   return val >= 1000 ? `${(val / 1000).toFixed(1)} Mrd$` : `${val} M$`;
 }
 
+function parsePartner(partnerLabel) {
+  const match = partnerLabel.match(/(.*?)(\d+(?:[.,]\d+)?)%/);
+  if (!match) {
+    return {
+      name: partnerLabel.trim(),
+      sharePct: null,
+    };
+  }
+  return {
+    name: match[1].replace(/·/g, "").trim(),
+    sharePct: parseFloat(match[2].replace(",", ".")),
+  };
+}
+
 // ── Transport Mode Panel ──────────────────────────────────────────────────────
 function TransportModePanel({ transportData }) {
   const [activeMode, setActiveMode] = useState("composite");
@@ -253,6 +267,19 @@ export function CountryDashboard({ country, indexValue, onClose, bankContext, tr
     { label: "Croissance du PIB", val: `+${td.gdpGrowth}%`, color: td.gdpGrowth > 5 ? "#4ade80" : "#f0b429", desc: "Taux de croissance annuel du PIB (dernière estimation disponible)." },
     { label: "Signal de marché", val: indexTrend.label, color: indexTrend.color, desc: `EXPANSION (>65) · STABLE (45–65) · CONTRACTION (<45). Valeur actuelle : ${indexValue}/100.` },
   ];
+  const topExports = [...td.exports].sort((a, b) => b.val - a.val).slice(0, 3);
+  const topImports = [...td.imports].sort((a, b) => b.val - a.val).slice(0, 3);
+  const topPartners = (td.partners || []).map(parsePartner).slice(0, 3);
+  const tradeDirection = balance >= 0 ? "EXCEDENTAIRE" : "DEFICITAIRE";
+  const balanceSentence = balance >= 0
+    ? `${country.name} affiche un excedent commercial de ${fmt(balance)}.`
+    : `${country.name} affiche un deficit commercial de ${fmt(Math.abs(balance))}.`;
+  const coverageSentence = parseFloat(coverageRate) >= 100
+    ? `Les exportations couvrent ${coverageRate}% des importations.`
+    : `Les exportations ne couvrent que ${coverageRate}% des importations.`;
+  const exportConcentrationPct = td.totalExports > 0 && topExports[0]
+    ? ((topExports[0].val / td.totalExports) * 100).toFixed(1)
+    : "0.0";
 
   // Shared panel style — clickable
   const panel = (accent = "#0f2a45") => ({
@@ -564,6 +591,89 @@ export function CountryDashboard({ country, indexValue, onClose, bankContext, tr
           </div>
         ),
       },
+      brief: {
+        title: "BRIEF ECONOMIQUE PAYS", accent: balanceColor,
+        body: (
+          <div>
+            <div style={{ marginBottom: 16, padding: "14px 18px", background: "rgba(15,42,69,0.4)", border: "1px solid #0f2a45", borderRadius: 6 }}>
+              <div style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.8 }}>
+                Synthese rapide pour {country.flag} <strong style={{ color: "#e2e8f0" }}>{country.name}</strong> (base WASI interne).
+                Ces chiffres sont des estimations de monitoring et ne remplacent pas une publication officielle.
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
+              {[
+                { label: "EXPORTATIONS", val: fmt(td.totalExports), color: "#4ade80" },
+                { label: "IMPORTATIONS", val: fmt(td.totalImports), color: "#38bdf8" },
+                { label: "BALANCE", val: `${balance >= 0 ? "+" : "-"}${fmt(Math.abs(balance))}`, color: balanceColor },
+                { label: "COUVERTURE", val: `${coverageRate}%`, color: parseFloat(coverageRate) >= 100 ? "#4ade80" : "#f0b429" },
+              ].map((kpi, i) => (
+                <div key={i} style={{ padding: "12px 14px", background: "rgba(15,42,69,0.45)", border: `1px solid ${kpi.color}33`, borderRadius: 6 }}>
+                  <div style={{ fontSize: 12, color: "#94a3b8", letterSpacing: 1, marginBottom: 4 }}>{kpi.label}</div>
+                  <div style={{ fontSize: 24, fontFamily: "'Bebas Neue',sans-serif", color: kpi.color, letterSpacing: 2 }}>{kpi.val}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 16, padding: "16px 18px", background: balance >= 0 ? "rgba(74,222,128,0.06)" : "rgba(239,68,68,0.06)", border: `1px solid ${balanceColor}44`, borderRadius: 6 }}>
+              <div style={{ fontSize: 14, color: "#94a3b8", letterSpacing: 2, marginBottom: 8 }}>CE QU'IL FAUT RETENIR</div>
+              <div style={{ fontSize: 16, color: "#e2e8f0", lineHeight: 1.8 }}>
+                <div>- Solde commercial {tradeDirection} : {balanceSentence}</div>
+                <div>- Couverture : {coverageSentence}</div>
+                <div>- Produit export dominant : {topExports[0]?.cat || "N/D"} ({exportConcentrationPct}% des exportations).</div>
+                <div>- Signal WASI courant : {indexTrend.label} ({Math.round(indexValue)}/100).</div>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div style={{ padding: "14px 16px", background: "rgba(74,222,128,0.05)", border: "1px solid #4ade8044", borderRadius: 6 }}>
+                <div style={{ fontSize: 13, color: "#4ade80", letterSpacing: 2, marginBottom: 6 }}>TOP EXPORTS</div>
+                {topExports.map((item, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 15, color: "#e2e8f0", padding: "4px 0", borderBottom: "1px solid #0a1628" }}>
+                    <span>{item.cat}</span>
+                    <span style={{ color: "#4ade80" }}>{fmt(item.val)}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: "14px 16px", background: "rgba(56,189,248,0.05)", border: "1px solid #38bdf844", borderRadius: 6 }}>
+                <div style={{ fontSize: 13, color: "#38bdf8", letterSpacing: 2, marginBottom: 6 }}>TOP IMPORTS</div>
+                {topImports.map((item, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 15, color: "#e2e8f0", padding: "4px 0", borderBottom: "1px solid #0a1628" }}>
+                    <span>{item.cat}</span>
+                    <span style={{ color: "#38bdf8" }}>{fmt(item.val)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 16, padding: "14px 16px", background: "rgba(167,139,250,0.06)", border: "1px solid #a78bfa44", borderRadius: 6 }}>
+              <div style={{ fontSize: 13, color: "#a78bfa", letterSpacing: 2, marginBottom: 6 }}>PARTENAIRES MAJEURS</div>
+              {topPartners.map((p, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 15, color: "#e2e8f0", padding: "4px 0", borderBottom: "1px solid #0a1628" }}>
+                  <span>{i + 1}. {p.name}</span>
+                  <span style={{ color: "#a78bfa" }}>{p.sharePct !== null ? `${p.sharePct}%` : "N/D"}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ padding: "14px 16px", background: "rgba(74,222,128,0.05)", border: "1px solid #4ade8044", borderRadius: 6 }}>
+                <div style={{ fontSize: 13, color: "#4ade80", letterSpacing: 2, marginBottom: 6 }}>OPPORTUNITES</div>
+                {td.opportunities.slice(0, 3).map((line, i) => (
+                  <div key={i} style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.7 }}>- {line}</div>
+                ))}
+              </div>
+              <div style={{ padding: "14px 16px", background: "rgba(239,68,68,0.05)", border: "1px solid #ef444444", borderRadius: 6 }}>
+                <div style={{ fontSize: 13, color: "#ef4444", letterSpacing: 2, marginBottom: 6 }}>RISQUES</div>
+                {td.risks.slice(0, 3).map((line, i) => (
+                  <div key={i} style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.7 }}>- {line}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ),
+      },
       bank: {
         title: "MODULE BANCAIRE — CRÉDIT & ADVISORY", accent: "#fb923c",
         body: (() => {
@@ -806,7 +916,23 @@ export function CountryDashboard({ country, indexValue, onClose, bankContext, tr
           </div>
         ))}
       </div>
-
+      <div onClick={() => setModal("brief")} style={{ ...panel(balance >= 0 ? "#4ade8044" : "#ef444444"), marginBottom: 10 }}>
+        <div style={hint}>? DETAILS</div>
+        <div style={{ fontSize: 13, color: balanceColor, letterSpacing: 3, marginBottom: 8 }}>BRIEF ECONOMIQUE PAYS</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 3 }}>Synthese</div>
+            <div style={{ fontSize: 14, color: "#e2e8f0", lineHeight: 1.7 }}>{balanceSentence}</div>
+            <div style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6, marginTop: 4 }}>{coverageSentence}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 3 }}>Points cles</div>
+            <div style={{ fontSize: 14, color: "#e2e8f0", lineHeight: 1.6 }}>Export dominant: {topExports[0]?.cat || "N/D"}</div>
+            <div style={{ fontSize: 14, color: "#e2e8f0", lineHeight: 1.6 }}>Part dominante: {exportConcentrationPct}%</div>
+            <div style={{ fontSize: 14, color: "#e2e8f0", lineHeight: 1.6 }}>Signal WASI: {indexTrend.label}</div>
+          </div>
+        </div>
+      </div>
       {/* Exports + Imports — clickable */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
         <div onClick={() => setModal("exports")} style={{ ...panel("#0f2a45") }}>
@@ -1155,3 +1281,7 @@ export function CountryDashboard({ country, indexValue, onClose, bankContext, tr
     </div>
   );
 }
+
+
+
+

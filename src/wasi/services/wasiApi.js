@@ -1,9 +1,11 @@
 // WASI backend API helpers
 const _RENDER_URL = "https://wasi-backend-api.onrender.com";
-const _LOCAL_URL = `${window.location.protocol}//${window.location.hostname}:8000`;
 const _IS_LOCAL_HOST =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
+
+// Try 8001 first (wasi-backend-api), then 8000 fallback
+const _LOCAL_URL = `${window.location.protocol}//${window.location.hostname}:8001`;
 
 export const BACKEND_API_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_WASI_API_URL) ||
@@ -115,11 +117,11 @@ export async function fetchBankContext(token, countryCode) {
   }
 }
 
-// Fetch commodity spot prices (WB Pink Sheet — cocoa, brent, gold, cotton, coffee, iron ore)
+// Fetch commodity spot prices (expanded WASI commodity universe)
 export async function fetchCommodityPrices(token) {
   if (!token) return null;
   try {
-    const res = await fetch(`${BACKEND_API_URL}/api/v2/data/commodities/latest`, {
+    const res = await fetch(`${BACKEND_API_URL}/api/v2/data/commodities/latest?limit=200`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;

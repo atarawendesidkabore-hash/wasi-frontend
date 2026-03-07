@@ -46,16 +46,21 @@ export const clearBankingSession = () => {
 };
 
 const request = async (path, init = {}) => {
+  const { idempotencyKey = null, ...fetchInit } = init;
   const token = getAccessToken();
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const idempotencyHeaders = idempotencyKey
+    ? { "Idempotency-Key": idempotencyKey }
+    : {};
 
   const response = await fetch(`${resolveApiBaseUrl()}${path}`, {
     headers: {
       "Content-Type": "application/json",
       ...authHeaders,
+      ...idempotencyHeaders,
       ...(init.headers || {}),
     },
-    ...init,
+    ...fetchInit,
   });
 
   const payload = await response.json().catch(() => null);
@@ -68,6 +73,14 @@ const request = async (path, init = {}) => {
   }
 
   return payload.data;
+};
+
+const createIdempotencyKey = (prefix) => {
+  const randomPart =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Math.random().toString(36).slice(2)}-${Date.now()}`;
+  return `${prefix}-${Date.now()}-${randomPart}`;
 };
 
 const toBigIntState = (state) => ({
@@ -121,9 +134,11 @@ export const postDeposit = async ({
   accountId,
   amountCentimes,
   description = "Manual deposit",
+  idempotencyKey = createIdempotencyKey("deposit"),
 }) => {
   const data = await request("/api/v1/banking/deposit", {
     method: "POST",
+    idempotencyKey,
     body: JSON.stringify({
       accountId,
       amountCentimes: amountCentimes.toString(),
@@ -137,9 +152,11 @@ export const postWithdraw = async ({
   accountId,
   amountCentimes,
   description = "Manual withdrawal",
+  idempotencyKey = createIdempotencyKey("withdraw"),
 }) => {
   const data = await request("/api/v1/banking/withdraw", {
     method: "POST",
+    idempotencyKey,
     body: JSON.stringify({
       accountId,
       amountCentimes: amountCentimes.toString(),
@@ -154,9 +171,11 @@ export const postTransfer = async ({
   toAccountId,
   amountCentimes,
   description = "Internal transfer",
+  idempotencyKey = createIdempotencyKey("transfer"),
 }) => {
   const data = await request("/api/v1/banking/transfer", {
     method: "POST",
+    idempotencyKey,
     body: JSON.stringify({
       fromAccountId,
       toAccountId,
