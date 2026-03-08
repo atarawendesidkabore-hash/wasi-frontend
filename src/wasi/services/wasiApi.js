@@ -3,6 +3,15 @@ const _RENDER_URL = "https://wasi-backend-api.onrender.com";
 const _IS_LOCAL_HOST =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
+const _STORED_URL = window.localStorage.getItem("WASI_API_URL");
+const _IS_BANKING_ONLY_API = (url) =>
+  typeof url === "string" &&
+  (/:8010(?:\/|$)/.test(url) || /\/api\/v1\/banking(?:\/|$)/i.test(url));
+const _SAFE_STORED_URL = _IS_BANKING_ONLY_API(_STORED_URL) ? null : _STORED_URL;
+
+if (_STORED_URL && !_SAFE_STORED_URL) {
+  window.localStorage.removeItem("WASI_API_URL");
+}
 
 // Try 8001 first (wasi-backend-api), then 8000 fallback
 const _LOCAL_URL = `${window.location.protocol}//${window.location.hostname}:8001`;
@@ -10,7 +19,7 @@ const _LOCAL_URL = `${window.location.protocol}//${window.location.hostname}:800
 export const BACKEND_API_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_WASI_API_URL) ||
   window.WASI_API_URL ||
-  window.localStorage.getItem("WASI_API_URL") ||
+  _SAFE_STORED_URL ||
   (_IS_LOCAL_HOST ? _LOCAL_URL : _RENDER_URL);
 
 // Fetch real indices from backend; returns { code: indexValue } map or null on failure

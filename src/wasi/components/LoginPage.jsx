@@ -10,6 +10,14 @@ export function LoginPage({ onAuth, apiUrl }) {
   const [showPwd, setShowPwd] = useState(false);
 
   const reset = () => { setError(""); };
+  const extractErrorMessage = (data, fallback) => {
+    if (typeof data?.detail === "string") return data.detail;
+    if (Array.isArray(data?.detail)) {
+      return data.detail.map((entry) => entry?.msg || JSON.stringify(entry)).join("; ");
+    }
+    if (typeof data?.error === "string") return data.error;
+    return fallback;
+  };
 
   const doRegister = async () => {
     setLoading(true); setError("");
@@ -21,7 +29,7 @@ export function LoginPage({ onAuth, apiUrl }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(typeof data.detail === "string" ? data.detail : Array.isArray(data.detail) ? data.detail.map(e => e.msg || JSON.stringify(e)).join("; ") : "Erreur lors de l'inscription.");
+        setError(extractErrorMessage(data, "Erreur lors de l'inscription."));
         setLoading(false); return;
       }
       // Auto-login after register
@@ -42,7 +50,7 @@ export function LoginPage({ onAuth, apiUrl }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(typeof data.detail === "string" ? data.detail : Array.isArray(data.detail) ? data.detail.map(e => e.msg || JSON.stringify(e)).join("; ") : "Identifiants incorrects.");
+        setError(extractErrorMessage(data, "Identifiants incorrects."));
         setLoading(false); return;
       }
       const token = data.access_token;

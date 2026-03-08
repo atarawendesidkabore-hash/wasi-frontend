@@ -61,6 +61,11 @@ export function RightSidebar({
   const wasiSignalLabel = getSignalLabel(wasiComposite);
   const wasiSignalGrade = getSignalGrade(wasiComposite);
   const wasiRiskLevel = getSignalRisk(wasiComposite);
+  const openSidebarDetail = (payload) => {
+    if (typeof setSidebarModal === "function") {
+      setSidebarModal(payload);
+    }
+  };
 
   return (
     <div
@@ -153,15 +158,18 @@ export function RightSidebar({
               {stockMarkets.map((m, i) => {
                 const up = m.change_pct >= 0;
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={i}
-                    onClick={() => setSidebarModal({ type: "market", market: m })}
+                    onClick={() => openSidebarDetail({ type: "market", market: m })}
                     style={{
                       cursor: "pointer",
                       border: "1px solid #d1d5db",
                       borderRadius: 8,
                       padding: "10px",
                       background: "#ffffff",
+                      width: "100%",
+                      textAlign: "left",
                     }}
                   >
                     <MetricBadge
@@ -174,7 +182,7 @@ export function RightSidebar({
                       <span>Cap. {(m.market_cap_usd / 1e9).toFixed(1)} Md USD</span>
                       <span>Ouvrir detail</span>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -245,17 +253,34 @@ export function RightSidebar({
                 const trend = p.mom_pct === null ? "flat" : p.mom_pct > 0 ? "up" : "down";
                 const deltaText = p.mom_pct === null ? "MoM n/a" : `${p.mom_pct > 0 ? "+" : ""}${p.mom_pct.toFixed(1)}% MoM`;
                 return (
-                  <div key={i} style={{ border: "1px solid #d1d5db", borderRadius: 8, padding: "10px", background: "#ffffff" }}>
+                  <button
+                    type="button"
+                    key={i}
+                    onClick={() => openSidebarDetail({ type: "commodity", commodity: p })}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: 8,
+                      padding: "10px",
+                      background: "#ffffff",
+                      width: "100%",
+                      textAlign: "left",
+                      cursor: "pointer",
+                    }}
+                  >
                     <MetricBadge
                       label={p.name}
-                      value={`${p.price_usd}`}
+                      value={`${Number(p.price_usd).toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`}
                       trend={trend}
                       deltaText={deltaText}
                     />
-                    <div style={{ marginTop: 4, fontSize: 12, color: "#64748b" }}>
-                      {p.unit} | {p.period}
+                    <div style={{ marginTop: 4, fontSize: 12, color: "#64748b", display: "flex", justifyContent: "space-between" }}>
+                      <span>{p.unit} | {p.period}</span>
+                      <span>Ouvrir detail</span>
                     </div>
-                  </div>
+                    <div style={{ marginTop: 2, fontSize: 11, color: "#94a3b8" }}>
+                      Code: {p.code}
+                    </div>
+                  </button>
                 );
               })}
               </div>

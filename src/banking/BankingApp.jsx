@@ -316,19 +316,34 @@ export const BankingApp = () => {
               flexWrap: "wrap",
             }}
           >
-            <a
-              href="?app=wasi"
-              style={{
-                color: "#c9a84c",
-                fontWeight: 700,
-                textDecoration: "none",
-                border: "1px solid rgba(201,168,76,0.45)",
-                padding: "6px 10px",
-                borderRadius: 8,
-              }}
-            >
-              Open WASI Terminal
-            </a>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <a
+                href="?app=wasi"
+                style={{
+                  color: "#c9a84c",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  border: "1px solid rgba(201,168,76,0.45)",
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                }}
+              >
+                Open WASI Terminal
+              </a>
+              <a
+                href="?app=dex"
+                style={{
+                  color: "#c9a84c",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  border: "1px solid rgba(201,168,76,0.45)",
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                }}
+              >
+                Open ETF DEX
+              </a>
+            </div>
             {backendConnected && authUser ? (
               <button onClick={onLogout} style={buttonStyle} type="button">
                 Logout ({authUser.role})

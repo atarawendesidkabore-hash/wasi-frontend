@@ -1,18 +1,50 @@
-export function SidebarDetailModal({ data, onClose, countries }) {
+Ôªøexport function SidebarDetailModal({ data, onClose, countries }) {
   if (!data) return null;
 
   const EVENT_META = {
-    POLITICAL_RISK:  { color: "#ef4444", icon: "?", label: "Risque Politique",     desc: "InstabilitÈ gouvernementale, Èlections, coups d'Ètat ou tensions sÈcuritaires affectant les flux commerciaux." },
-    PORT_DISRUPTION: { color: "#f97316", icon: "?", label: "Perturbation Portuaire",desc: "GrËve, incident technique, congestion ou fermeture temporaire d'un port majeur." },
-    STRIKE:          { color: "#f0b429", icon: "?", label: "GrËve / ArrÍt de travail",desc: "Mouvement social affectant la logistique, les douanes ou les opÈrations portuaires." },
-    COMMODITY_SURGE: { color: "#a78bfa", icon: "??", label: "FlambÈe de matiËres premiËres",desc: "Hausse soudaine du prix d'une matiËre premiËre clÈ exportÈe par ce pays." },
-    POLICY_CHANGE:   { color: "#38bdf8", icon: "??", label: "Changement de politique",desc: "Nouvelle rÈglementation douaniËre, fiscale ou commerciale impactant les Èchanges." },
+    POLITICAL_RISK:  { color: "#ef4444", icon: "?", label: "Risque Politique",     desc: "Instabilit√© gouvernementale, √©lections, coups d'√©tat ou tensions s√©curitaires affectant les flux commerciaux." },
+    PORT_DISRUPTION: { color: "#f97316", icon: "?", label: "Perturbation Portuaire",desc: "Gr√®ve, incident technique, congestion ou fermeture temporaire d'un port majeur." },
+    STRIKE:          { color: "#f0b429", icon: "?", label: "Gr√®ve / Arr√™t de travail",desc: "Mouvement social affectant la logistique, les douanes ou les op√©rations portuaires." },
+    COMMODITY_SURGE: { color: "#a78bfa", icon: "??", label: "Flamb√©e de mati√®res premi√®res",desc: "Hausse soudaine du prix d'une mati√®re premi√®re cl√© export√©e par ce pays." },
+    POLICY_CHANGE:   { color: "#38bdf8", icon: "??", label: "Changement de politique",desc: "Nouvelle r√©glementation douani√®re, fiscale ou commerciale impactant les √©changes." },
   };
 
   const EXCHANGE_INFO = {
-    NGX:  { flag: "????", country: "Nigeria",        fullName: "Nigerian Exchange Group",        desc: "La plus grande bourse d'Afrique subsaharienne par capitalisation. Secteurs dominants : banque, pÈtrole, ciment, tÈlÈcoms." },
-    GSE:  { flag: "????", country: "Ghana",           fullName: "Ghana Stock Exchange",           desc: "Bourse de rÈfÈrence en Afrique de l'Ouest anglophone. Secteurs : or, cacao, banque, mines." },
-    BRVM: { flag: "??",  country: "CEDEAO (8 pays)", fullName: "Bourse RÈgionale des Valeurs MobiliËres", desc: "Bourse commune ‡ 8 pays UEMOA (CI, SN, BJ, TG, ML, BF, NE, GN). SiËge ‡ Abidjan. Secteurs : banque, agroalimentaire, tÈlÈcoms." },
+    NGX:  { flag: "????", country: "Nigeria",        fullName: "Nigerian Exchange Group",        desc: "La plus grande bourse d'Afrique subsaharienne par capitalisation. Secteurs dominants : banque, p√©trole, ciment, t√©l√©coms." },
+    GSE:  { flag: "????", country: "Ghana",           fullName: "Ghana Stock Exchange",           desc: "Bourse de r√©f√©rence en Afrique de l'Ouest anglophone. Secteurs : or, cacao, banque, mines." },
+    BRVM: { flag: "??",  country: "CEDEAO (8 pays)", fullName: "Bourse R√©gionale des Valeurs Mobili√®res", desc: "Bourse commune √† 8 pays UEMOA (CI, SN, BJ, TG, ML, BF, NE, GN). Si√®ge √† Abidjan. Secteurs : banque, agroalimentaire, t√©l√©coms." },
+  };
+  const COMMODITY_INFO = {
+    COCOA: {
+      label: "Cacao",
+      color: "#f0b429",
+      importance: "Produit cl√© pour CI, GH, NG et plusieurs cha√Ænes de valeur r√©gionales.",
+    },
+    GOLD: {
+      label: "Or",
+      color: "#f59e0b",
+      importance: "Mati√®re strat√©gique pour BF, ML et GH avec fort impact devises.",
+    },
+    BRENT: {
+      label: "Brent",
+      color: "#38bdf8",
+      importance: "R√©f√©rence √©nergie import√©e pour le co√ªt logistique r√©gional.",
+    },
+    COTTON: {
+      label: "Coton",
+      color: "#4ade80",
+      importance: "Export agricole majeur pour BF, ML, BJ et TG.",
+    },
+    COFFEE: {
+      label: "Caf√©",
+      color: "#22c55e",
+      importance: "Produit d'export transformable √† forte valeur ajout√©e locale.",
+    },
+    IRON_ORE: {
+      label: "Minerai de fer",
+      color: "#94a3b8",
+      importance: "Indicateur du cycle industriel et des flux vrac.",
+    },
   };
 
   if (data.type === "market") {
@@ -37,7 +69,7 @@ export function SidebarDetailModal({ data, onClose, countries }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }}>
             {[
               { label: "VALEUR DE L'INDICE", val: m.index_value.toLocaleString("fr-FR", { maximumFractionDigits: 2 }), color: "#e2e8f0", big: true },
-              { label: "VARIATION JOURNALI»RE", val: `${up ? "?" : "?"} ${Math.abs(m.change_pct).toFixed(2)}%`, color: color, big: true },
+              { label: "VARIATION JOURNALI√àRE", val: `${up ? "?" : "?"} ${Math.abs(m.change_pct).toFixed(2)}%`, color: color, big: true },
               { label: "PERFORMANCE YTD", val: `${ytdUp ? "+" : ""}${m.ytd_change_pct?.toFixed(1)}%`, color: ytdColor, big: true },
             ].map((s, i) => (
               <div key={i} style={{ padding: "18px 22px", background: "rgba(15,42,69,0.5)", border: `1px solid ${s.color}33`, borderRadius: 6 }}>
@@ -49,10 +81,10 @@ export function SidebarDetailModal({ data, onClose, countries }) {
           {/* Secondary stats */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 24 }}>
             {[
-              { label: "CAPITALISATION BOURSI»RE", val: `${(m.market_cap_usd / 1e9).toFixed(1)} Mrd USD`, color: "#a78bfa" },
+              { label: "CAPITALISATION BOURSI√àRE", val: `${(m.market_cap_usd / 1e9).toFixed(1)} Mrd USD`, color: "#a78bfa" },
               { label: "NOM DE L'INDICE", val: m.index_name, color: "#38bdf8" },
               { label: "CODE DE LA BOURSE", val: m.exchange_code, color: "#f0b429" },
-              { label: "PAYS / R…GION", val: info.country, color: "#4ade80" },
+              { label: "PAYS / R√âGION", val: info.country, color: "#4ade80" },
             ].map((s, i) => (
               <div key={i} style={{ padding: "18px 22px", background: "rgba(15,42,69,0.4)", border: "1px solid #0f2a45", borderRadius: 6 }}>
                 <div style={{ fontSize: 14, color: "#94a3b8", letterSpacing: 2, marginBottom: 6 }}>{s.label}</div>
@@ -62,7 +94,7 @@ export function SidebarDetailModal({ data, onClose, countries }) {
           </div>
           {/* Description */}
           <div style={{ padding: "16px 18px", background: "rgba(15,42,69,0.3)", borderRadius: 6, border: `1px solid #0f2a4588`, fontSize: 16, color: "#94a3b8", lineHeight: 1.9 }}>
-            <strong style={{ color: color }}>¿ propos de {m.exchange_code} :</strong><br />
+            <strong style={{ color: color }}>√Ä propos de {m.exchange_code} :</strong><br />
             {info.desc}
           </div>
         </div>
@@ -90,21 +122,21 @@ export function SidebarDetailModal({ data, onClose, countries }) {
               <span style={{ fontSize: 42 }}>{meta.icon}</span>
               <div>
                 <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: meta.color, letterSpacing: 4 }}>{meta.label}</div>
-                <div style={{ fontSize: 16, color: "#94a3b8", marginTop: 2 }}>{country.flag} {country.name} ∑ Signal WASI RSS</div>
+                <div style={{ fontSize: 16, color: "#94a3b8", marginTop: 2 }}>{country.flag} {country.name} ¬∑ Signal WASI RSS</div>
               </div>
             </div>
             <button onClick={onClose} style={{ background: "none", border: `1px solid ${meta.color}44`, color: meta.color, padding: "8px 18px", borderRadius: 6, cursor: "pointer", fontSize: 16, fontFamily: "'Space Mono',monospace", letterSpacing: 1 }}>? FERMER</button>
           </div>
           {/* Headline */}
           <div style={{ padding: "18px 20px", background: `${meta.color}0d`, border: `1px solid ${meta.color}44`, borderRadius: 6, marginBottom: 20 }}>
-            <div style={{ fontSize: 14, color: meta.color, letterSpacing: 2, marginBottom: 8 }}>TITRE DE L'…V…NEMENT</div>
+            <div style={{ fontSize: 14, color: meta.color, letterSpacing: 2, marginBottom: 8 }}>TITRE DE L'√âV√âNEMENT</div>
             <div style={{ fontSize: 20, color: "#e2e8f0", lineHeight: 1.7, fontWeight: 600 }}>{e.headline}</div>
           </div>
           {/* Stats grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }}>
             {[
               { label: "IMPACT SUR L'INDICE", val: `${impactSign}${e.magnitude} pts`, color: impactColor },
-              { label: "DUR…E RESTANTE", val: timeLeft, color: "#f0b429" },
+              { label: "DUR√âE RESTANTE", val: timeLeft, color: "#f0b429" },
               { label: "CODE PAYS", val: `${country.flag} ${e.country_code}`, color: "#38bdf8" },
             ].map((s, i) => (
               <div key={i} style={{ padding: "18px 22px", background: "rgba(15,42,69,0.5)", border: `1px solid ${s.color}33`, borderRadius: 6 }}>
@@ -128,7 +160,122 @@ export function SidebarDetailModal({ data, onClose, countries }) {
           <div style={{ padding: "16px 18px", background: "rgba(15,42,69,0.3)", borderRadius: 6, border: "1px solid #0f2a4588", fontSize: 16, color: "#94a3b8", lineHeight: 1.9 }}>
             <strong style={{ color: meta.color }}>Qu'est-ce que "{meta.label}" ?</strong><br />
             {meta.desc}<br /><br />
-            <strong style={{ color: "#94a3b8" }}>Impact sur le score WASI :</strong> L'indice de {country.name} est ajustÈ de <strong style={{ color: impactColor }}>{impactSign}{e.magnitude} points</strong> jusqu'‡ expiration du signal. L'ajustement est capÈ ‡ ±25 pts pour Èviter les distorsions.
+            <strong style={{ color: "#94a3b8" }}>Impact sur le score WASI :</strong> L'indice de {country.name} est ajust√© de <strong style={{ color: impactColor }}>{impactSign}{e.magnitude} points</strong> jusqu'√† expiration du signal. L'ajustement est cap√© √† ¬±25 pts pour √©viter les distorsions.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.type === "commodity") {
+    const c = data.commodity || {};
+    const info = COMMODITY_INFO[c.code] || {
+      label: c.name || c.code || "Commodity",
+      color: "#f0b429",
+      importance: "Indicateur de prix utile pour l'analyse commerciale r√©gionale.",
+    };
+    const mom = typeof c.mom_pct === "number" ? c.mom_pct : null;
+    const yoy = typeof c.yoy_pct === "number" ? c.yoy_pct : null;
+    const trendColor = mom === null ? "#94a3b8" : mom >= 0 ? "#4ade80" : "#ef4444";
+    const formatPct = (value) => (value === null ? "N/A" : `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`);
+
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(3,13,26,0.93)",
+          zIndex: 400,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+        }}
+        onClick={onClose}
+      >
+        <div
+          style={{
+            background: "#07192e",
+            border: `1px solid ${info.color}55`,
+            borderRadius: 8,
+            width: "100%",
+            maxWidth: 620,
+            padding: 32,
+          }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 22,
+              paddingBottom: 14,
+              borderBottom: `1px solid ${info.color}33`,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontFamily: "'Bebas Neue',sans-serif",
+                  fontSize: 30,
+                  color: info.color,
+                  letterSpacing: 3,
+                }}
+              >
+                {c.code || "COM"} - {info.label}
+              </div>
+              <div style={{ fontSize: 14, color: "#94a3b8", marginTop: 3 }}>
+                Cours mati√®re premi√®re
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: "none",
+                border: `1px solid ${info.color}44`,
+                color: info.color,
+                padding: "8px 16px",
+                borderRadius: 6,
+                cursor: "pointer",
+                fontSize: 14,
+                fontFamily: "'Space Mono',monospace",
+              }}
+            >
+              FERMER
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 18 }}>
+            <div style={{ padding: "14px 16px", background: "rgba(15,42,69,0.5)", border: "1px solid #0f2a45", borderRadius: 6 }}>
+              <div style={{ fontSize: 12, color: "#94a3b8", letterSpacing: 1 }}>PRIX ACTUEL</div>
+              <div style={{ fontSize: 28, fontFamily: "'Bebas Neue',sans-serif", color: "#e2e8f0", letterSpacing: 2 }}>
+                {Number(c.price_usd || 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b" }}>{c.unit || "USD/unit"}</div>
+            </div>
+            <div style={{ padding: "14px 16px", background: "rgba(15,42,69,0.5)", border: "1px solid #0f2a45", borderRadius: 6 }}>
+              <div style={{ fontSize: 12, color: "#94a3b8", letterSpacing: 1 }}>VARIATION MoM</div>
+              <div style={{ fontSize: 28, fontFamily: "'Bebas Neue',sans-serif", color: trendColor, letterSpacing: 2 }}>
+                {formatPct(mom)}
+              </div>
+            </div>
+            <div style={{ padding: "14px 16px", background: "rgba(15,42,69,0.5)", border: "1px solid #0f2a45", borderRadius: 6 }}>
+              <div style={{ fontSize: 12, color: "#94a3b8", letterSpacing: 1 }}>VARIATION YoY</div>
+              <div style={{ fontSize: 28, fontFamily: "'Bebas Neue',sans-serif", color: yoy === null ? "#94a3b8" : yoy >= 0 ? "#4ade80" : "#ef4444", letterSpacing: 2 }}>
+                {formatPct(yoy)}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: "14px 16px", background: "rgba(15,42,69,0.35)", border: "1px solid #0f2a45", borderRadius: 6 }}>
+            <div style={{ fontSize: 13, color: info.color, letterSpacing: 2, marginBottom: 6 }}>LECTURE RAPIDE</div>
+            <div style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.7 }}>
+              {info.importance}
+              <br />
+              P√©riode des donn√©es: <span style={{ color: "#e2e8f0" }}>{c.period || "N/A"}</span>.
+            </div>
           </div>
         </div>
       </div>
@@ -137,4 +284,5 @@ export function SidebarDetailModal({ data, onClose, countries }) {
 
   return null;
 }
+
 

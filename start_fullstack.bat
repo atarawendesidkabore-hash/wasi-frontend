@@ -19,6 +19,7 @@ echo   Banking API health: http://localhost:8010/api/health
 echo.
 echo   Banking app: http://localhost:3000/
 echo   WASI terminal: http://localhost:3000/?app=wasi
+echo   ETF DEX: http://localhost:3000/?app=dex
 echo.
 echo ============================================
 echo.
