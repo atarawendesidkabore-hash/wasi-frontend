@@ -1,0 +1,140 @@
+{
+  "summary": "WASI project audit reveals functional routing and DEX implementation but critical build failure, API routing inconsistencies, and missing ETF catalog items. Core features work but maintenance and configuration risks exist.",
+  "score": 72,
+  "critical": [
+    {
+      "issue": "Build process fails with npm run build",
+      "why": "Exit code -1 indicates build configuration or dependency issues preventing production deployment",
+      "files": [
+        "package.json",
+        "build configuration"
+      ],
+      "fix": "Investigate build logs, verify all dependencies are compatible, check Vite/build configuration"
+    },
+    {
+      "issue": "API routing inconsistency across multiple files",
+      "why": "Three different API URL resolution strategies (index.html, wasiApi.js, dexApi.js) can cause runtime errors and stale localStorage conflicts",
+      "files": [
+        "index.html",
+        "src/wasi/services/wasiApi.js",
+        "src/dex/dexApi.js"
+      ],
+      "fix": "Consolidate API URL resolution into a single shared utility, standardize localStorage key names"
+    }
+  ],
+  "high": [
+    {
+      "issue": "ETF catalog count mismatch (40 vs expected 42)",
+      "why": "DEX_SEED_TOKENS array contains only 40 ETFs but expectedFacts specifies 42, indicating missing catalog items",
+      "files": [
+        "server/index.mjs"
+      ],
+      "fix": "Add the 2 missing ETF tokens to DEX_SEED_TOKENS array to match expected catalog size"
+    },
+    {
+      "issue": "Incomplete form field reference in DexApp.jsx",
+      "why": "Line 621 references 'orderFor' instead of 'orderForm' causing runtime error when placing orders",
+      "files": [
+        "src/dex/DexApp.jsx"
+      ],
+      "fix": "Change 'orderFor' to 'orderForm' in the select element value attribute"
+    },
+    {
+      "issue": "Missing error handling in dexApi.js request function",
+      "why": "Non-JSON responses cause silent failures, no timeout handling, and generic error messages",
+      "files": [
+        "src/dex/dexApi.js"
+      ],
+      "fix": "Add try-catch for JSON parsing, implement request timeout, improve error specificity"
+    }
+  ],
+  "medium": [
+    {
+      "issue": "Stale localStorage URL detection logic flawed",
+      "why": "index.html attempts to detect banking-only URLs but regex may miss edge cases, leaving stale URLs",
+      "files": [
+        "index.html"
+      ],
+      "fix": "Improve isLikelyBankingOnlyApi function with more comprehensive pattern matching"
+    },
+    {
+      "issue": "Missing input validation in DEX order form",
+      "why": "Client-side validation exists but no server-side validation mentioned for order parameters",
+      "files": [
+        "server/index.mjs",
+        "src/dex/DexApp.jsx"
+      ],
+      "fix": "Add server-side validation for symbol, quantity, and price in order endpoints"
+    },
+    {
+      "issue": "Hardcoded demo credentials in frontend",
+      "why": "Credentials exposed in source code pose security risk and limit authentication flexibility",
+      "files": [
+        "src/dex/DexApp.jsx"
+      ],
+      "fix": "Move credentials to environment variables or configuration file"
+    }
+  ],
+  "low": [
+    {
+      "issue": "Truncated runtime check output for markets endpoint",
+      "why": "Large ETF catalog response gets truncated in audit logs, hiding potential data issues",
+      "files": [
+        "server/index.mjs"
+      ],
+      "fix": "Implement pagination or response size limits for large datasets"
+    },
+    {
+      "issue": "Inconsistent error message styling",
+      "why": "Error display uses different color schemes across components (red vs yellow borders)",
+      "files": [
+        "src/dex/DexApp.jsx",
+        "src/wasi/components"
+      ],
+      "fix": "Standardize error message styling across all components"
+    }
+  ],
+  "missing_features": [
+    {
+      "feature": "2 missing ETF tokens",
+      "expected": "42 ETF tokens in catalog",
+      "current": "40 ETF tokens in DEX_SEED_TOKENS array",
+      "files": [
+        "server/index.mjs"
+      ]
+    },
+    {
+      "feature": "Build process configuration",
+      "expected": "Successful npm run build execution",
+      "current": "Build fails with exit code -1",
+      "files": [
+        "package.json",
+        "build configuration"
+      ]
+    }
+  ],
+  "regressions": [
+    {
+      "regression": "Build process broken",
+      "evidence": "npm.cmd run build returns exit code -1 with no output",
+      "files": [
+        "package.json",
+        "build configuration"
+      ]
+    },
+    {
+      "regression": "Typo in DexApp order form",
+      "evidence": "Line 621 references undefined 'orderFor' variable instead of 'orderForm'",
+      "files": [
+        "src/dex/DexApp.jsx"
+      ]
+    }
+  ],
+  "next_actions": [
+    "Fix build process by investigating npm run build failure and resolving dependency issues",
+    "Add 2 missing ETF tokens to DEX_SEED_TOKENS array to reach expected count of 42",
+    "Consolidate API URL resolution logic into shared utility across all modules",
+    "Fix 'orderFor' typo in DexApp.jsx select element",
+    "Add comprehensive error handling and validation to dexApi.js request function"
+  ]
+}

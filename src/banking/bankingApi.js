@@ -1,26 +1,11 @@
-const DEFAULT_API_BASE_URL = "http://localhost:8010";
+import { resolvePlatformApiBaseUrl } from "../platform/apiResolver";
+
 const ACCESS_TOKEN_STORAGE_KEY = "WASI_BANKING_ACCESS_TOKEN";
+const WASI_TERMINAL_TOKEN_KEY = "wasi_token";
+const WASI_TERMINAL_TOKEN_TS_KEY = "wasi_token_ts";
 
 const resolveApiBaseUrl = () => {
-  const explicitWindowValue =
-    typeof window !== "undefined" &&
-    typeof window.WASI_BANKING_API_URL === "string"
-      ? window.WASI_BANKING_API_URL
-      : null;
-  const envValue =
-    typeof import.meta !== "undefined" &&
-    import.meta?.env &&
-    typeof import.meta.env.VITE_WASI_BANKING_API_URL === "string"
-      ? import.meta.env.VITE_WASI_BANKING_API_URL
-      : null;
-  const explicitStorageValue =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem("WASI_BANKING_API_URL")
-      : null;
-
-  const baseUrl =
-    explicitWindowValue || envValue || explicitStorageValue || DEFAULT_API_BASE_URL;
-  return baseUrl.replace(/\/+$/, "");
+  return resolvePlatformApiBaseUrl();
 };
 
 const getAccessToken = () => {
@@ -43,6 +28,19 @@ const setAccessToken = (token) => {
 
 export const clearBankingSession = () => {
   setAccessToken(null);
+  if (typeof window !== "undefined") {
+    window.sessionStorage.removeItem(WASI_TERMINAL_TOKEN_KEY);
+    window.sessionStorage.removeItem(WASI_TERMINAL_TOKEN_TS_KEY);
+  }
+};
+
+export const syncWasiTerminalSession = () => {
+  if (typeof window === "undefined") return false;
+  const token = getAccessToken();
+  if (!token) return false;
+  window.sessionStorage.setItem(WASI_TERMINAL_TOKEN_KEY, token);
+  window.sessionStorage.setItem(WASI_TERMINAL_TOKEN_TS_KEY, String(Date.now()));
+  return true;
 };
 
 const request = async (path, init = {}) => {

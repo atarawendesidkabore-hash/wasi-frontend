@@ -85,13 +85,20 @@ export interface BuildWASISystemPromptContext {
   now?: Date;
 }
 
+function toFiniteNumber(value: unknown): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function formatSignedPercent(value: number | null | undefined, digits = 1): string {
-  if (typeof value !== "number") return "N/A";
-  return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}%`;
+  const parsed = toFiniteNumber(value);
+  if (parsed === null) return "N/A";
+  return `${parsed >= 0 ? "+" : ""}${parsed.toFixed(digits)}%`;
 }
 
 function formatMaybeNumber(value: number | null | undefined, digits = 1): string {
-  return typeof value === "number" ? value.toFixed(digits) : "N/A";
+  const parsed = toFiniteNumber(value);
+  return parsed === null ? "N/A" : parsed.toFixed(digits);
 }
 
 export function buildWASISystemPrompt(context: BuildWASISystemPromptContext): string {
@@ -113,22 +120,32 @@ export function buildWASISystemPrompt(context: BuildWASISystemPromptContext): st
   } = context;
 
   const countryData = countries
-    .map(
-      (c) =>
-        `${c.flag} ${c.name} (${c.code}): Index ${indices[c.code]}/100 | Port: ${c.port} | Weight: ${(c.weight * 100).toFixed(1)}%`
-    )
+    .map((c) => {
+      const weight = toFiniteNumber(c.weight);
+      const weightLabel = weight === null ? "N/A" : `${(weight * 100).toFixed(1)}%`;
+      return `${c.flag} ${c.name} (${c.code}): Index ${indices[c.code]}/100 | Port: ${c.port} | Weight: ${weightLabel}`;
+    })
     .join("\n");
 
   const stockMarketSection =
     stockMarkets.length > 0
       ? `WEST AFRICAN STOCK MARKETS:
 ${stockMarkets
-  .map(
-    (m) =>
-      `${m.exchange_code} ${m.index_name}: ${m.index_value.toFixed(2)} (${m.change_pct >= 0 ? "+" : ""}${m.change_pct.toFixed(2)}% today, YTD ${
-        m.ytd_change_pct >= 0 ? "+" : ""
-      }${m.ytd_change_pct.toFixed(1)}%, cap ${(m.market_cap_usd / 1e9).toFixed(1)}B USD)`
-  )
+  .map((m) => {
+    const indexValue = formatMaybeNumber(m.index_value, 2);
+    const dayChange = toFiniteNumber(m.change_pct);
+    const ytdChange = toFiniteNumber(m.ytd_change_pct);
+    const marketCap = toFiniteNumber(m.market_cap_usd);
+
+    const dayChangeLabel =
+      dayChange === null ? "N/A" : `${dayChange >= 0 ? "+" : ""}${dayChange.toFixed(2)}%`;
+    const ytdLabel =
+      ytdChange === null ? "N/A" : `${ytdChange >= 0 ? "+" : ""}${ytdChange.toFixed(1)}%`;
+    const marketCapLabel =
+      marketCap === null ? "N/A" : `${(marketCap / 1e9).toFixed(1)}B USD`;
+
+    return `${m.exchange_code} ${m.index_name}: ${indexValue} (${dayChangeLabel} today, YTD ${ytdLabel}, cap ${marketCapLabel})`;
+  })
   .join("\n")}`
       : "";
 

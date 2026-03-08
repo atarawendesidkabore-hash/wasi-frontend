@@ -1,4 +1,5 @@
 @echo off
+setlocal
 cd /d C:\Users\KaboreTarawendesida\OneDrive\Desktop\WASI
 
 echo Installing dependencies if needed...
@@ -11,17 +12,24 @@ if errorlevel 1 (
 
 echo.
 echo ============================================
-echo   WASI Banking + Frontend (Full Stack)
+echo   WASI Full Stack Launcher
 echo ============================================
 echo.
-echo   Frontend: http://localhost:3000
-echo   Banking API health: http://localhost:8010/api/health
+echo   Single URL: http://localhost:3000
+echo   API health: http://localhost:8010/api/health
 echo.
-echo   Banking app: http://localhost:3000/
-echo   WASI terminal: http://localhost:3000/?app=wasi
-echo   ETF DEX: http://localhost:3000/?app=dex
-echo.
+echo   Starting backend ^(8010^) and frontend ^(3000^) in separate windows...
 echo ============================================
 echo.
-call npm run dev:full
-pause
+
+start "WASI API 8010" cmd /k "cd /d C:\Users\KaboreTarawendesida\OneDrive\Desktop\WASI && npm run server"
+start "WASI Frontend 3000" cmd /k "cd /d C:\Users\KaboreTarawendesida\OneDrive\Desktop\WASI && npm run dev"
+
+timeout /t 4 /nobreak >nul
+start "" http://localhost:3000
+
+echo.
+echo Opened: http://localhost:3000
+echo If the page is blank, press Ctrl+F5 in browser.
+echo.
+endlocal

@@ -1,0 +1,129 @@
+{
+  "summary": "WASI project audit reveals critical build failure and API routing inconsistencies. Core functionality (WASI terminal, Banking app, DEX app) is implemented and routes work correctly. DEX backend endpoints are functional with 42 ETF catalog properly seeded. However, npm build failure blocks production deployment, and there's a typo in the DEX order form causing runtime errors.",
+  "score": 72,
+  "critical": [
+    {
+      "issue": "npm build command fails with exit code -1",
+      "why": "Blocks production deployment and indicates build configuration issues",
+      "files": [
+        "package.json",
+        "vite.config.js",
+        ".env"
+      ],
+      "fix": "Investigate build failure by running 'npm run build' with verbose output, check for missing dependencies, environment variables, or Vite configuration errors"
+    },
+    {
+      "issue": "Typo in DEX order form select element",
+      "why": "Causes runtime error when placing orders, breaking core DEX functionality",
+      "files": [
+        "src/dex/DexApp.jsx"
+      ],
+      "fix": "Change 'orderFor' to 'orderForm' in the select element value attribute around line 560"
+    }
+  ],
+  "high": [
+    {
+      "issue": "Inconsistent API URL resolution between DEX and WASI modules",
+      "why": "Risk of connection failures and stale localStorage URLs causing routing issues",
+      "files": [
+        "src/dex/dexApi.js",
+        "src/wasi/services/wasiApi.js",
+        "index.html"
+      ],
+      "fix": "Standardize API URL resolution logic, use shared WASI_API_URL from index.html, add fallback health checks"
+    },
+    {
+      "issue": "DEX endpoints not fully verified in runtime checks",
+      "why": "Orderbook, order placement, and cancellation endpoints untested could hide runtime issues",
+      "files": [
+        "server/index.mjs",
+        "src/dex/dexApi.js"
+      ],
+      "fix": "Add runtime health checks for /api/v1/dex/orderbook/:symbol, /api/v1/dex/orders, and /api/v1/dex/orders/:orderId/cancel"
+    }
+  ],
+  "medium": [
+    {
+      "issue": "Banking-only API detection logic may incorrectly filter valid URLs",
+      "why": "Could prevent connection to valid backend endpoints running on port 8010",
+      "files": [
+        "index.html",
+        "src/wasi/services/wasiApi.js"
+      ],
+      "fix": "Refine isLikelyBankingOnlyApi logic to be more permissive or add explicit API capability detection"
+    },
+    {
+      "issue": "No error boundaries for React component failures",
+      "why": "Component errors could crash entire app without graceful fallback",
+      "files": [
+        "src/main.jsx"
+      ],
+      "fix": "Add ErrorBoundary wrapper around RootApp component"
+    }
+  ],
+  "low": [
+    {
+      "issue": "Hardcoded demo credentials in multiple files",
+      "why": "Security risk and maintenance overhead for credential management",
+      "files": [
+        "src/dex/DexApp.jsx",
+        "server/index.mjs"
+      ],
+      "fix": "Move credentials to environment variables or configuration file"
+    },
+    {
+      "issue": "Missing TypeScript for type safety",
+      "why": "Runtime errors could be caught at compile time with TypeScript",
+      "files": [
+        "package.json",
+        "src/**/*.jsx",
+        "src/**/*.js"
+      ],
+      "fix": "Consider migrating to TypeScript gradually starting with API interfaces"
+    }
+  ],
+  "missing_features": [
+    {
+      "feature": "Production build configuration",
+      "expected": "Working npm run build command",
+      "current": "Build fails with exit code -1",
+      "files": [
+        "package.json",
+        "vite.config.js"
+      ]
+    },
+    {
+      "feature": "Comprehensive endpoint health monitoring",
+      "expected": "Health checks for all DEX endpoints",
+      "current": "Only basic health and login endpoints checked",
+      "files": [
+        "server/index.mjs",
+        "ops/verify_wasi_with_ollama.mjs"
+      ]
+    }
+  ],
+  "regressions": [
+    {
+      "regression": "Build process broken",
+      "evidence": "npm.cmd run build exitCode: -1, ok: false",
+      "files": [
+        "package.json",
+        "vite.config.js"
+      ]
+    },
+    {
+      "regression": "Order form typo introduced",
+      "evidence": "computedFacts.hasOrderForTypo: true",
+      "files": [
+        "src/dex/DexApp.jsx"
+      ]
+    }
+  ],
+  "next_actions": [
+    "Fix npm build failure by investigating build logs and dependencies",
+    "Correct 'orderFor' typo to 'orderForm' in DEX order form select element",
+    "Standardize API URL resolution across DEX and WASI modules",
+    "Add runtime health checks for all DEX endpoints",
+    "Implement ErrorBoundary for better error handling"
+  ]
+}

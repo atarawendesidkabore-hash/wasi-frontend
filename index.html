@@ -27,24 +27,18 @@
             '<p style="color:#94a3b8;margin-top:20px">Ou double-cliquez sur <b>start_frontend.bat</b></p></div>';
           return;
         }
-        const LOCAL_API_CANDIDATES = [
-          `${window.location.protocol}//${window.location.hostname}:8001`,
-          `${window.location.protocol}//${window.location.hostname}:8000`,
-        ];
+        const LOCAL_API_CANDIDATES = [8010, 8001, 8000].map(
+          (port) => `${window.location.protocol}//${window.location.hostname}:${port}`
+        );
         const PROD_API_URL = "https://wasi-backend-api.onrender.com";
         const params = new URLSearchParams(window.location.search);
         const forcedApi = params.get("api");
-        const storedApi = window.localStorage.getItem("WASI_API_URL");
-        const selectedApp = (params.get("app") || "wasi").toLowerCase();
-        const isBankingApp = ["banking", "bank", "wallet"].includes(selectedApp);
+        const storedApi =
+          window.localStorage.getItem("WASI_PLATFORM_API_URL") ||
+          window.localStorage.getItem("WASI_API_URL");
         const isLocalHost =
           window.location.hostname === "localhost" ||
           window.location.hostname === "127.0.0.1";
-
-        function isLikelyBankingOnlyApi(url) {
-          if (!url || typeof url !== "string") return false;
-          return /:8010(?:\/|$)/.test(url) || /\/api\/v1\/banking(?:\/|$)/i.test(url);
-        }
 
         async function isHealthy(url) {
           try {
@@ -61,14 +55,11 @@
         async function resolveApiUrl() {
           if (forcedApi) return forcedApi;
           if (storedApi) {
-            if (!isBankingApp && isLikelyBankingOnlyApi(storedApi)) {
-              window.localStorage.removeItem("WASI_API_URL");
-            } else {
-              if (await isHealthy(storedApi)) {
-                return storedApi;
-              }
-              window.localStorage.removeItem("WASI_API_URL");
+            if (await isHealthy(storedApi)) {
+              return storedApi;
             }
+            window.localStorage.removeItem("WASI_PLATFORM_API_URL");
+            window.localStorage.removeItem("WASI_API_URL");
           }
           if (!isLocalHost) return PROD_API_URL;
 
@@ -78,7 +69,15 @@
           return PROD_API_URL;
         }
 
-        window.WASI_API_URL = await resolveApiUrl();
+        const platformApiUrl = await resolveApiUrl();
+        window.WASI_PLATFORM_API_URL = platformApiUrl;
+        window.WASI_API_URL = platformApiUrl;
+        window.WASI_BANKING_API_URL = platformApiUrl;
+        window.WASI_DEX_API_URL = platformApiUrl;
+        window.localStorage.setItem("WASI_PLATFORM_API_URL", platformApiUrl);
+        window.localStorage.removeItem("WASI_API_URL");
+        window.localStorage.removeItem("WASI_BANKING_API_URL");
+        window.localStorage.removeItem("WASI_DEX_API_URL");
         await import("/src/main.jsx");
       })();
     </script>

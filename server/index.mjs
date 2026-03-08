@@ -1,5 +1,5 @@
 import cors from "cors";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,14 +10,69 @@ import Database from "better-sqlite3";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const loadLocalEnv = () => {
+  const envPath = path.join(__dirname, "..", ".env");
+  if (!fs.existsSync(envPath)) return;
+
+  const raw = fs.readFileSync(envPath, "utf8");
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const separatorIndex = trimmed.indexOf("=");
+    if (separatorIndex <= 0) continue;
+
+    const key = trimmed.slice(0, separatorIndex).trim();
+    if (!key || process.env[key] !== undefined) continue;
+
+    let value = trimmed.slice(separatorIndex + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+};
+
+loadLocalEnv();
+
 const PORT = Number(process.env.BANKING_API_PORT ?? process.env.PORT ?? 8010);
 const MAX_SAFE_AMOUNT_CENTIMES = BigInt(Number.MAX_SAFE_INTEGER);
 const MAX_IDEMPOTENCY_KEY_LENGTH = 128;
 const JWT_SECRET = process.env.BANKING_JWT_SECRET ?? "wasi-dev-insecure-secret";
 const JWT_EXPIRES_IN = process.env.BANKING_JWT_EXPIRES_IN ?? "12h";
+const IS_PRODUCTION = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+const ALLOW_DEMO_CREDENTIALS = String(
+  process.env.WASI_ALLOW_DEMO_USERS ?? (IS_PRODUCTION ? "false" : "true")
+).toLowerCase() === "true";
 const DB_PATH =
   process.env.BANKING_DB_PATH ??
   path.join(__dirname, "data", "wasi_banking.sqlite");
+const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
+const ANTHROPIC_API_KEY =
+  process.env.ANTHROPIC_API_KEY ??
+  process.env.ANTROPIC_API_KEY ??
+  "";
+const ANTHROPIC_MODEL =
+  process.env.ANTHROPIC_MODEL ?? "claude-3-5-sonnet-20241022";
+const DEFAULT_CHAT_MAX_TOKENS = 1024;
+const MAX_CHAT_MAX_TOKENS = 4096;
+const MAX_CHAT_MESSAGES = 20;
+const OLLAMA_API_URL =
+  process.env.OLLAMA_API_URL ?? "http://127.0.0.1:11434/api/chat";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "llama3.1:8b";
+const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS ?? 20000);
+const RAW_LLM_PROVIDER = String(process.env.LLM_PROVIDER ?? "auto")
+  .trim()
+  .toLowerCase();
+const LLM_PROVIDER = ["auto", "anthropic", "ollama", "snapshot"].includes(
+  RAW_LLM_PROVIDER
+)
+  ? RAW_LLM_PROVIDER
+  : "auto";
 
 const ROLE_CLIENT = "CLIENT";
 const ROLE_TELLER = "TELLER";
@@ -109,6 +164,22 @@ db.exec(`
   BEGIN
     SELECT RAISE(ABORT, 'audit_log is immutable');
   END;
+
+  CREATE TABLE IF NOT EXISTS platform_users (
+    id TEXT PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('CLIENT','TELLER','MANAGER')),
+    tier TEXT NOT NULL DEFAULT 'free',
+    x402_balance REAL NOT NULL DEFAULT 10,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at_utc TEXT NOT NULL,
+    updated_at_utc TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_platform_users_role_active
+  ON platform_users(role, is_active, created_at_utc DESC);
 
   CREATE TABLE IF NOT EXISTS etf_tokens (
     symbol TEXT PRIMARY KEY,
@@ -279,6 +350,11 @@ const DEX_SEED_TOKENS = [
   { symbol: "WASI-LR", name: "Liberia ETF", category: "COUNTRY", feeBps: 60, underlying: "WASI Liberia country index", lastPriceCentimes: "615000" },
   { symbol: "WASI-GM", name: "Gambia ETF", category: "COUNTRY", feeBps: 65, underlying: "WASI Gambia country index", lastPriceCentimes: "598000" },
   { symbol: "WASI-CV", name: "Cabo Verde ETF", category: "COUNTRY", feeBps: 65, underlying: "WASI Cabo Verde country index", lastPriceCentimes: "669000" },
+  { symbol: "BRVM-C", name: "BRVM Composite Token", category: "INDEX", feeBps: 35, underlying: "BRVM Composite benchmark", lastPriceCentimes: "1016073" },
+  { symbol: "GSE-CI", name: "GSE Composite Token", category: "INDEX", feeBps: 35, underlying: "GSE Composite benchmark", lastPriceCentimes: "341255" },
+  { symbol: "NGX-ASI", name: "NGX All-Share Token", category: "INDEX", feeBps: 35, underlying: "NGX All-Share benchmark", lastPriceCentimes: "9843210" },
+  { symbol: "UMOA-TITRES", name: "UMOA Titres Composite Token", category: "BOND", feeBps: 30, underlying: "UMOA sovereign debt composite", lastPriceCentimes: "15342" },
+  { symbol: "WA-BOND-10Y", name: "West Africa Sovereign Bond 10Y Token", category: "BOND", feeBps: 30, underlying: "Regional sovereign bond basket (10Y)", lastPriceCentimes: "9786" },
 ];
 
 const DEX_SEED_WALLETS = [
@@ -297,6 +373,126 @@ const DEX_SEED_POSITIONS = [
   { userId: "usr-manager-demo", symbol: "WASI-GOLD", quantityUnits: "75" },
   { userId: "usr-manager-demo", symbol: "WASI-EQ", quantityUnits: "600" },
 ];
+
+const COUNTRY_WEIGHTS = {
+  CI: 0.22,
+  GH: 0.15,
+  TG: 0.03,
+  SN: 0.1,
+  NG: 0.28,
+  BF: 0.04,
+  ML: 0.04,
+  GN: 0.04,
+  BJ: 0.03,
+  NE: 0.01,
+  MR: 0.01,
+  GW: 0.01,
+  SL: 0.01,
+  LR: 0.01,
+  GM: 0.01,
+  CV: 0.01,
+};
+
+const COUNTRY_BASE_SCORES = {
+  CI: 89, GH: 88, TG: 82, SN: 79, NG: 77, BF: 71, ML: 68, GN: 65,
+  BJ: 64, NE: 52, MR: 51, GW: 48, SL: 46, LR: 44, GM: 42, CV: 61,
+};
+
+const COUNTRY_NAMES = {
+  CI: "Cote d'Ivoire",
+  GH: "Ghana",
+  TG: "Togo",
+  SN: "Senegal",
+  NG: "Nigeria",
+  BF: "Burkina Faso",
+  ML: "Mali",
+  GN: "Guinee",
+  BJ: "Benin",
+  NE: "Niger",
+  MR: "Mauritanie",
+  GW: "Guinee-Bissau",
+  SL: "Sierra Leone",
+  LR: "Liberia",
+  GM: "Gambie",
+  CV: "Cap-Vert",
+};
+
+const COUNTRY_TO_ETF_SYMBOL = {
+  CI: "WASI-CI",
+  GH: "WASI-GH",
+  TG: "WASI-TG",
+  SN: "WASI-SN",
+  NG: "WASI-NG",
+  BF: "WASI-BF",
+  ML: "WASI-ML",
+  GN: "WASI-GN",
+  BJ: "WASI-BJ",
+  NE: "WASI-NE",
+  MR: "WASI-MR",
+  GW: "WASI-GW",
+  SL: "WASI-SL",
+  LR: "WASI-LR",
+  GM: "WASI-GM",
+  CV: "WASI-CV",
+};
+
+const MARKET_BOARD_SNAPSHOT = [
+  { exchange: "BRVM", label: "BRVM Composite", symbol: "BRVM-C", level: 10160.73, change_pct: 2.65 },
+  { exchange: "NGX", label: "NGX ASI", symbol: "NGX-ASI", level: 98432.1, change_pct: 0.84 },
+  { exchange: "GSE", label: "GSE Composite", symbol: "GSE-CI", level: 3412.55, change_pct: -0.32 },
+  { exchange: "UMOA", label: "UMOA Titres Composite", symbol: "UMOA-TITRES", level: 153.42, change_pct: 0.61 },
+  { exchange: "WA-BOND", label: "West Africa Sovereign Bond 10Y", symbol: "WA-BOND-10Y", level: 97.86, change_pct: 0.24 },
+];
+
+const FINANCIAL_PRODUCTS_SNAPSHOT = [
+  { code: "BRVM-C", type: "INDEX", venue: "BRVM", label: "BRVM Composite", tradableOnDex: true },
+  { code: "GSE-CI", type: "INDEX", venue: "GSE", label: "GSE Composite", tradableOnDex: true },
+  { code: "NGX-ASI", type: "INDEX", venue: "NGX", label: "NGX All Share", tradableOnDex: true },
+  { code: "UMOA-TITRES", type: "BOND", venue: "UMOA Titres", label: "UMOA Titres Composite", tradableOnDex: true },
+  { code: "WA-BOND-10Y", type: "BOND", venue: "Regional", label: "West Africa Sovereign Bond 10Y", tradableOnDex: true },
+  { code: "WASI-COMP", type: "ETF", venue: "WASI DEX", label: "WASI Composite ETF", tradableOnDex: true },
+  { code: "WASI-BRVM", type: "ETF", venue: "WASI DEX", label: "BRVM Equity ETF", tradableOnDex: true },
+  { code: "WASI-GSE", type: "ETF", venue: "WASI DEX", label: "GSE Equity ETF", tradableOnDex: true },
+  { code: "WASI-UEMOA", type: "ETF", venue: "WASI DEX", label: "UEMOA Zone ETF", tradableOnDex: true },
+  { code: "WASI-COCOA", type: "ETF", venue: "WASI DEX", label: "Cocoa ETF", tradableOnDex: true },
+];
+
+const COMMODITY_SNAPSHOT = [
+  { symbol: "COCOA", name: "Cocoa ICE", price: 8945, unit: "USD/t", chg_pct: 1.2, ytd_pct: 62.3 },
+  { symbol: "BRENT", name: "Brent Crude", price: 72.4, unit: "USD/bbl", chg_pct: -0.8, ytd_pct: -8.2 },
+  { symbol: "GOLD", name: "Gold Spot", price: 2312.5, unit: "USD/oz", chg_pct: 0.3, ytd_pct: 12.1 },
+  { symbol: "COTTON", name: "Cotton #2", price: 0.84, unit: "USD/lb", chg_pct: -0.5, ytd_pct: -3.4 },
+  { symbol: "COFFEE", name: "Robusta", price: 5180, unit: "USD/t", chg_pct: 2.1, ytd_pct: 45.8 },
+  { symbol: "IRON", name: "Iron Ore 62", price: 108.5, unit: "USD/t", chg_pct: -1.3, ytd_pct: -12.7 },
+  { symbol: "RUBBER", name: "Natural Rubber", price: 178.3, unit: "JPY/kg", chg_pct: 0.9, ytd_pct: 14.2 },
+];
+
+const NEWS_EVENT_SNAPSHOT = [
+  { id: "evt-1", type: "NEWS", text: "BCEAO holds benchmark rate at 3.50%", impact: 1.2, country_code: "SN", severity: "LOW", timestamp: "14:32" },
+  { id: "evt-2", type: "RISK", text: "Sahel security pressure weighs on logistics", impact: -1.5, country_code: "BF", severity: "HIGH", timestamp: "14:15" },
+  { id: "evt-3", type: "DATA", text: "CI GDP growth revised to +6.8% YoY", impact: 1.8, country_code: "CI", severity: "MEDIUM", timestamp: "13:48" },
+  { id: "evt-4", type: "TRADE", text: "BRVM turnover climbs on SOLIBRA and SGBCI", impact: 0.9, country_code: "CI", severity: "LOW", timestamp: "13:22" },
+  { id: "evt-5", type: "DATA", text: "NG inflation eases for third month", impact: 1.1, country_code: "NG", severity: "MEDIUM", timestamp: "12:55" },
+];
+
+const MACRO_COUNTRY_SNAPSHOT = {
+  CI: { gdp_growth: 6.7, inflation: 3.9, debt_to_gdp: 58.2, current_account: -3.1 },
+  GH: { gdp_growth: 4.8, inflation: 18.2, debt_to_gdp: 76.4, current_account: -2.4 },
+  TG: { gdp_growth: 5.4, inflation: 3.4, debt_to_gdp: 64.8, current_account: -4.2 },
+  SN: { gdp_growth: 8.1, inflation: 2.9, debt_to_gdp: 72.3, current_account: -6.0 },
+  NG: { gdp_growth: 3.2, inflation: 26.3, debt_to_gdp: 39.1, current_account: 1.8 },
+  BF: { gdp_growth: 5.2, inflation: 3.8, debt_to_gdp: 59.4, current_account: -5.2 },
+  ML: { gdp_growth: 4.1, inflation: 4.1, debt_to_gdp: 48.9, current_account: -7.0 },
+  GN: { gdp_growth: 5.5, inflation: 8.7, debt_to_gdp: 42.6, current_account: -4.8 },
+  BJ: { gdp_growth: 6.4, inflation: 2.7, debt_to_gdp: 54.3, current_account: -3.9 },
+  NE: { gdp_growth: 6.0, inflation: 5.8, debt_to_gdp: 49.8, current_account: -8.5 },
+  MR: { gdp_growth: 5.0, inflation: 4.6, debt_to_gdp: 47.4, current_account: -2.1 },
+  GW: { gdp_growth: 4.0, inflation: 6.2, debt_to_gdp: 61.5, current_account: -11.0 },
+  SL: { gdp_growth: 4.7, inflation: 19.9, debt_to_gdp: 83.4, current_account: -9.4 },
+  LR: { gdp_growth: 4.1, inflation: 11.2, debt_to_gdp: 57.1, current_account: -7.8 },
+  GM: { gdp_growth: 5.1, inflation: 9.6, debt_to_gdp: 70.2, current_account: -5.7 },
+  CV: { gdp_growth: 4.3, inflation: 2.1, debt_to_gdp: 114.0, current_account: -8.2 },
+};
 
 const sanitizeUser = (user) => ({
   id: user.id,
@@ -375,6 +571,7 @@ const ensureDexSeedData = () => {
       category = excluded.category,
       fee_bps = excluded.fee_bps,
       underlying = excluded.underlying,
+      last_price_centimes = excluded.last_price_centimes,
       is_active = 1,
       updated_at_utc = excluded.updated_at_utc
   `);
@@ -436,6 +633,42 @@ const ensureDexSeedData = () => {
 
 ensureDexSeedData();
 
+const hashPassword = (password) =>
+  createHash("sha256").update(`${JWT_SECRET}:${String(password)}`).digest("hex");
+
+const ensurePlatformUsers = () => {
+  if (!ALLOW_DEMO_CREDENTIALS) return;
+
+  const insertUser = db.prepare(`
+    INSERT OR IGNORE INTO platform_users (
+      id, username, email, password_hash, role, tier, x402_balance, is_active, created_at_utc, updated_at_utc
+    ) VALUES (
+      @id, @username, @email, @passwordHash, @role, @tier, @x402Balance, 1, @createdAtUtc, @updatedAtUtc
+    )
+  `);
+
+  const now = new Date().toISOString();
+  const run = db.transaction((users) => {
+    for (const user of users) {
+      insertUser.run({
+        id: user.id,
+        username: user.username,
+        email: `${user.username}@wasi.local`,
+        passwordHash: hashPassword(user.password),
+        role: user.role,
+        tier: "demo",
+        x402Balance: 1000,
+        createdAtUtc: now,
+        updatedAtUtc: now,
+      });
+    }
+  });
+
+  run(AUTH_USERS);
+};
+
+ensurePlatformUsers();
+
 class ApiError extends Error {
   constructor(statusCode, message) {
     super(message);
@@ -446,6 +679,7 @@ class ApiError extends Error {
 const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 const success = (res, data, statusCode = 200) =>
   res.status(statusCode).json({
@@ -652,6 +886,28 @@ const insertAuditLog = db.prepare(`
     @id, @actorUserId, @actorUsername, @actorRole, @action,
     @resourceType, @resourceId, @status, @detailJson, @createdAtUtc
   )
+`);
+
+const insertPlatformUser = db.prepare(`
+  INSERT INTO platform_users (
+    id, username, email, password_hash, role, tier, x402_balance, is_active, created_at_utc, updated_at_utc
+  ) VALUES (
+    @id, @username, @email, @passwordHash, @role, @tier, @x402Balance, 1, @createdAtUtc, @updatedAtUtc
+  )
+`);
+
+const getPlatformUserByUsername = db.prepare(`
+  SELECT *
+  FROM platform_users
+  WHERE lower(username) = lower(?)
+  LIMIT 1
+`);
+
+const getPlatformUserByEmail = db.prepare(`
+  SELECT *
+  FROM platform_users
+  WHERE lower(email) = lower(?)
+  LIMIT 1
 `);
 
 const listEtfTokens = db.prepare(`
@@ -1175,17 +1431,33 @@ const executeDexOrderPlacement = ({ userId, symbol, side, quantityUnits, limitPr
     };
   })();
 
-const getUserByUsername = (username) =>
-  AUTH_USERS.find((user) => user.username.toLowerCase() === username.toLowerCase());
+const getDemoUserByUsername = (username) => {
+  if (!ALLOW_DEMO_CREDENTIALS) return null;
+  return AUTH_USERS.find((user) => user.username.toLowerCase() === username.toLowerCase()) ?? null;
+};
+
+const serializePlatformUser = (row) => ({
+  id: row.id,
+  username: row.username,
+  email: row.email,
+  role: row.role,
+  tier: row.tier,
+  x402_balance: Number(row.x402_balance),
+  is_active: Boolean(row.is_active),
+  created_at: row.created_at_utc,
+});
 
 const signAccessToken = (user) =>
   jwt.sign(
     {
       sub: user.id,
       username: user.username,
-      displayName: user.displayName,
-      role: user.role,
-      accountIds: user.accountIds,
+      displayName: user.displayName ?? user.username,
+      role: user.role ?? ROLE_CLIENT,
+      accountIds: user.accountIds ?? [],
+      tier: user.tier ?? "free",
+      x402_balance: typeof user.x402_balance === "number" ? user.x402_balance : Number(user.x402_balance ?? 0),
+      email: user.email ?? null,
     },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
@@ -1345,16 +1617,732 @@ const requireRoles = (roles) => (req, _res, next) => {
   next();
 };
 
+const toIsoMonth = (offsetFromNow = 0) => {
+  const date = new Date();
+  date.setUTCMonth(date.getUTCMonth() - offsetFromNow);
+  date.setUTCDate(1);
+  date.setUTCHours(0, 0, 0, 0);
+  return date.toISOString();
+};
+
+const buildCountryIndicesSnapshot = () => {
+  const marketRows = listEtfTokens.all();
+  const priceBySymbol = new Map(marketRows.map((row) => [row.symbol, BigInt(row.last_price_centimes)]));
+  const indices = {};
+
+  for (const [countryCode, baseScore] of Object.entries(COUNTRY_BASE_SCORES)) {
+    const symbol = COUNTRY_TO_ETF_SYMBOL[countryCode];
+    const price = symbol ? priceBySymbol.get(symbol) : null;
+    if (price) {
+      const derived = Number(price / 10000n);
+      indices[countryCode] = Math.max(35, Math.min(99, derived));
+    } else {
+      indices[countryCode] = baseScore;
+    }
+  }
+  return indices;
+};
+
+const buildComposite = (indices) =>
+  Object.entries(COUNTRY_WEIGHTS).reduce(
+    (sum, [countryCode, weight]) => sum + (Number(indices[countryCode] ?? 50) * weight),
+    0
+  );
+
+const buildIndicesHistory = (months = 12) => {
+  const currentIndices = buildCountryIndicesSnapshot();
+  const compositeNow = buildComposite(currentIndices);
+  const safeMonths = Number.isFinite(months) ? Math.min(Math.max(months, 1), 120) : 12;
+  const rows = [];
+  for (let i = safeMonths - 1; i >= 0; i -= 1) {
+    const seasonal = Math.sin((safeMonths - i) / 2.7) * 1.8;
+    rows.push({
+      period_date: toIsoMonth(i),
+      composite_value: Math.round((compositeNow - i * 0.35 + seasonal) * 10) / 10,
+      source: "wasi_platform_snapshot",
+    });
+  }
+  return rows;
+};
+
+const buildCountryHistory = (countryCode, months = 12) => {
+  const safeCode = String(countryCode || "").trim().toUpperCase();
+  const safeMonths = Number.isFinite(months) ? Math.min(Math.max(months, 1), 120) : 12;
+  const currentIndices = buildCountryIndicesSnapshot();
+  const base = Number(currentIndices[safeCode] ?? COUNTRY_BASE_SCORES[safeCode] ?? 50);
+  const noiseSeed = safeCode.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % 5;
+  const rows = [];
+  for (let i = safeMonths - 1; i >= 0; i -= 1) {
+    const seasonal = Math.sin((safeMonths - i + noiseSeed) / 2.4) * 1.4;
+    rows.push({
+      country_code: safeCode,
+      period_date: toIsoMonth(i),
+      value: Math.round((base - i * 0.22 + seasonal) * 10) / 10,
+      source: "wasi_platform_snapshot",
+    });
+  }
+  return rows;
+};
+
+const buildLiveSignals = () => {
+  const indices = buildCountryIndicesSnapshot();
+  return Object.entries(indices).map(([countryCode, value]) => {
+    const eventImpact = NEWS_EVENT_SNAPSHOT
+      .filter((event) => event.country_code === countryCode)
+      .reduce((sum, event) => sum + Number(event.impact || 0), 0);
+    const adjusted = Math.max(30, Math.min(100, value + eventImpact));
+    return {
+      country_code: countryCode,
+      country_name: COUNTRY_NAMES[countryCode] ?? countryCode,
+      base_index: value,
+      adjustment: Math.round(eventImpact * 10) / 10,
+      adjusted_index: Math.round(adjusted * 10) / 10,
+      signal: adjusted >= 80 ? "BULLISH" : adjusted >= 65 ? "STABLE" : "CAUTION",
+      timestamp: new Date().toISOString(),
+    };
+  });
+};
+
+const buildMacroByCountry = (countryCode) => {
+  const safeCode = String(countryCode || "").trim().toUpperCase();
+  return {
+    country_code: safeCode,
+    source: "wasi_platform_snapshot",
+    ...(MACRO_COUNTRY_SNAPSHOT[safeCode] ?? {
+      gdp_growth: 4.2,
+      inflation: 6.0,
+      debt_to_gdp: 58.0,
+      current_account: -4.0,
+    }),
+  };
+};
+
+const buildBankContext = (countryCode) => {
+  const macro = buildMacroByCountry(countryCode);
+  const risk =
+    macro.inflation > 15 || macro.debt_to_gdp > 90 ? "HIGH" : macro.inflation > 7 ? "MEDIUM" : "LOW";
+  return {
+    country_code: macro.country_code,
+    risk_level: risk,
+    advisory: risk === "HIGH"
+      ? "Tighten lending standards and require collateral buffers."
+      : risk === "MEDIUM"
+        ? "Prefer short tenor working-capital products."
+        : "Stable credit environment for SME growth products.",
+    policy_rate_reference: 4.5,
+    source: "wasi_platform_snapshot",
+    timestamp: new Date().toISOString(),
+  };
+};
+
+const buildTransportComparison = (countryCode) => {
+  const safeCode = String(countryCode || "").trim().toUpperCase();
+  const base = Number(buildCountryIndicesSnapshot()[safeCode] ?? 60);
+  return {
+    country_code: safeCode,
+    maritime: { score: Math.round(base + 8), trend: "POSITIVE" },
+    air: { score: Math.round(base - 6), trend: "STABLE" },
+    rail: { score: Math.round(base - 3), trend: "STABLE" },
+    road: { score: Math.round(base + 2), trend: "POSITIVE" },
+    composite: Math.round((base + 8 + (base - 6) + (base - 3) + (base + 2)) / 4),
+    source: "wasi_platform_snapshot",
+    timestamp: new Date().toISOString(),
+  };
+};
+
+const buildUssdAggregateSummary = () => {
+  const indices = buildCountryIndicesSnapshot();
+  const average = Object.values(indices).reduce((sum, value) => sum + Number(value), 0) / Object.keys(indices).length;
+  return {
+    source: "wasi_platform_snapshot",
+    timestamp: new Date().toISOString(),
+    total_sessions_24h: 18234,
+    repayment_intent_rate: 73.2,
+    average_country_index: Math.round(average * 10) / 10,
+    top_countries: Object.entries(indices)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([code, value]) => ({ country_code: code, score: value })),
+  };
+};
+
+const buildChatResponse = (queryText) => {
+  const indices = buildCountryIndicesSnapshot();
+  const top = Object.entries(indices).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const composite = Math.round(buildComposite(indices) * 10) / 10;
+  const content =
+    `WASI live snapshot: composite ${composite}. ` +
+    `Top countries: ${top.map(([code, value]) => `${code} ${value}`).join(", ")}. ` +
+    `Query received: "${queryText}".`;
+
+  return {
+    id: randomUUID(),
+    model: "wasi-platform-analyst",
+    content: [{ type: "text", text: content }],
+    source: "wasi_platform_snapshot",
+    timestamp: new Date().toISOString(),
+  };
+};
+
+const clampChatMaxTokens = (value) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_CHAT_MAX_TOKENS;
+  return Math.min(Math.max(Math.trunc(parsed), 64), MAX_CHAT_MAX_TOKENS);
+};
+
+const extractMessageText = (content) => {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => (part && typeof part.text === "string" ? part.text : ""))
+      .filter(Boolean)
+      .join("\n");
+  }
+  return String(content ?? "");
+};
+
+const toAnthropicMessages = (messages, promptFallback = "") => {
+  const normalized = (Array.isArray(messages) ? messages : [])
+    .map((entry) => {
+      const role = entry?.role === "assistant" ? "assistant" : "user";
+      const content = extractMessageText(entry?.content).trim();
+      return content ? { role, content } : null;
+    })
+    .filter(Boolean)
+    .slice(-MAX_CHAT_MESSAGES);
+
+  if (normalized.length > 0) {
+    return normalized;
+  }
+
+  const fallback = String(promptFallback || "").trim();
+  return fallback ? [{ role: "user", content: fallback }] : [];
+};
+
+const buildAnthropicChatResponse = async ({
+  systemPrompt,
+  messages,
+  maxTokens,
+}) => {
+  const payload = {
+    model: ANTHROPIC_MODEL,
+    max_tokens: clampChatMaxTokens(maxTokens),
+    messages,
+  };
+
+  const safeSystem = String(systemPrompt || "").trim();
+  if (safeSystem) {
+    payload.system = safeSystem.slice(0, 24000);
+  }
+
+  const upstreamResponse = await fetch(ANTHROPIC_API_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const body = await upstreamResponse.json().catch(() => null);
+  if (!upstreamResponse.ok) {
+    const reason =
+      body?.error?.message ||
+      body?.error?.type ||
+      `HTTP ${upstreamResponse.status}`;
+    throw new ApiError(502, `Anthropic API error: ${reason}`);
+  }
+
+  const text = Array.isArray(body?.content)
+    ? body.content
+        .map((part) => (part?.type === "text" ? String(part.text || "") : ""))
+        .filter(Boolean)
+        .join("\n\n")
+        .trim()
+    : "";
+
+  if (!text) {
+    throw new ApiError(502, "Anthropic API returned empty content.");
+  }
+
+  return {
+    id: body?.id || randomUUID(),
+    model: body?.model || ANTHROPIC_MODEL,
+    content: [{ type: "text", text }],
+    source: "anthropic_api",
+    timestamp: new Date().toISOString(),
+  };
+};
+
+const toOllamaMessages = (messages, promptFallback = "", systemPrompt = "") => {
+  const normalized = [];
+  const safeSystem = String(systemPrompt || "").trim();
+  if (safeSystem) {
+    normalized.push({
+      role: "system",
+      content: safeSystem.slice(0, 24000),
+    });
+  }
+
+  const chatMessages = toAnthropicMessages(messages, promptFallback);
+  for (const message of chatMessages) {
+    normalized.push(message);
+  }
+  return normalized;
+};
+
+const buildOllamaChatResponse = async ({
+  systemPrompt,
+  messages,
+  queryText,
+  maxTokens,
+}) => {
+  const ollamaMessages = toOllamaMessages(messages, queryText, systemPrompt);
+  if (!ollamaMessages.length) {
+    throw new ApiError(400, "messages or prompt is required.");
+  }
+
+  const controller = new AbortController();
+  const timeoutMs =
+    Number.isFinite(OLLAMA_TIMEOUT_MS) && OLLAMA_TIMEOUT_MS > 1000
+      ? OLLAMA_TIMEOUT_MS
+      : 20000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const upstreamResponse = await fetch(OLLAMA_API_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
+        stream: false,
+        messages: ollamaMessages,
+        options: {
+          num_predict: clampChatMaxTokens(maxTokens),
+        },
+      }),
+    });
+
+    const body = await upstreamResponse.json().catch(() => null);
+    if (!upstreamResponse.ok) {
+      const reason = body?.error || `HTTP ${upstreamResponse.status}`;
+      throw new ApiError(502, `Ollama API error: ${reason}`);
+    }
+
+    const text = String(body?.message?.content || "").trim();
+    if (!text) {
+      throw new ApiError(502, "Ollama API returned empty content.");
+    }
+
+    return {
+      id: body?.created_at || randomUUID(),
+      model: body?.model || OLLAMA_MODEL,
+      content: [{ type: "text", text }],
+      source: "ollama_api",
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new ApiError(504, "Ollama API timeout.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+const buildProviderChatResponse = async ({
+  systemPrompt,
+  messages,
+  queryText,
+  maxTokens,
+}) => {
+  const normalizedMessages = toAnthropicMessages(messages, queryText);
+  if (!normalizedMessages.length) {
+    throw new ApiError(400, "messages or prompt is required.");
+  }
+
+  const tryAnthropic = async () => {
+    if (!ANTHROPIC_API_KEY) {
+      throw new ApiError(500, "ANTHROPIC_API_KEY is not configured.");
+    }
+    return buildAnthropicChatResponse({
+      systemPrompt,
+      messages: normalizedMessages,
+      maxTokens,
+    });
+  };
+
+  const tryOllama = async () =>
+    buildOllamaChatResponse({
+      systemPrompt,
+      messages: normalizedMessages,
+      queryText,
+      maxTokens,
+    });
+
+  if (LLM_PROVIDER === "snapshot") {
+    return buildChatResponse(queryText);
+  }
+
+  if (LLM_PROVIDER === "ollama") {
+    return tryOllama();
+  }
+
+  if (LLM_PROVIDER === "anthropic") {
+    try {
+      return await tryAnthropic();
+    } catch (_anthropicError) {
+      return tryOllama();
+    }
+  }
+
+  if (ANTHROPIC_API_KEY) {
+    try {
+      return await tryAnthropic();
+    } catch (_anthropicError) {
+      // fallback to Ollama below
+    }
+  }
+
+  try {
+    return await tryOllama();
+  } catch (_ollamaError) {
+    return buildChatResponse(queryText);
+  }
+};
+
 app.get("/api/health", (_req, res) => {
   success(res, {
-    service: "wasi-banking-api",
+    service: "wasi-platform-api",
     status: "ok",
     database: DB_PATH,
     auth: "jwt-rbac-enabled",
     idempotency: "required-for-mutations",
     auditLog: "immutable-enabled",
     dex: "wasi-etf-orderbook-enabled",
+    marketSnapshot: "unified-platform-source",
+    anthropicEnabled: Boolean(ANTHROPIC_API_KEY),
+    ollamaConfigured: Boolean(OLLAMA_API_URL),
+    llmProvider: LLM_PROVIDER,
+    allowDemoUsers: ALLOW_DEMO_CREDENTIALS,
   });
+});
+
+app.post("/api/auth/register", (req, res, next) => {
+  try {
+    const username = String(req.body?.username || "").trim();
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const password = String(req.body?.password || "");
+
+    if (!username || username.length < 3) {
+      throw new ApiError(400, "username must contain at least 3 characters.");
+    }
+    if (!email || !email.includes("@")) {
+      throw new ApiError(400, "email is invalid.");
+    }
+    if (!password || password.length < 8) {
+      throw new ApiError(400, "password must contain at least 8 characters.");
+    }
+    if (getPlatformUserByUsername.get(username)) {
+      throw new ApiError(409, "username already exists.");
+    }
+    if (getPlatformUserByEmail.get(email)) {
+      throw new ApiError(409, "email already exists.");
+    }
+
+    const now = new Date().toISOString();
+    const userId = randomUUID();
+    insertPlatformUser.run({
+      id: userId,
+      username,
+      email,
+      passwordHash: hashPassword(password),
+      role: ROLE_CLIENT,
+      tier: "free",
+      x402Balance: 10,
+      createdAtUtc: now,
+      updatedAtUtc: now,
+    });
+
+    const saved = getPlatformUserByUsername.get(username);
+    writeAuditLog({
+      actorOverride: { id: userId, username, role: ROLE_CLIENT },
+      action: "REGISTER",
+      resourceType: "AUTH",
+      resourceId: userId,
+      status: AUDIT_SUCCESS,
+      detail: { email },
+    });
+
+    res.status(201).json(serializePlatformUser(saved));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/auth/login", (req, res, next) => {
+  try {
+    const username = String(req.body?.username || "").trim();
+    const password = String(req.body?.password || "");
+    if (!username || !password) {
+      throw new ApiError(400, "username and password are required.");
+    }
+
+    const platformUser = getPlatformUserByUsername.get(username);
+    if (platformUser && Number(platformUser.is_active) === 1) {
+      if (platformUser.password_hash !== hashPassword(password)) {
+        throw new ApiError(401, "Incorrect username or password");
+      }
+      const accessToken = signAccessToken({
+        id: platformUser.id,
+        username: platformUser.username,
+        displayName: platformUser.username,
+        role: platformUser.role,
+        tier: platformUser.tier,
+        x402_balance: Number(platformUser.x402_balance),
+        email: platformUser.email,
+        accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS],
+      });
+      writeAuditLog({
+        actorOverride: { id: platformUser.id, username: platformUser.username, role: platformUser.role },
+        action: "LOGIN",
+        resourceType: "AUTH",
+        status: AUDIT_SUCCESS,
+      });
+      return res.json({ access_token: accessToken, token_type: "bearer" });
+    }
+
+    const demoUser = getDemoUserByUsername(username);
+    if (!demoUser || demoUser.password !== password) {
+      throw new ApiError(401, "Incorrect username or password");
+    }
+
+    const accessToken = signAccessToken({
+      ...demoUser,
+      tier: "demo",
+      x402_balance: 1000,
+      email: `${demoUser.username}@wasi.local`,
+    });
+    writeAuditLog({
+      actorOverride: { id: demoUser.id, username: demoUser.username, role: demoUser.role },
+      action: "LOGIN",
+      resourceType: "AUTH",
+      status: AUDIT_SUCCESS,
+      detail: { mode: "demo" },
+    });
+    return res.json({ access_token: accessToken, token_type: "bearer" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/auth/me", requireAuth, (req, res) => {
+  const user = {
+    id: req.authUser.sub,
+    username: req.authUser.username,
+    email: req.authUser.email ?? null,
+    role: req.authUser.role ?? ROLE_CLIENT,
+    tier: req.authUser.tier ?? "free",
+    x402_balance: Number(req.authUser.x402_balance ?? 0),
+    is_active: true,
+    created_at: null,
+  };
+  res.json(user);
+});
+
+app.post("/api/chat", requireAuth, async (req, res, next) => {
+  try {
+    const messages = Array.isArray(req.body?.messages) ? req.body.messages : [];
+    const lastUserMessage = [...messages].reverse().find((message) => message?.role === "user");
+    const queryText = extractMessageText(
+      lastUserMessage?.content || req.body?.prompt || ""
+    ).slice(0, 400);
+
+    const responsePayload = await buildProviderChatResponse({
+      systemPrompt: req.body?.system,
+      messages,
+      queryText,
+      maxTokens: req.body?.max_tokens,
+    });
+    return res.json(responsePayload);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/platform/snapshot", requireAuth, (_req, res, next) => {
+  try {
+    const indices = buildCountryIndicesSnapshot();
+    const composite = Math.round(buildComposite(indices) * 10) / 10;
+    success(res, {
+      source: "wasi_platform_snapshot",
+      data_mode: "snapshot",
+      timestamp: new Date().toISOString(),
+      indices,
+      composite,
+      markets: getDexMarkets(),
+      commodities: COMMODITY_SNAPSHOT,
+      liveSignals: buildLiveSignals(),
+      newsEvents: NEWS_EVENT_SNAPSHOT,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/indices/latest", requireAuth, (_req, res, next) => {
+  try {
+    success(res, {
+      indices: buildCountryIndicesSnapshot(),
+      source: "wasi_platform_snapshot",
+      data_mode: "snapshot",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/indices/history", requireAuth, (req, res, next) => {
+  try {
+    const months = Number(req.query.months ?? 12);
+    res.json(buildIndicesHistory(months));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/country/:countryCode/history", requireAuth, (req, res, next) => {
+  try {
+    const countryCode = String(req.params.countryCode || "").trim().toUpperCase();
+    const months = Number(req.query.months ?? 12);
+    res.json(buildCountryHistory(countryCode, months));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/markets/latest", requireAuth, (_req, res, next) => {
+  try {
+    res.json({
+      source: "wasi_platform_snapshot",
+      data_mode: "snapshot",
+      timestamp: new Date().toISOString(),
+      markets: MARKET_BOARD_SNAPSHOT.map((market) => ({
+        ...market,
+        data_mode: "snapshot",
+        provider: "wasi_market_snapshot",
+      })),
+      products: FINANCIAL_PRODUCTS_SNAPSHOT,
+      coverage: {
+        exchanges: ["BRVM", "NGX", "GSE", "UMOA Titres"],
+        assetTypes: ["INDEX", "ETF", "BOND", "COMMODITY"],
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/markets/divergence", requireAuth, (_req, res, next) => {
+  try {
+    const indices = buildCountryIndicesSnapshot();
+    const rows = Object.entries(indices)
+      .map(([country_code, value]) => ({
+        country_code,
+        country_name: COUNTRY_NAMES[country_code] ?? country_code,
+        divergence_score: Math.round((value - 70) * 10) / 10,
+        trend: value >= 80 ? "OUTPERFORM" : value >= 65 ? "NEUTRAL" : "UNDERPERFORM",
+      }))
+      .sort((a, b) => b.divergence_score - a.divergence_score)
+      .slice(0, 10);
+    res.json(rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v2/signals/live", requireAuth, (_req, res, next) => {
+  try {
+    res.json({
+      source: "wasi_platform_snapshot",
+      data_mode: "snapshot",
+      timestamp: new Date().toISOString(),
+      signals: buildLiveSignals(),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v2/signals/events", requireAuth, (_req, res, next) => {
+  try {
+    res.json({
+      source: "wasi_platform_snapshot",
+      data_mode: "snapshot",
+      timestamp: new Date().toISOString(),
+      events: NEWS_EVENT_SNAPSHOT,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v2/data/commodities/latest", requireAuth, (req, res, next) => {
+  try {
+    const limit = Number(req.query.limit ?? 200);
+    const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 500) : 200;
+    res.json({
+      source: "wasi_platform_snapshot",
+      data_mode: "snapshot",
+      timestamp: new Date().toISOString(),
+      prices: COMMODITY_SNAPSHOT.slice(0, safeLimit),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v2/data/macro/:countryCode", requireAuth, (req, res, next) => {
+  try {
+    const countryCode = String(req.params.countryCode || "").trim().toUpperCase();
+    res.json(buildMacroByCountry(countryCode));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v2/bank/credit-context/:countryCode", requireAuth, (req, res, next) => {
+  try {
+    const countryCode = String(req.params.countryCode || "").trim().toUpperCase();
+    res.json(buildBankContext(countryCode));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v2/transport/mode-comparison/:countryCode", requireAuth, (req, res, next) => {
+  try {
+    const countryCode = String(req.params.countryCode || "").trim().toUpperCase();
+    res.json(buildTransportComparison(countryCode));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/ussd/aggregate/summary", requireAuth, (_req, res, next) => {
+  try {
+    res.json(buildUssdAggregateSummary());
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/api/v1/banking/auth/login", (req, res, next) => {
@@ -1364,7 +2352,43 @@ app.post("/api/v1/banking/auth/login", (req, res, next) => {
       throw new ApiError(400, "username and password are required.");
     }
 
-    const user = getUserByUsername(String(username));
+    const platformUser = getPlatformUserByUsername.get(String(username));
+    if (platformUser && Number(platformUser.is_active) === 1) {
+      if (platformUser.password_hash !== hashPassword(String(password))) {
+        throw new ApiError(401, "Invalid credentials.");
+      }
+      const accessToken = signAccessToken({
+        id: platformUser.id,
+        username: platformUser.username,
+        displayName: platformUser.username,
+        role: platformUser.role,
+        accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS],
+        tier: platformUser.tier,
+        x402_balance: Number(platformUser.x402_balance),
+        email: platformUser.email,
+      });
+      writeAuditLog({
+        actorOverride: { id: platformUser.id, username: platformUser.username, role: platformUser.role },
+        action: "LOGIN",
+        resourceType: "AUTH",
+        status: AUDIT_SUCCESS,
+        detail: { tokenExpiresIn: JWT_EXPIRES_IN },
+      });
+      success(res, {
+        accessToken,
+        tokenType: "Bearer",
+        user: {
+          id: platformUser.id,
+          username: platformUser.username,
+          displayName: platformUser.username,
+          role: platformUser.role,
+          accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS],
+        },
+      });
+      return;
+    }
+
+    const user = getDemoUserByUsername(String(username));
     if (!user || user.password !== String(password)) {
       writeAuditLog({
         actorOverride: { id: "anonymous", username: String(username), role: null },
@@ -1406,6 +2430,8 @@ app.get("/api/v1/banking/auth/me", requireAuth, (req, res) => {
     displayName: req.authUser.displayName,
     role: req.authUser.role,
     accountIds: req.authUser.accountIds,
+    tier: req.authUser.tier ?? "free",
+    x402_balance: Number(req.authUser.x402_balance ?? 0),
   });
 });
 
@@ -1983,5 +3009,5 @@ app.use((_req, res) => {
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`WASI Banking API listening on http://localhost:${PORT}`);
+  console.log(`WASI Platform API listening on http://localhost:${PORT}`);
 });

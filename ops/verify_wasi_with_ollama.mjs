@@ -152,6 +152,7 @@ Your task:
 2) Identify missing items, regressions, inconsistencies, and risks.
 3) Give precise file-level change recommendations.
 4) Prioritize by severity.
+5) Use deterministic facts from "computedFacts" as source of truth over speculation.
 
 Output strictly as JSON with this schema:
 {
@@ -223,6 +224,26 @@ async function run() {
   ]);
 
   const runtimeChecks = await getRuntimeChecks();
+  const buildResult = commandResults.find((item) => item.command.startsWith("npm"));
+  const serverFile = files.find((file) => file.path === "server/index.mjs")?.content || "";
+  const seedArrayMatch = serverFile.match(/const DEX_SEED_TOKENS = \[(.*?)\];/s);
+  const seedEtfCount = seedArrayMatch
+    ? (seedArrayMatch[1].match(/symbol:\s*"/g) || []).length
+    : null;
+  const dexMarketsProbe = runtimeChecks.find((check) =>
+    check.url.includes("/api/v1/dex/markets")
+  );
+  let runtimeDexCount = null;
+  try {
+    if (dexMarketsProbe?.ok) {
+      const parsed = JSON.parse(dexMarketsProbe.body);
+      runtimeDexCount = Array.isArray(parsed?.data?.markets)
+        ? parsed.data.markets.length
+        : null;
+    }
+  } catch {
+    runtimeDexCount = null;
+  }
 
   const auditPayload = {
     generatedAtUtc: new Date().toISOString(),
@@ -242,6 +263,15 @@ async function run() {
         "/api/v1/dex/orders",
         "/api/v1/dex/orders/:orderId/cancel",
       ],
+    },
+    computedFacts: {
+      npmBuildExitCode: buildResult?.exitCode ?? null,
+      npmBuildOk: buildResult?.ok ?? null,
+      seedEtfCount,
+      runtimeDexCount,
+      hasOrderForTypo: /orderFor\b/.test(
+        files.find((file) => file.path === "src/dex/DexApp.jsx")?.content || ""
+      ),
     },
   };
 
@@ -297,6 +327,32 @@ async function run() {
     throw new Error(`Failed to parse Ollama JSON: ${error.message}\nRaw:\n${rawContent}`);
   }
 
+  const sanityWarnings = [];
+  const allIssuesText = JSON.stringify(parsed).toLowerCase();
+  if (auditPayload.computedFacts.npmBuildOk === true && allIssuesText.includes("build failure")) {
+    sanityWarnings.push(
+      "Potential false positive: Report mentions build failure but computedFacts.npmBuildOk=true."
+    );
+  }
+  if (
+    auditPayload.computedFacts.seedEtfCount === 42 &&
+    (allIssuesText.includes("40 vs expected 42") ||
+      allIssuesText.includes("missing etf") ||
+      allIssuesText.includes("2 missing etf"))
+  ) {
+    sanityWarnings.push(
+      "Potential false positive: Report mentions missing ETF catalog items but computedFacts.seedEtfCount=42."
+    );
+  }
+  if (
+    auditPayload.computedFacts.hasOrderForTypo === false &&
+    allIssuesText.includes("orderfor")
+  ) {
+    sanityWarnings.push(
+      "Potential false positive: Report mentions 'orderFor' typo but computedFacts.hasOrderForTypo=false."
+    );
+  }
+
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const jsonPath = path.join(reportsDir, `wasi_ollama_verification_${stamp}.json`);
   const mdPath = path.join(reportsDir, `wasi_ollama_verification_${stamp}.md`);
@@ -310,6 +366,9 @@ async function run() {
     `- Model Used: \`${modelUsed}\``,
     `- Score: **${parsed.score ?? "n/a"}**`,
     `- Summary: ${parsed.summary ?? "n/a"}`,
+    ...(sanityWarnings.length
+      ? ["", `## Sanity Warnings`, ...sanityWarnings.map((warning) => `- ${warning}`)]
+      : []),
     ``,
     `## Critical`,
     ...(parsed.critical?.length
@@ -352,6 +411,9 @@ async function run() {
   console.log(`Model used: ${modelUsed}`);
   console.log(`Score: ${parsed.score ?? "n/a"}`);
   console.log(`Summary: ${parsed.summary ?? "n/a"}`);
+  if (sanityWarnings.length) {
+    console.log(`Sanity warnings: ${sanityWarnings.length}`);
+  }
 }
 
 run().catch((error) => {

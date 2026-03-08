@@ -19,8 +19,7 @@ start "WASI Fullstack" cmd /k "cd /d %WASI% && call start_fullstack.bat"
 
 echo Launch commands sent.
 echo.
-echo Banking app: http://localhost:3000/
-echo WASI terminal: http://localhost:3000/?app=wasi
+echo Single URL: http://localhost:3000
 echo FastAPI health: http://localhost:8000/api/health
 echo Banking API health: http://localhost:8010/api/health
 endlocal

@@ -1,26 +1,17 @@
+import { resolvePlatformApiBaseUrl } from "../../platform/apiResolver";
+
 // WASI backend API helpers
-const _RENDER_URL = "https://wasi-backend-api.onrender.com";
-const _IS_LOCAL_HOST =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1";
-const _STORED_URL = window.localStorage.getItem("WASI_API_URL");
-const _IS_BANKING_ONLY_API = (url) =>
-  typeof url === "string" &&
-  (/:8010(?:\/|$)/.test(url) || /\/api\/v1\/banking(?:\/|$)/i.test(url));
-const _SAFE_STORED_URL = _IS_BANKING_ONLY_API(_STORED_URL) ? null : _STORED_URL;
+export const BACKEND_API_URL = resolvePlatformApiBaseUrl();
 
-if (_STORED_URL && !_SAFE_STORED_URL) {
-  window.localStorage.removeItem("WASI_API_URL");
-}
+const unwrapData = (payload) => (payload && typeof payload === "object" && "data" in payload ? payload.data : payload);
+const SNAPSHOT_TAG = "snapshot";
 
-// Try 8001 first (wasi-backend-api), then 8000 fallback
-const _LOCAL_URL = `${window.location.protocol}//${window.location.hostname}:8001`;
-
-export const BACKEND_API_URL =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_WASI_API_URL) ||
-  window.WASI_API_URL ||
-  _SAFE_STORED_URL ||
-  (_IS_LOCAL_HOST ? _LOCAL_URL : _RENDER_URL);
+const toDataMode = (source) => {
+  const normalized = String(source || "").toLowerCase();
+  if (normalized.includes(SNAPSHOT_TAG)) return "snapshot";
+  if (normalized.includes("live") || normalized.includes("realtime")) return "live";
+  return "unknown";
+};
 
 // Fetch real indices from backend; returns { code: indexValue } map or null on failure
 export async function fetchBackendIndices(token) {
@@ -30,8 +21,13 @@ export async function fetchBackendIndices(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data.indices || null;
+    const data = unwrapData(await res.json());
+    return {
+      indices: data.indices || null,
+      source: data.source || "unknown",
+      timestamp: data.timestamp || null,
+      dataMode: data.data_mode || toDataMode(data.source),
+    };
   } catch (_) {
     return null;
   }
@@ -45,7 +41,7 @@ export async function fetchBackendComposite(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    const data = await res.json();
+    const data = unwrapData(await res.json());
     return data.length > 0 ? data[0].composite_value : null;
   } catch (_) {
     return null;
@@ -60,7 +56,21 @@ export async function fetchStockMarkets(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    return await res.json();
+    const data = unwrapData(await res.json());
+    if (Array.isArray(data)) {
+      return {
+        markets: data,
+        source: "unknown",
+        timestamp: null,
+        dataMode: "unknown",
+      };
+    }
+    return {
+      markets: data.markets || [],
+      source: data.source || "unknown",
+      timestamp: data.timestamp || null,
+      dataMode: data.data_mode || toDataMode(data.source),
+    };
   } catch (_) {
     return null;
   }
@@ -74,13 +84,14 @@ export async function fetchDivergence(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    return await res.json();
+    return unwrapData(await res.json());
   } catch (_) {
     return null;
   }
 }
 
 // Fetch live signals (base + adjustment + adjusted index per country)
+
 export async function fetchLiveSignals(token) {
   if (!token) return null;
   try {
@@ -88,17 +99,24 @@ export async function fetchLiveSignals(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    const data = await res.json();
-    // Return a map of country_code → signal object
+    const data = unwrapData(await res.json());
     const map = {};
-    (data.signals || []).forEach(s => { map[s.country_code] = s; });
-    return map;
+    (data.signals || []).forEach((signal) => {
+      map[signal.country_code] = signal;
+    });
+    return {
+      signals: map,
+      source: data.source || "unknown",
+      timestamp: data.timestamp || null,
+      dataMode: data.data_mode || toDataMode(data.source),
+    };
   } catch (_) {
     return null;
   }
 }
 
 // Fetch active news events
+
 export async function fetchNewsEvents(token) {
   if (!token) return null;
   try {
@@ -106,8 +124,13 @@ export async function fetchNewsEvents(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data.events || [];
+    const data = unwrapData(await res.json());
+    return {
+      events: data.events || [],
+      source: data.source || "unknown",
+      timestamp: data.timestamp || null,
+      dataMode: data.data_mode || toDataMode(data.source),
+    };
   } catch (_) {
     return null;
   }
@@ -120,13 +143,14 @@ export async function fetchBankContext(token, countryCode) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    return await res.json();
+    return unwrapData(await res.json());
   } catch (_) {
     return null;
   }
 }
 
 // Fetch commodity spot prices (expanded WASI commodity universe)
+
 export async function fetchCommodityPrices(token) {
   if (!token) return null;
   try {
@@ -134,8 +158,13 @@ export async function fetchCommodityPrices(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data.prices || [];
+    const data = unwrapData(await res.json());
+    return {
+      prices: data.prices || [],
+      source: data.source || "unknown",
+      timestamp: data.timestamp || null,
+      dataMode: data.data_mode || toDataMode(data.source),
+    };
   } catch (_) {
     return null;
   }
@@ -149,7 +178,7 @@ export async function fetchMacroData(token, countryCode) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    return await res.json();
+    return unwrapData(await res.json());
   } catch (_) {
     return null;
   }
@@ -162,7 +191,7 @@ export async function fetchUSSDAggregate(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    return await res.json();
+    return unwrapData(await res.json());
   } catch (_) {
     return null;
   }
@@ -181,7 +210,7 @@ export async function fetchHistoricalData(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    return await res.json();
+    return unwrapData(await res.json());
   } catch (_) {
     return null;
   }
@@ -195,7 +224,7 @@ export async function fetchCountryHistory(token, countryCode) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
-    return await res.json();
+    return unwrapData(await res.json());
   } catch (_) {
     return null;
   }

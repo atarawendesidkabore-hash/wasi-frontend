@@ -8,25 +8,30 @@
     "server": "node server/index.mjs",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
     "diagnose:all": "powershell -ExecutionPolicy Bypass -File .\\ops\\diagnose_all.ps1",
+    "release:gate": "node .\\ops\\release_gate.mjs",
     "verify:ollama": "node .\\ops\\verify_wasi_with_ollama.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "jest --runInBand"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^5.1.4",
     "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",
+    "decimal.js": "^10.6.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "@vitejs/plugin-react": "^5.1.4",
-    "decimal.js": "^10.6.0",
+    "lucide-react": "^0.577.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "autoprefixer": "^10.4.20",
     "concurrently": "^9.2.1",
     "jest": "^30.2.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
     "ts-jest": "^29.4.4",
     "typescript": "^5.9.2",
     "vite": "^6.4.1"

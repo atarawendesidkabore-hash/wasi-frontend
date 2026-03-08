@@ -1,34 +1,9 @@
-const DEFAULT_DEX_API_BASE_URL = "http://localhost:8010";
+import { resolvePlatformApiBaseUrl } from "../platform/apiResolver";
+
 const ACCESS_TOKEN_STORAGE_KEY = "WASI_BANKING_ACCESS_TOKEN";
 
 const resolveDexApiBaseUrl = () => {
-  const explicitWindowValue =
-    typeof window !== "undefined" &&
-    typeof window.WASI_DEX_API_URL === "string"
-      ? window.WASI_DEX_API_URL
-      : null;
-  const envValue =
-    typeof import.meta !== "undefined" &&
-    import.meta?.env &&
-    typeof import.meta.env.VITE_WASI_DEX_API_URL === "string"
-      ? import.meta.env.VITE_WASI_DEX_API_URL
-      : null;
-  const explicitStorageValue =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem("WASI_DEX_API_URL")
-      : null;
-  const sharedBankingValue =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem("WASI_BANKING_API_URL")
-      : null;
-
-  const baseUrl =
-    explicitWindowValue ||
-    envValue ||
-    explicitStorageValue ||
-    sharedBankingValue ||
-    DEFAULT_DEX_API_BASE_URL;
-  return baseUrl.replace(/\/+$/, "");
+  return resolvePlatformApiBaseUrl();
 };
 
 const getAccessToken = () => {
@@ -152,4 +127,3 @@ export const cancelDexOrder = async (
     idempotencyKey,
     body: JSON.stringify({}),
   });
-

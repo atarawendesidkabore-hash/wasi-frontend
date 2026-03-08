@@ -8,6 +8,15 @@
   mobilePanel,
   onMobilePanelChange,
 }) {
+  const isLive = backendConnected && dataSource === "live";
+  const isSnapshot = backendConnected && dataSource === "snapshot";
+  const statusText = isLive
+    ? "EN DIRECT | TEMPS REEL"
+    : isSnapshot
+      ? "SNAPSHOT | VERIFIER SOURCES"
+      : "SIMULATION";
+  const statusColor = isLive ? "#00ff84" : "#f0b429";
+
   const tabs = [
     { id: "left", label: "INDICES", icon: "IDX" },
     { id: "center", label: "CHAT", icon: "CHAT" },
@@ -39,9 +48,9 @@
           <div style={{ width: 1, height: 36, background: "#0f2a45" }} />
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div className="live-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: backendConnected ? "#4ade80" : "#f0b429" }} />
-              <span style={{ fontSize: 14, color: backendConnected ? "#4ade80" : "#f0b429", letterSpacing: 2 }}>
-                {backendConnected ? `EN DIRECT | ${dataSource === "live" ? "TEMPS REEL" : "SIMULATION"}` : "SIMULATION"}
+              <div className="live-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor }} />
+              <span style={{ fontSize: 14, color: statusColor, letterSpacing: 2 }}>
+                {statusText}
               </span>
             </div>
             <div style={{ fontSize: 28, fontFamily: "'Bebas Neue', sans-serif", color: wasiTrend.color, letterSpacing: 2 }}>
@@ -65,16 +74,16 @@
           <div
             style={{
               padding: "6px 14px",
-              background: backendConnected && dataSource === "live" ? "rgba(74,222,128,0.08)" : "rgba(240,180,41,0.10)",
-              border: `1px solid ${backendConnected && dataSource === "live" ? "#4ade8044" : "#f0b42966"}`,
+              background: isLive ? "rgba(0,255,132,0.08)" : "rgba(240,180,41,0.10)",
+              border: `1px solid ${isLive ? "#00ff8444" : "#f0b42966"}`,
               borderRadius: 4,
               fontSize: 14,
-              color: backendConnected && dataSource === "live" ? "#4ade80" : "#f0b429",
+              color: statusColor,
               fontFamily: "'Space Mono', monospace",
               letterSpacing: 1,
             }}
           >
-            {backendConnected && dataSource === "live" ? "DONNEES LIVE" : "DEMO"}
+            {isLive ? "DONNEES LIVE" : isSnapshot ? "DONNEES SNAPSHOT" : "DEMO"}
           </div>
 
           {onLogout ? (
@@ -112,7 +121,7 @@
           <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, letterSpacing: 4, color: "#f0b429", lineHeight: 1 }}>
             WASI
           </div>
-          <div className="live-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: backendConnected ? "#4ade80" : "#f0b429" }} />
+          <div className="live-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor }} />
           <span style={{ fontSize: 20, fontFamily: "'Bebas Neue', sans-serif", color: wasiTrend.color, letterSpacing: 2 }}>
             {wasiComposite}
           </span>
