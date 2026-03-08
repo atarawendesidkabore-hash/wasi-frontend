@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { SidebarDetailModal } from "./src/wasi/components/SidebarDetailModal";
 import { LoginPage } from "./src/wasi/components/LoginPage";
 import { CountryDashboard } from "./src/wasi/components/CountryDashboard";
@@ -15,6 +15,7 @@ import {
   fetchLiveSignals,
   fetchNewsEvents,
   fetchBankContext,
+  normalizeTransportComparison,
   fetchCommodityPrices,
   fetchMacroData,
   fetchUSSDAggregate,
@@ -36,11 +37,11 @@ import {
 } from "./src/wasi/config/wasiData";
 
 // ============================================================
-// WASI AI AGENT — West African Shipping & Economic Intelligence
+// WASI AI AGENT â€” West African Shipping & Economic Intelligence
 // Powered by Claude AI | ECOWAS 16 Nations
 // ============================================================
 
-// ── Backend API Integration ───────────────────────────────────────────────────
+// â”€â”€ Backend API Integration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Configurable: set window.WASI_API_URL before loading, or falls back to same-origin :8000
 const FALLBACK_COUNTRY_INDICES = {
   CI: 89, GH: 88, TG: 82, SN: 79, NG: 77, BF: 71, ML: 68, GN: 65,
@@ -101,7 +102,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
 
   const resolveDataSourceMode = (...payloads) => {
     const modes = payloads
-      .map((payload) => String(payload?.dataMode || "").toLowerCase())
+      .map((payload) => String(payload.dataMode || "").toLowerCase())
       .filter(Boolean);
     if (modes.includes("live")) return "live";
     if (modes.includes("snapshot")) return "snapshot";
@@ -138,15 +139,15 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
 
   const parseDexPayload = async (response) => {
     const payload = await response.json().catch(() => null);
-    if (!response.ok || !payload?.success) {
-      throw new Error(payload?.error || `HTTP ${response.status}`);
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.error || `HTTP ${response.status}`);
     }
     return payload.data;
   };
 
   const parseDexPriceToCentimes = (amountInput) => {
     const normalized = String(amountInput || "").trim().replace(",", ".");
-    if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+    if (!/^\d+(\.\d{1,2})$/.test(normalized)) {
       throw new Error("Prix limite invalide.");
     }
     const [wholePart, fractionalPart = ""] = normalized.split(".");
@@ -182,12 +183,12 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
       setDexRecentTrades(trades);
 
       const effectiveSymbol =
-        symbolOverride || dexSelectedSymbol || markets[0]?.symbol || "WASI-COMP";
+        symbolOverride || dexSelectedSymbol || markets[0].symbol || "WASI-COMP";
       setDexSelectedSymbol(effectiveSymbol);
       setDexOrderForm((previous) => ({ ...previous, symbol: effectiveSymbol }));
 
       const bookResponse = await fetchWithApiFailover(
-        `/api/v1/dex/orderbook/${encodeURIComponent(effectiveSymbol)}?depth=12`,
+        `/api/v1/dex/orderbook/${encodeURIComponent(effectiveSymbol)}depth=12`,
         { headers: commonHeaders }
       );
       const bookPayload = await parseDexPayload(bookResponse);
@@ -248,7 +249,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
       }
       setDexOrderForm((previous) => ({ ...previous, quantityUnits: "" }));
       setDexError("");
-      const successMessage = payload?.order?.id
+      const successMessage = payload.order?.id
         ? `Ordre ${payload.order.id.slice(0, 8)} soumis.`
         : "Ordre soumis.";
       setDexLastAction(successMessage);
@@ -292,7 +293,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
     }
   };
 
-  // ── Connect to backend when authToken is available ────────────────────────
+  // â”€â”€ Connect to backend when authToken is available â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     let cancelled = false;
     async function connectBackend() {
@@ -304,7 +305,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
       // Fetch real indices
       const realIndicesPayload = await fetchBackendIndices(token);
       if (cancelled) return;
-      if (realIndicesPayload?.indices && Object.keys(realIndicesPayload.indices).length > 0) {
+      if (realIndicesPayload.indices && Object.keys(realIndicesPayload.indices).length > 0) {
         // Merge backend real data with deterministic fallback for countries not yet in backend
         const merged = { ...FALLBACK_COUNTRY_INDICES, ...realIndicesPayload.indices };
         setIndices(merged);
@@ -317,7 +318,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
         setWasiComposite(Math.round(composite));
       }
 
-      // Fetch historical port data (CI / Abidjan — 5 years)
+      // Fetch historical port data (CI / Abidjan â€” 5 years)
       const hist = await fetchHistoricalData(token);
       if (cancelled) return;
       if (hist && hist.length > 0) setHistoricalData(hist);
@@ -325,27 +326,27 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
       // Fetch stock market data (NGX, GSE, BRVM)
       const stocksPayload = await fetchStockMarkets(token);
       if (cancelled) return;
-      if (stocksPayload?.markets && stocksPayload.markets.length > 0) setStockMarkets(stocksPayload.markets);
+      if (stocksPayload.markets && stocksPayload.markets.length > 0) setStockMarkets(stocksPayload.markets);
 
       // Fetch divergence signals
       const divs = await fetchDivergence(token);
       if (cancelled) return;
       if (divs && divs.length > 0) setDivergenceSignals(divs);
 
-      // Fetch live signals (v2) — base + news adjustment per country
+      // Fetch live signals (v2) â€” base + news adjustment per country
       const signalsPayload = await fetchLiveSignals(token);
       if (cancelled) return;
-      if (signalsPayload?.signals && Object.keys(signalsPayload.signals).length > 0) setLiveSignals(signalsPayload.signals);
+      if (signalsPayload.signals && Object.keys(signalsPayload.signals).length > 0) setLiveSignals(signalsPayload.signals);
 
       // Fetch active news events (v2)
       const eventsPayload = await fetchNewsEvents(token);
       if (cancelled) return;
-      if (eventsPayload?.events) setNewsEvents(eventsPayload.events);
+      if (eventsPayload.events) setNewsEvents(eventsPayload.events);
 
       // Fetch commodity prices (WB Pink Sheet)
       const commoditiesPayload = await fetchCommodityPrices(token);
       if (cancelled) return;
-      if (commoditiesPayload?.prices && commoditiesPayload.prices.length > 0) {
+      if (commoditiesPayload.prices && commoditiesPayload.prices.length > 0) {
         setCommodityPrices(commoditiesPayload.prices);
       }
 
@@ -370,7 +371,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
     return () => { cancelled = true; };
   }, [authToken]);
 
-  // ── Periodic refresh (simulation fallback if backend down) ────────────────
+  // â”€â”€ Periodic refresh (simulation fallback if backend down) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     setWasiComposite(prev => prev || calcWASI(indices));
     const interval = setInterval(async () => {
@@ -391,16 +392,16 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
           fetchCommodityPrices(backendToken),
         ]);
 
-        if (realIndicesPayload?.indices && Object.keys(realIndicesPayload.indices).length > 0) {
+        if (realIndicesPayload.indices && Object.keys(realIndicesPayload.indices).length > 0) {
           const merged = { ...FALLBACK_COUNTRY_INDICES, ...realIndicesPayload.indices };
           setIndices(merged);
         }
 
         if (composite !== null) setWasiComposite(Math.round(composite));
-        if (stocksPayload?.markets && stocksPayload.markets.length > 0) setStockMarkets(stocksPayload.markets);
-        if (signalsPayload?.signals && Object.keys(signalsPayload.signals).length > 0) setLiveSignals(signalsPayload.signals);
-        if (eventsPayload?.events) setNewsEvents(eventsPayload.events);
-        if (commoditiesPayload?.prices && commoditiesPayload.prices.length > 0) {
+        if (stocksPayload.markets && stocksPayload.markets.length > 0) setStockMarkets(stocksPayload.markets);
+        if (signalsPayload.signals && Object.keys(signalsPayload.signals).length > 0) setLiveSignals(signalsPayload.signals);
+        if (eventsPayload.events) setNewsEvents(eventsPayload.events);
+        if (commoditiesPayload.prices && commoditiesPayload.prices.length > 0) {
           setCommodityPrices(commoditiesPayload.prices);
         }
 
@@ -440,16 +441,19 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
     if (transportCache[code]) return; // already cached
     (async () => {
       try {
-        const res = await fetch(`${BACKEND_API_URL}/api/v2/transport/mode-comparison/${code}`, {
+        const res = await fetchWithApiFailover(`/api/v2/transport/mode-comparison/${code}`, {
           headers: { Authorization: `Bearer ${backendToken}` },
         });
         if (res.ok) {
-          const data = await res.json();
-          setTransportCache(prev => ({ ...prev, [code]: data }));
+          const payload = await res.json();
+          const data = normalizeTransportComparison(payload, code);
+          if (data) {
+            setTransportCache(prev => ({ ...prev, [code]: data }));
+          }
         }
       } catch (_) {}
     })();
-  }, [selectedCountry, backendToken]);
+  }, [selectedCountry, backendToken, activeApiUrl]);
 
   // Fetch IMF WEO macro data whenever a country is selected
   useEffect(() => {
@@ -476,7 +480,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
     (async () => {
       try {
         const response = await fetchWithApiFailover(
-          `/api/v1/dex/orderbook/${encodeURIComponent(dexSelectedSymbol)}?depth=12`,
+          `/api/v1/dex/orderbook/${encodeURIComponent(dexSelectedSymbol)}depth=12`,
           { headers: { Authorization: `Bearer ${backendToken}` } }
         );
         const payload = await parseDexPayload(response);
@@ -548,17 +552,19 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
         })
       });
       const data = await response.json();
-      const rawReply = data.content?.[0]?.text || "Agent WASI temporairement indisponible. Veuillez réessayer.";
+      const rawReply =
+        data?.content?.[0]?.text ||
+        "Agent WASI temporairement indisponible. Veuillez réessayer.";
       const reply = enforceWasiAssistantGuardrails(query, rawReply);
       setMessages(m => [...m, { role: "assistant", content: reply }]);
     } catch (err) {
-      setMessages(m => [...m, { role: "assistant", content: `Erreur de connexion. Agent WASI hors ligne. Detail: ${err?.message || "API inaccessible"}` }]);
+      setMessages(m => [...m, { role: "assistant", content: `Erreur de connexion. Agent WASI hors ligne. Detail: ${err.message || "API inaccessible"}` }]);
     }
     setLoading(false);
   };
 
   const handleCountryToggle = (country) => {
-    const next = selectedCountry?.code === country.code ? null : country;
+    const next = selectedCountry.code === country.code ? null : country;
     setShowUSSDPanel(false);
     setSelectedCountry(next);
     if (next) setShowDashboard(true);
@@ -697,3 +703,4 @@ export default function App() {
     />
   );
 }
+

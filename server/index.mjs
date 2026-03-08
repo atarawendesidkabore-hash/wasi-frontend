@@ -494,6 +494,145 @@ const MACRO_COUNTRY_SNAPSHOT = {
   CV: { gdp_growth: 4.3, inflation: 2.1, debt_to_gdp: 114.0, current_account: -8.2 },
 };
 
+const TRANSPORT_PROFILE_WEIGHTS = {
+  COASTAL_MAJOR: { maritime: 0.35, air: 0.25, rail: 0.05, road: 0.35 },
+  COASTAL_TRANSIT: { maritime: 0.3, air: 0.15, rail: 0.05, road: 0.5 },
+  LANDLOCKED_RAIL: { maritime: 0.05, air: 0.15, rail: 0.35, road: 0.45 },
+  LANDLOCKED_ROAD: { maritime: 0.05, air: 0.15, rail: 0.05, road: 0.75 },
+  COASTAL_MINING: { maritime: 0.25, air: 0.15, rail: 0.1, road: 0.5 },
+  SMALL_COASTAL: { maritime: 0.4, air: 0.3, rail: 0.0, road: 0.3 },
+};
+
+const TRANSPORT_COUNTRY_SNAPSHOT = {
+  NG: {
+    profile: "COASTAL_MAJOR",
+    modes: { maritime: 78, air: 86, rail: 32, road: 82 },
+    roadSource: "NBS exports corridor + CBN fuel trucking proxy",
+    roadQuality: "A",
+  },
+  CI: {
+    profile: "COASTAL_MAJOR",
+    modes: { maritime: 84, air: 93, rail: 58, road: 76 },
+    roadSource: "DGD CI + Port d'Abidjan hinterland transit",
+    roadQuality: "A",
+  },
+  GH: {
+    profile: "COASTAL_MAJOR",
+    modes: { maritime: 72, air: 88, rail: 30, road: 79 },
+    roadSource: "GSS Ghana + Ghana Ports hinterland",
+    roadQuality: "A",
+  },
+  SN: {
+    profile: "COASTAL_MAJOR",
+    modes: { maritime: 75, air: 82, rail: 28, road: 74 },
+    roadSource: "ANSD Tableau 6 + Port de Dakar dispatch",
+    roadQuality: "B",
+  },
+  BJ: {
+    profile: "COASTAL_TRANSIT",
+    modes: { maritime: 68, air: 61, rail: 29, road: 74 },
+    roadSource: "INStaD transit Niger + Port de Cotonou",
+    roadQuality: "A",
+  },
+  TG: {
+    profile: "COASTAL_TRANSIT",
+    modes: { maritime: 71, air: 64, rail: 27, road: 78 },
+    roadSource: "Port de Lome destination transit + INSEED Togo",
+    roadQuality: "A",
+  },
+  BF: {
+    profile: "LANDLOCKED_RAIL",
+    modes: { maritime: 41, air: 52, rail: 69, road: 72 },
+    roadSource: "DGD BF multi-corridor transit + SONABHY fuel proxy",
+    roadQuality: "A",
+  },
+  ML: {
+    profile: "LANDLOCKED_ROAD",
+    modes: { maritime: 38, air: 48, rail: 24, road: 68 },
+    roadSource: "Dakar/Bamako and Abidjan/Bamako corridor proxies",
+    roadQuality: "B",
+  },
+  NE: {
+    profile: "LANDLOCKED_ROAD",
+    modes: { maritime: 36, air: 46, rail: 20, road: 66 },
+    roadSource: "INStaD Benin transit + WAPCo pipeline cross-check",
+    roadQuality: "A",
+  },
+  GN: {
+    profile: "COASTAL_MINING",
+    modes: { maritime: 70, air: 63, rail: 35, road: 71 },
+    roadSource: "SMB-Winning logistics + BCRG trade flow proxy",
+    roadQuality: "B",
+  },
+  MR: {
+    profile: "COASTAL_MINING",
+    modes: { maritime: 66, air: 57, rail: 33, road: 65 },
+    roadSource: "PANPA hinterland + ONS Mauritanie transit proxy",
+    roadQuality: "B",
+  },
+  SL: {
+    profile: "COASTAL_MINING",
+    modes: { maritime: 53, air: 49, rail: 19, road: 56 },
+    roadSource: "Commodity logistics proxy (rutile/iron corridors)",
+    roadQuality: "C",
+  },
+  LR: {
+    profile: "COASTAL_MINING",
+    modes: { maritime: 54, air: 46, rail: 18, road: 58 },
+    roadSource: "Commodity logistics proxy (rubber/iron corridors)",
+    roadQuality: "C",
+  },
+  GW: {
+    profile: "SMALL_COASTAL",
+    modes: { maritime: 45, air: 42, rail: 15, road: 50 },
+    roadSource: "Customs/fuel proxy (low-frequency reporting)",
+    roadQuality: "C",
+  },
+  GM: {
+    profile: "SMALL_COASTAL",
+    modes: { maritime: 52, air: 47, rail: 14, road: 55 },
+    roadSource: "Customs/fuel proxy (cross-border trucks)",
+    roadQuality: "C",
+  },
+  CV: {
+    profile: "SMALL_COASTAL",
+    modes: { maritime: 60, air: 68, rail: 8, road: 48 },
+    roadSource: "Import/fuel proxy + airport/port dispatch blend",
+    roadQuality: "B",
+  },
+};
+
+const clampTransportIndex = (value) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.min(100, Math.round(parsed * 10) / 10));
+};
+
+const deriveTransportTrend = (index) => {
+  if (index >= 75) return "POSITIVE";
+  if (index >= 55) return "STABLE";
+  return "PRESSURED";
+};
+
+const defaultTransportModeSources = {
+  maritime: {
+    source: "WASI Shipping Index snapshot (port activity)",
+    quality: "B",
+  },
+  air: {
+    source: "Airport authority + ASECNA blended snapshot",
+    quality: "B",
+  },
+  rail: {
+    source: "SITARAIL and corridor rail proxy",
+    quality: "B",
+  },
+  road: {
+    source: "Customs transit + port hinterland + fuel + OPA proxy",
+    quality: "B",
+  },
+};
+
 const sanitizeUser = (user) => ({
   id: user.id,
   username: user.username,
@@ -1738,15 +1877,72 @@ const buildBankContext = (countryCode) => {
 const buildTransportComparison = (countryCode) => {
   const safeCode = String(countryCode || "").trim().toUpperCase();
   const base = Number(buildCountryIndicesSnapshot()[safeCode] ?? 60);
+  const snapshot = TRANSPORT_COUNTRY_SNAPSHOT[safeCode] ?? null;
+  const profile = snapshot?.profile ?? "COASTAL_MAJOR";
+  const weights =
+    TRANSPORT_PROFILE_WEIGHTS[profile] ??
+    TRANSPORT_PROFILE_WEIGHTS.COASTAL_MAJOR;
+
+  const maritimeIndex = clampTransportIndex(
+    snapshot?.modes?.maritime ?? Math.round(base + 4)
+  );
+  const airIndex = clampTransportIndex(
+    snapshot?.modes?.air ?? Math.round(base - 2)
+  );
+  const railIndex = clampTransportIndex(
+    snapshot?.modes?.rail ?? Math.round(base - 10)
+  );
+  const roadIndex = clampTransportIndex(
+    snapshot?.modes?.road ?? Math.round(base + 1)
+  );
+
+  const transportComposite = clampTransportIndex(
+    maritimeIndex * weights.maritime +
+      airIndex * weights.air +
+      railIndex * weights.rail +
+      roadIndex * weights.road
+  );
+
+  const nowIso = new Date().toISOString();
   return {
     country_code: safeCode,
-    maritime: { score: Math.round(base + 8), trend: "POSITIVE" },
-    air: { score: Math.round(base - 6), trend: "STABLE" },
-    rail: { score: Math.round(base - 3), trend: "STABLE" },
-    road: { score: Math.round(base + 2), trend: "POSITIVE" },
-    composite: Math.round((base + 8 + (base - 6) + (base - 3) + (base + 2)) / 4),
-    source: "wasi_platform_snapshot",
-    timestamp: new Date().toISOString(),
+    transport_composite: transportComposite,
+    country_profile: profile,
+    profile_weights: weights,
+    effective_weights: weights,
+    methodology_version: "road-air-rail-v1.1",
+    data_mode: "snapshot",
+    source: "wasi_transport_snapshot",
+    source_note:
+      "Road index from customs transit + hinterland + fuel proxy, with corridor quality grading.",
+    timestamp: nowIso,
+    last_updated: nowIso,
+    modes: {
+      maritime: {
+        index: maritimeIndex,
+        trend: deriveTransportTrend(maritimeIndex),
+        source: defaultTransportModeSources.maritime.source,
+        quality: defaultTransportModeSources.maritime.quality,
+      },
+      air: {
+        index: airIndex,
+        trend: deriveTransportTrend(airIndex),
+        source: defaultTransportModeSources.air.source,
+        quality: defaultTransportModeSources.air.quality,
+      },
+      rail: {
+        index: railIndex,
+        trend: deriveTransportTrend(railIndex),
+        source: defaultTransportModeSources.rail.source,
+        quality: defaultTransportModeSources.rail.quality,
+      },
+      road: {
+        index: roadIndex,
+        trend: deriveTransportTrend(roadIndex),
+        source: snapshot?.roadSource ?? defaultTransportModeSources.road.source,
+        quality: snapshot?.roadQuality ?? defaultTransportModeSources.road.quality,
+      },
+    },
   };
 };
 

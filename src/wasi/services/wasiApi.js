@@ -13,6 +13,94 @@ const toDataMode = (source) => {
   return "unknown";
 };
 
+const normalizeTransportMode = (mode) => {
+  const rawIndex =
+    mode?.index ?? mode?.score ?? (typeof mode === "number" ? mode : null);
+  const index = Number(rawIndex);
+  return {
+    index: Number.isFinite(index) ? index : null,
+    trend: mode?.trend || "UNKNOWN",
+    source: mode?.source || null,
+    quality: mode?.quality || null,
+  };
+};
+
+/**
+ * Normalize transport comparison payloads across legacy/new backend formats.
+ * @param {unknown} payload
+ * @param {string} countryCode
+ * @returns {{
+ * country_code: string,
+ * transport_composite: number|null,
+ * country_profile: string,
+ * profile_weights: Record<string, number>|null,
+ * effective_weights: Record<string, number>|null,
+ * modes: {
+ * maritime: {index:number|null,trend:string,source:string|null,quality:string|null},
+ * air: {index:number|null,trend:string,source:string|null,quality:string|null},
+ * rail: {index:number|null,trend:string,source:string|null,quality:string|null},
+ * road: {index:number|null,trend:string,source:string|null,quality:string|null},
+ * },
+ * source: string,
+ * data_mode: string,
+ * timestamp: string|null,
+ * last_updated: string|null,
+ * methodology_version: string|null,
+ * source_note: string|null,
+ * }|null}
+ */
+export const normalizeTransportComparison = (payload, countryCode) => {
+  const data = unwrapData(payload);
+  if (!data || typeof data !== "object") return null;
+
+  const fallbackModes = {
+    maritime: data.maritime,
+    air: data.air,
+    rail: data.rail,
+    road: data.road,
+  };
+
+  const rawModes =
+    data.modes && typeof data.modes === "object" ? data.modes : fallbackModes;
+
+  const transportCompositeRaw =
+    data.transport_composite ?? data.composite ?? data.index ?? null;
+  const transportComposite = Number(transportCompositeRaw);
+
+  const normalizedCountryCode = String(
+    data.country_code || countryCode || ""
+  ).toUpperCase();
+  const profileWeights =
+    data.profile_weights && typeof data.profile_weights === "object"
+      ? data.profile_weights
+      : null;
+
+  return {
+    country_code: normalizedCountryCode,
+    transport_composite: Number.isFinite(transportComposite)
+      ? transportComposite
+      : null,
+    country_profile: String(data.country_profile || data.profile || "UNKNOWN"),
+    profile_weights: profileWeights,
+    effective_weights:
+      (data.effective_weights && typeof data.effective_weights === "object"
+        ? data.effective_weights
+        : profileWeights) || null,
+    modes: {
+      maritime: normalizeTransportMode(rawModes?.maritime),
+      air: normalizeTransportMode(rawModes?.air),
+      rail: normalizeTransportMode(rawModes?.rail),
+      road: normalizeTransportMode(rawModes?.road),
+    },
+    source: String(data.source || "unknown"),
+    data_mode: data.data_mode || toDataMode(data.source),
+    timestamp: data.timestamp || null,
+    last_updated: data.last_updated || data.timestamp || null,
+    methodology_version: data.methodology_version || null,
+    source_note: data.source_note || null,
+  };
+};
+
 // Fetch real indices from backend; returns { code: indexValue } map or null on failure
 export async function fetchBackendIndices(token) {
   if (!token) return null;
@@ -144,6 +232,26 @@ export async function fetchBankContext(token, countryCode) {
     });
     if (!res.ok) return null;
     return unwrapData(await res.json());
+  } catch (_) {
+    return null;
+  }
+}
+
+// Fetch transport mode comparison (road/air/rail/maritime)
+export async function fetchTransportComparison(token, countryCode) {
+  if (!token || !countryCode) return null;
+  try {
+    const res = await fetch(
+      `${BACKEND_API_URL}/api/v2/transport/mode-comparison/${encodeURIComponent(
+        String(countryCode).toUpperCase()
+      )}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    if (!res.ok) return null;
+    const payload = await res.json();
+    return normalizeTransportComparison(payload, countryCode);
   } catch (_) {
     return null;
   }
