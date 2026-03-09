@@ -1,5 +1,11 @@
 import cors from "cors";
-import { createHash, randomUUID } from "node:crypto";
+import {
+  createHash,
+  randomBytes,
+  randomUUID,
+  scryptSync,
+  timingSafeEqual,
+} from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,15 +45,51 @@ const loadLocalEnv = () => {
 
 loadLocalEnv();
 
+const toBool = (value, fallback = false) => {
+  if (value === undefined || value === null || value === "") return fallback;
+  const normalized = String(value).trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(normalized)) return true;
+  if (["0", "false", "no", "off"].includes(normalized)) return false;
+  return fallback;
+};
+
+const parseCsvValues = (value) =>
+  String(value || "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
 const PORT = Number(process.env.BANKING_API_PORT ?? process.env.PORT ?? 8010);
 const MAX_SAFE_AMOUNT_CENTIMES = BigInt(Number.MAX_SAFE_INTEGER);
 const MAX_IDEMPOTENCY_KEY_LENGTH = 128;
-const JWT_SECRET = process.env.BANKING_JWT_SECRET ?? "wasi-dev-insecure-secret";
-const JWT_EXPIRES_IN = process.env.BANKING_JWT_EXPIRES_IN ?? "12h";
 const IS_PRODUCTION = String(process.env.NODE_ENV || "").toLowerCase() === "production";
-const ALLOW_DEMO_CREDENTIALS = String(
-  process.env.WASI_ALLOW_DEMO_USERS ?? (IS_PRODUCTION ? "false" : "true")
-).toLowerCase() === "true";
+const JWT_SECRET_FROM_ENV = String(process.env.BANKING_JWT_SECRET || "").trim();
+if (IS_PRODUCTION && !JWT_SECRET_FROM_ENV) {
+  throw new Error("BANKING_JWT_SECRET must be configured in production.");
+}
+const JWT_SECRET = JWT_SECRET_FROM_ENV || randomBytes(32).toString("hex");
+const JWT_EXPIRES_IN = process.env.BANKING_JWT_EXPIRES_IN ?? "12h";
+const PASSWORD_PEPPER = String(process.env.BANKING_PASSWORD_PEPPER || "");
+const AUTH_RATE_LIMIT_WINDOW_MS = Number(
+  process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000
+);
+const AUTH_RATE_LIMIT_MAX_ATTEMPTS = Number(
+  process.env.AUTH_RATE_LIMIT_MAX_ATTEMPTS ?? 8
+);
+const PASSWORD_HASH_KEY_LENGTH = 64;
+const PASSWORD_HASH_VERSION = "scrypt-v1";
+const LEGACY_DEFAULT_DEV_PASSWORD_SECRET = !IS_PRODUCTION
+  ? "wasi-dev-insecure-secret"
+  : "";
+const LEGACY_PASSWORD_SECRETS = [
+  process.env.LEGACY_PASSWORD_SECRET,
+  process.env.BANKING_JWT_SECRET,
+  LEGACY_DEFAULT_DEV_PASSWORD_SECRET,
+]
+  .map((value) => String(value || "").trim())
+  .filter(Boolean)
+  .filter((value, index, array) => array.indexOf(value) === index);
+const CORS_ALLOWED_ORIGINS = new Set(parseCsvValues(process.env.CORS_ALLOWED_ORIGINS));
 const DB_PATH =
   process.env.BANKING_DB_PATH ??
   path.join(__dirname, "data", "wasi_banking.sqlite");
@@ -86,6 +128,13 @@ const DEX_STATUS_OPEN = "OPEN";
 const DEX_STATUS_PARTIAL = "PARTIAL";
 const DEX_STATUS_FILLED = "FILLED";
 const DEX_STATUS_CANCELLED = "CANCELLED";
+
+if (!JWT_SECRET_FROM_ENV && !IS_PRODUCTION) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "BANKING_JWT_SECRET not set. Using an ephemeral development secret for this process."
+  );
+}
 
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
@@ -249,6 +298,54 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_dex_trades_user_time
   ON dex_trades(buyer_user_id, seller_user_id, created_at_utc DESC);
+
+  CREATE TABLE IF NOT EXISTS syscohada_accounts (
+    code TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    class_number INTEGER NOT NULL CHECK (class_number BETWEEN 1 AND 8),
+    category TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('DEBIT','CREDIT','BOTH')),
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at_utc TEXT NOT NULL,
+    updated_at_utc TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_syscohada_accounts_class
+  ON syscohada_accounts(class_number, code);
+
+  CREATE TABLE IF NOT EXISTS accounting_journal_entries (
+    id TEXT PRIMARY KEY,
+    reference TEXT NOT NULL UNIQUE,
+    module_source TEXT NOT NULL,
+    description TEXT NOT NULL,
+    entry_date_utc TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('POSTED','DRAFT')),
+    total_debit_centimes TEXT NOT NULL,
+    total_credit_centimes TEXT NOT NULL,
+    created_at_utc TEXT NOT NULL,
+    updated_at_utc TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_accounting_entries_date
+  ON accounting_journal_entries(entry_date_utc DESC, created_at_utc DESC);
+
+  CREATE TABLE IF NOT EXISTS accounting_journal_lines (
+    id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL,
+    account_code TEXT NOT NULL,
+    line_label TEXT NOT NULL,
+    debit_centimes TEXT NOT NULL,
+    credit_centimes TEXT NOT NULL,
+    created_at_utc TEXT NOT NULL,
+    FOREIGN KEY (entry_id) REFERENCES accounting_journal_entries(id),
+    FOREIGN KEY (account_code) REFERENCES syscohada_accounts(code)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_accounting_lines_entry
+  ON accounting_journal_lines(entry_id);
+
+  CREATE INDEX IF NOT EXISTS idx_accounting_lines_account
+  ON accounting_journal_lines(account_code, created_at_utc DESC);
 `);
 
 const ensureDexSchema = () => {
@@ -280,11 +377,11 @@ const ACCOUNT_ID_MAIN = "fd43f43e-d0f7-4be3-9769-34bd4eebbc0b";
 const ACCOUNT_ID_SAVINGS = "05729563-6d54-4742-9d16-d2f29e5fd2e9";
 const ACCOUNT_ID_BUSINESS = "7f3ec2be-3f2d-4994-9fdc-9603d2f12950";
 
-const AUTH_USERS = [
+const DEMO_USER_DEFINITIONS = [
   {
     id: "usr-client-demo",
     username: "client_demo",
-    password: "client123",
+    passwordEnv: "WASI_DEMO_CLIENT_PASSWORD",
     displayName: "Client Demo",
     role: ROLE_CLIENT,
     accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS],
@@ -292,7 +389,7 @@ const AUTH_USERS = [
   {
     id: "usr-teller-demo",
     username: "teller_demo",
-    password: "teller123",
+    passwordEnv: "WASI_DEMO_TELLER_PASSWORD",
     displayName: "Teller Demo",
     role: ROLE_TELLER,
     accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS, ACCOUNT_ID_BUSINESS],
@@ -300,12 +397,32 @@ const AUTH_USERS = [
   {
     id: "usr-manager-demo",
     username: "manager_demo",
-    password: "manager123",
+    passwordEnv: "WASI_DEMO_MANAGER_PASSWORD",
     displayName: "Manager Demo",
     role: ROLE_MANAGER,
     accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS, ACCOUNT_ID_BUSINESS],
   },
 ];
+
+const DEMO_MODE_REQUESTED = toBool(process.env.WASI_ALLOW_DEMO_USERS, false);
+const DEMO_USERS = DEMO_USER_DEFINITIONS.map((user) => {
+  const password = String(process.env[user.passwordEnv] || "").trim();
+  if (!password) return null;
+  return {
+    ...user,
+    password,
+  };
+}).filter(Boolean);
+
+const ALLOW_DEMO_CREDENTIALS =
+  DEMO_MODE_REQUESTED && DEMO_USERS.length === DEMO_USER_DEFINITIONS.length;
+
+if (DEMO_MODE_REQUESTED && !ALLOW_DEMO_CREDENTIALS) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "WASI_ALLOW_DEMO_USERS=true but one or more demo passwords are missing. Demo access has been disabled."
+  );
+}
 
 const DEX_SEED_TOKENS = [
   { symbol: "WASI-COMP", name: "WASI Composite Index ETF", category: "BROAD", feeBps: 35, underlying: "Full 16-country WASI Composite", lastPriceCentimes: "824000" },
@@ -372,6 +489,132 @@ const DEX_SEED_POSITIONS = [
   { userId: "usr-manager-demo", symbol: "WASI-COMP", quantityUnits: "1200" },
   { userId: "usr-manager-demo", symbol: "WASI-GOLD", quantityUnits: "75" },
   { userId: "usr-manager-demo", symbol: "WASI-EQ", quantityUnits: "600" },
+];
+
+const SYSCOHADA_CLASS_LABELS = {
+  1: "Capitaux",
+  2: "Immobilisations",
+  3: "Stocks",
+  4: "Tiers",
+  5: "Tresorerie",
+  6: "Charges",
+  7: "Produits",
+  8: "Hors activites ordinaires",
+};
+
+const SYSCOHADA_SEED_ACCOUNTS = [
+  { code: "101000", label: "Capital social", classNumber: 1, category: "CAPITAUX_PROPRES", kind: "CREDIT" },
+  { code: "106100", label: "Reserves libres", classNumber: 1, category: "CAPITAUX_PROPRES", kind: "CREDIT" },
+  { code: "131000", label: "Resultat net de l'exercice", classNumber: 1, category: "RESULTAT", kind: "CREDIT" },
+  { code: "211000", label: "Logiciels et plateformes", classNumber: 2, category: "IMMOBILISATIONS_INCORPORELLES", kind: "DEBIT" },
+  { code: "244000", label: "Mobilier et materiel de bureau", classNumber: 2, category: "IMMOBILISATIONS_CORPORELLES", kind: "DEBIT" },
+  { code: "371000", label: "Marchandises et produits digitaux", classNumber: 3, category: "STOCKS", kind: "DEBIT" },
+  { code: "401100", label: "Fournisseurs", classNumber: 4, category: "DETTES_FOURNISSEURS", kind: "CREDIT" },
+  { code: "411100", label: "Clients", classNumber: 4, category: "CREANCES_CLIENTS", kind: "DEBIT" },
+  { code: "421000", label: "Personnel remuneration due", classNumber: 4, category: "DETTES_SOCIALES", kind: "CREDIT" },
+  { code: "443100", label: "TVA facturee", classNumber: 4, category: "TVA_COLLECTEE", kind: "CREDIT" },
+  { code: "445660", label: "TVA deductible sur biens et services", classNumber: 4, category: "TVA_DEDUCTIBLE", kind: "DEBIT" },
+  { code: "447000", label: "Etat - impots et taxes dus", classNumber: 4, category: "FISCALITE", kind: "CREDIT" },
+  { code: "521000", label: "Banque - Ecobank", classNumber: 5, category: "BANQUE", kind: "DEBIT" },
+  { code: "571000", label: "Caisse XOF", classNumber: 5, category: "CAISSE", kind: "DEBIT" },
+  { code: "601100", label: "Achats de services cloud", classNumber: 6, category: "ACHATS", kind: "DEBIT" },
+  { code: "616100", label: "Loyers et charges locatives", classNumber: 6, category: "SERVICES_EXTERNES", kind: "DEBIT" },
+  { code: "628100", label: "Autres services externes", classNumber: 6, category: "SERVICES_EXTERNES", kind: "DEBIT" },
+  { code: "641100", label: "Salaires et traitements", classNumber: 6, category: "PERSONNEL", kind: "DEBIT" },
+  { code: "671200", label: "Charges financieres et provisions fiscales", classNumber: 6, category: "CHARGES_FINANCIERES", kind: "DEBIT" },
+  { code: "701100", label: "Ventes de solutions digitales", classNumber: 7, category: "VENTES", kind: "CREDIT" },
+  { code: "706100", label: "Commissions bancaires et trading", classNumber: 7, category: "SERVICES", kind: "CREDIT" },
+  { code: "706200", label: "Frais de marche DEX", classNumber: 7, category: "SERVICES", kind: "CREDIT" },
+  { code: "707100", label: "Services data et intelligence WASI", classNumber: 7, category: "SERVICES", kind: "CREDIT" },
+  { code: "811000", label: "Produits hors activites ordinaires", classNumber: 8, category: "HAO_PRODUITS", kind: "CREDIT" },
+  { code: "831000", label: "Charges hors activites ordinaires", classNumber: 8, category: "HAO_CHARGES", kind: "DEBIT" },
+];
+
+const ACCOUNTING_SEED_ENTRIES = [
+  {
+    reference: "CAP-2026-001",
+    moduleSource: "BANKING",
+    description: "Apport initial en capital pour la plateforme WASI",
+    entryDateUtc: "2026-01-03T09:00:00.000Z",
+    lines: [
+      { accountCode: "521000", lineLabel: "Apport en banque", debitCentimes: "20000000000", creditCentimes: "0" },
+      { accountCode: "101000", lineLabel: "Capital social", debitCentimes: "0", creditCentimes: "20000000000" },
+    ],
+  },
+  {
+    reference: "WASI-2026-001",
+    moduleSource: "WASI",
+    description: "Facturation abonnement intelligence economique",
+    entryDateUtc: "2026-01-10T11:00:00.000Z",
+    lines: [
+      { accountCode: "521000", lineLabel: "Encaissement client", debitCentimes: "2450000000", creditCentimes: "0" },
+      { accountCode: "707100", lineLabel: "Revenus services data", debitCentimes: "0", creditCentimes: "2076271186" },
+      { accountCode: "443100", lineLabel: "TVA sur vente", debitCentimes: "0", creditCentimes: "373728814" },
+    ],
+  },
+  {
+    reference: "AFT-2026-001",
+    moduleSource: "AFRITRADE",
+    description: "Commissions de trading clients",
+    entryDateUtc: "2026-01-14T14:00:00.000Z",
+    lines: [
+      { accountCode: "521000", lineLabel: "Encaissement commissions", debitCentimes: "1850000000", creditCentimes: "0" },
+      { accountCode: "706100", lineLabel: "Commissions bancaires et trading", debitCentimes: "0", creditCentimes: "1567796610" },
+      { accountCode: "443100", lineLabel: "TVA sur commissions", debitCentimes: "0", creditCentimes: "282203390" },
+    ],
+  },
+  {
+    reference: "DEX-2026-001",
+    moduleSource: "DEX",
+    description: "Frais ETF DEX encaisses",
+    entryDateUtc: "2026-01-17T16:30:00.000Z",
+    lines: [
+      { accountCode: "521000", lineLabel: "Encaissement DEX", debitCentimes: "650000000", creditCentimes: "0" },
+      { accountCode: "706200", lineLabel: "Frais DEX", debitCentimes: "0", creditCentimes: "550847457" },
+      { accountCode: "443100", lineLabel: "TVA sur frais DEX", debitCentimes: "0", creditCentimes: "99152543" },
+    ],
+  },
+  {
+    reference: "CLD-2026-001",
+    moduleSource: "WASI",
+    description: "Facture fournisseur infrastructure cloud",
+    entryDateUtc: "2026-01-20T09:15:00.000Z",
+    lines: [
+      { accountCode: "601100", lineLabel: "Services cloud", debitCentimes: "420000000", creditCentimes: "0" },
+      { accountCode: "445660", lineLabel: "TVA deductible", debitCentimes: "75600000", creditCentimes: "0" },
+      { accountCode: "401100", lineLabel: "Dette fournisseur", debitCentimes: "0", creditCentimes: "495600000" },
+    ],
+  },
+  {
+    reference: "PAY-2026-001",
+    moduleSource: "BANKING",
+    description: "Reglement facture cloud",
+    entryDateUtc: "2026-01-25T13:45:00.000Z",
+    lines: [
+      { accountCode: "401100", lineLabel: "Paiement fournisseur", debitCentimes: "495600000", creditCentimes: "0" },
+      { accountCode: "521000", lineLabel: "Sortie bancaire", debitCentimes: "0", creditCentimes: "495600000" },
+    ],
+  },
+  {
+    reference: "SAL-2026-001",
+    moduleSource: "BANKING",
+    description: "Paie equipe produit et operations",
+    entryDateUtc: "2026-01-28T18:00:00.000Z",
+    lines: [
+      { accountCode: "641100", lineLabel: "Salaires", debitCentimes: "1200000000", creditCentimes: "0" },
+      { accountCode: "521000", lineLabel: "Paiement salaires", debitCentimes: "0", creditCentimes: "1200000000" },
+    ],
+  },
+  {
+    reference: "TAX-2026-001",
+    moduleSource: "AFRITAX",
+    description: "Provision fiscale mensuelle",
+    entryDateUtc: "2026-01-31T17:00:00.000Z",
+    lines: [
+      { accountCode: "671200", lineLabel: "Provision fiscale", debitCentimes: "315000000", creditCentimes: "0" },
+      { accountCode: "447000", lineLabel: "Etat - impots dus", debitCentimes: "0", creditCentimes: "315000000" },
+    ],
+  },
 ];
 
 const COUNTRY_WEIGHTS = {
@@ -772,24 +1015,74 @@ const ensureDexSeedData = () => {
 
 ensureDexSeedData();
 
-const hashPassword = (password) =>
-  createHash("sha256").update(`${JWT_SECRET}:${String(password)}`).digest("hex");
+const hashLegacyPassword = (password, secret) =>
+  createHash("sha256").update(`${secret}:${String(password)}`).digest("hex");
+
+const hashPassword = (password) => {
+  const salt = randomBytes(16).toString("hex");
+  const derived = scryptSync(
+    String(password),
+    `${PASSWORD_PEPPER}:${salt}`,
+    PASSWORD_HASH_KEY_LENGTH
+  ).toString("hex");
+  return `${PASSWORD_HASH_VERSION}$${salt}$${derived}`;
+};
+
+const verifyPassword = (password, storedHash) => {
+  const normalizedStoredHash = String(storedHash || "").trim();
+  if (!normalizedStoredHash) {
+    return { valid: false, needsRehash: false };
+  }
+
+  const [version, salt, derivedHex] = normalizedStoredHash.split("$");
+  if (version === PASSWORD_HASH_VERSION && salt && derivedHex) {
+    const derived = scryptSync(
+      String(password),
+      `${PASSWORD_PEPPER}:${salt}`,
+      PASSWORD_HASH_KEY_LENGTH
+    );
+    const expected = Buffer.from(derivedHex, "hex");
+    if (expected.length !== derived.length) {
+      return { valid: false, needsRehash: false };
+    }
+    return {
+      valid: timingSafeEqual(derived, expected),
+      needsRehash: false,
+    };
+  }
+
+  for (const secret of LEGACY_PASSWORD_SECRETS) {
+    if (hashLegacyPassword(password, secret) === normalizedStoredHash) {
+      return { valid: true, needsRehash: true };
+    }
+  }
+
+  return { valid: false, needsRehash: false };
+};
 
 const ensurePlatformUsers = () => {
   if (!ALLOW_DEMO_CREDENTIALS) return;
 
-  const insertUser = db.prepare(`
-    INSERT OR IGNORE INTO platform_users (
+  const upsertUser = db.prepare(`
+    INSERT INTO platform_users (
       id, username, email, password_hash, role, tier, x402_balance, is_active, created_at_utc, updated_at_utc
     ) VALUES (
       @id, @username, @email, @passwordHash, @role, @tier, @x402Balance, 1, @createdAtUtc, @updatedAtUtc
     )
+    ON CONFLICT(username) DO UPDATE SET
+      email = excluded.email,
+      password_hash = excluded.password_hash,
+      role = excluded.role,
+      tier = excluded.tier,
+      x402_balance = excluded.x402_balance,
+      is_active = 1,
+      updated_at_utc = excluded.updated_at_utc
   `);
 
   const now = new Date().toISOString();
   const run = db.transaction((users) => {
     for (const user of users) {
-      insertUser.run({
+      upsertUser.run({
         id: user.id,
         username: user.username,
         email: `${user.username}@wasi.local`,
@@ -803,10 +1096,108 @@ const ensurePlatformUsers = () => {
     }
   });
 
-  run(AUTH_USERS);
+  run(DEMO_USERS);
 };
 
 ensurePlatformUsers();
+
+const sumEntryLineDebits = (lines) =>
+  lines.reduce((sum, line) => sum + BigInt(line.debitCentimes), 0n);
+
+const sumEntryLineCredits = (lines) =>
+  lines.reduce((sum, line) => sum + BigInt(line.creditCentimes), 0n);
+
+const ensureComptaSeedData = () => {
+  const now = new Date().toISOString();
+
+  const upsertAccount = db.prepare(`
+    INSERT INTO syscohada_accounts (
+      code, label, class_number, category, kind, is_active, created_at_utc, updated_at_utc
+    ) VALUES (
+      @code, @label, @classNumber, @category, @kind, 1, @createdAtUtc, @updatedAtUtc
+    )
+    ON CONFLICT(code) DO UPDATE SET
+      label = excluded.label,
+      class_number = excluded.class_number,
+      category = excluded.category,
+      kind = excluded.kind,
+      is_active = 1,
+      updated_at_utc = excluded.updated_at_utc
+  `);
+
+  const ensureAccounts = db.transaction((rows) => {
+    for (const row of rows) {
+      upsertAccount.run({
+        ...row,
+        createdAtUtc: now,
+        updatedAtUtc: now,
+      });
+    }
+  });
+
+  ensureAccounts(SYSCOHADA_SEED_ACCOUNTS);
+
+  const entryCountRow = db
+    .prepare("SELECT COUNT(*) AS count FROM accounting_journal_entries")
+    .get();
+  if (Number(entryCountRow?.count ?? 0) > 0) {
+    return;
+  }
+
+  const insertEntry = db.prepare(`
+    INSERT INTO accounting_journal_entries (
+      id, reference, module_source, description, entry_date_utc, status,
+      total_debit_centimes, total_credit_centimes, created_at_utc, updated_at_utc
+    ) VALUES (
+      @id, @reference, @moduleSource, @description, @entryDateUtc, 'POSTED',
+      @totalDebitCentimes, @totalCreditCentimes, @createdAtUtc, @updatedAtUtc
+    )
+  `);
+
+  const insertLine = db.prepare(`
+    INSERT INTO accounting_journal_lines (
+      id, entry_id, account_code, line_label, debit_centimes, credit_centimes, created_at_utc
+    ) VALUES (
+      @id, @entryId, @accountCode, @lineLabel, @debitCentimes, @creditCentimes, @createdAtUtc
+    )
+  `);
+
+  const seedEntries = db.transaction((entries) => {
+    for (const entry of entries) {
+      const totalDebitCentimes = sumEntryLineDebits(entry.lines).toString();
+      const totalCreditCentimes = sumEntryLineCredits(entry.lines).toString();
+      const entryId = randomUUID();
+
+      insertEntry.run({
+        id: entryId,
+        reference: entry.reference,
+        moduleSource: entry.moduleSource,
+        description: entry.description,
+        entryDateUtc: entry.entryDateUtc,
+        totalDebitCentimes,
+        totalCreditCentimes,
+        createdAtUtc: now,
+        updatedAtUtc: now,
+      });
+
+      for (const line of entry.lines) {
+        insertLine.run({
+          id: randomUUID(),
+          entryId,
+          accountCode: line.accountCode,
+          lineLabel: line.lineLabel,
+          debitCentimes: line.debitCentimes,
+          creditCentimes: line.creditCentimes,
+          createdAtUtc: now,
+        });
+      }
+    }
+  });
+
+  seedEntries(ACCOUNTING_SEED_ENTRIES);
+};
+
+ensureComptaSeedData();
 
 class ApiError extends Error {
   constructor(statusCode, message) {
@@ -815,8 +1206,86 @@ class ApiError extends Error {
   }
 }
 
+const authFailureStore = new Map();
+const resolveAuthRateLimitWindowMs = () =>
+  Number.isFinite(AUTH_RATE_LIMIT_WINDOW_MS) && AUTH_RATE_LIMIT_WINDOW_MS >= 1000
+    ? AUTH_RATE_LIMIT_WINDOW_MS
+    : 15 * 60 * 1000;
+const resolveAuthRateLimitMaxAttempts = () =>
+  Number.isFinite(AUTH_RATE_LIMIT_MAX_ATTEMPTS) && AUTH_RATE_LIMIT_MAX_ATTEMPTS >= 1
+    ? Math.trunc(AUTH_RATE_LIMIT_MAX_ATTEMPTS)
+    : 8;
+
+const getRequestIp = (req) => {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  if (typeof forwardedFor === "string" && forwardedFor.trim()) {
+    return forwardedFor.split(",")[0].trim();
+  }
+  return req.socket?.remoteAddress ?? "unknown";
+};
+
+const getAuthFailureKey = (req, username) =>
+  `${getRequestIp(req)}:${String(username || "anonymous").trim().toLowerCase()}`;
+
+const getAuthFailureRecord = (key, now = Date.now()) => {
+  const windowMs = resolveAuthRateLimitWindowMs();
+  const current = authFailureStore.get(key);
+  if (!current || now - current.windowStartedAt > windowMs) {
+    const fresh = { count: 0, windowStartedAt: now };
+    authFailureStore.set(key, fresh);
+    return fresh;
+  }
+  return current;
+};
+
+const assertAuthRateLimit = (req, username) => {
+  const key = getAuthFailureKey(req, username);
+  const record = getAuthFailureRecord(key);
+  const maxAttempts = resolveAuthRateLimitMaxAttempts();
+  if (record.count >= maxAttempts) {
+    throw new ApiError(429, "Too many authentication attempts. Please retry later.");
+  }
+};
+
+const recordAuthFailure = (req, username) => {
+  const key = getAuthFailureKey(req, username);
+  const record = getAuthFailureRecord(key);
+  record.count += 1;
+  authFailureStore.set(key, record);
+  return record.count;
+};
+
+const clearAuthFailures = (req, username) => {
+  authFailureStore.delete(getAuthFailureKey(req, username));
+};
+
+const isCorsOriginAllowed = (origin) => {
+  if (!origin) return true;
+  if (CORS_ALLOWED_ORIGINS.size > 0) {
+    return CORS_ALLOWED_ORIGINS.has(origin);
+  }
+  if (!IS_PRODUCTION) {
+    return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  }
+  return false;
+};
+
 const app = express();
-app.use(cors({ origin: true }));
+app.set("trust proxy", 1);
+app.use(
+  cors({
+    origin(origin, callback) {
+      callback(null, isCorsOriginAllowed(origin));
+    },
+    methods: ["GET", "POST"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Idempotency-Key",
+      "X-Idempotency-Key",
+    ],
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -960,6 +1429,298 @@ const serializeAuditEntry = (row) => {
   };
 };
 
+const parseNonNegativeAmountCentimes = (
+  value,
+  fieldName = "amountCentimes"
+) => {
+  if (typeof value !== "string" && typeof value !== "number") {
+    throw new ApiError(400, `${fieldName} must be a string or integer number.`);
+  }
+
+  const normalized = String(value).trim();
+  if (!/^\d+$/.test(normalized)) {
+    throw new ApiError(
+      400,
+      `${fieldName} must be a non-negative integer in centimes.`
+    );
+  }
+
+  const amount = BigInt(normalized);
+  if (amount > MAX_SAFE_AMOUNT_CENTIMES) {
+    throw new ApiError(400, `${fieldName} exceeds supported bounds.`);
+  }
+
+  return amount;
+};
+
+const serializeSyscohadaAccount = (row) => ({
+  code: row.code,
+  label: row.label,
+  classNumber: Number(row.class_number),
+  classLabel: SYSCOHADA_CLASS_LABELS[Number(row.class_number)] ?? "Classe",
+  category: row.category,
+  kind: row.kind,
+});
+
+const serializeAccountingLine = (row) => ({
+  entryId: row.entry_id,
+  accountCode: row.account_code,
+  lineLabel: row.line_label,
+  debitCentimes: String(row.debit_centimes),
+  creditCentimes: String(row.credit_centimes),
+  createdAtUtc: row.created_at_utc,
+});
+
+const serializeAccountingEntry = (row) => ({
+  id: row.id,
+  reference: row.reference,
+  moduleSource: row.module_source,
+  description: row.description,
+  entryDateUtc: row.entry_date_utc,
+  status: row.status,
+  totalDebitCentimes: String(row.total_debit_centimes),
+  totalCreditCentimes: String(row.total_credit_centimes),
+  createdAtUtc: row.created_at_utc,
+  updatedAtUtc: row.updated_at_utc,
+});
+
+const buildRecentAccountingEntries = (limit = 8) => {
+  const safeLimit = Number.isFinite(limit)
+    ? Math.min(Math.max(limit, 1), 50)
+    : 8;
+  return listRecentAccountingEntries.all(safeLimit).map((row) => ({
+    ...serializeAccountingEntry(row),
+    lines: listAccountingLinesByEntryId
+      .all(row.id)
+      .map(serializeAccountingLine),
+  }));
+};
+
+const buildComptaChart = () => {
+  const accounts = listSyscohadaAccounts.all().map(serializeSyscohadaAccount);
+  const countByClass = new Map(
+    listSyscohadaClassCounts
+      .all()
+      .map((row) => [Number(row.class_number), Number(row.account_count)])
+  );
+
+  const classes = Object.keys(SYSCOHADA_CLASS_LABELS).map((classNumberRaw) => {
+    const classNumber = Number(classNumberRaw);
+    return {
+      classNumber,
+      classLabel: SYSCOHADA_CLASS_LABELS[classNumber],
+      accountCount: countByClass.get(classNumber) ?? 0,
+    };
+  });
+
+  return { classes, accounts };
+};
+
+const buildTrialBalanceSnapshot = () => {
+  const rows = listTrialBalanceRows.all().map((row) => {
+    const totalDebitCentimes = BigInt(row.total_debit_centimes ?? 0);
+    const totalCreditCentimes = BigInt(row.total_credit_centimes ?? 0);
+    const balanceSide =
+      totalDebitCentimes === totalCreditCentimes
+        ? "FLAT"
+        : totalDebitCentimes > totalCreditCentimes
+          ? "DEBIT"
+          : "CREDIT";
+    const balanceCentimes =
+      totalDebitCentimes >= totalCreditCentimes
+        ? totalDebitCentimes - totalCreditCentimes
+        : totalCreditCentimes - totalDebitCentimes;
+
+    return {
+      code: row.code,
+      label: row.label,
+      classNumber: Number(row.class_number),
+      classLabel: SYSCOHADA_CLASS_LABELS[Number(row.class_number)] ?? "Classe",
+      category: row.category,
+      kind: row.kind,
+      totalDebitCentimes: totalDebitCentimes.toString(),
+      totalCreditCentimes: totalCreditCentimes.toString(),
+      balanceSide,
+      balanceCentimes: balanceCentimes.toString(),
+    };
+  });
+
+  const totals = rows.reduce(
+    (accumulator, row) => ({
+      totalDebitCentimes:
+        accumulator.totalDebitCentimes + BigInt(row.totalDebitCentimes),
+      totalCreditCentimes:
+        accumulator.totalCreditCentimes + BigInt(row.totalCreditCentimes),
+    }),
+    { totalDebitCentimes: 0n, totalCreditCentimes: 0n }
+  );
+
+  return {
+    rows,
+    totals: {
+      totalDebitCentimes: totals.totalDebitCentimes.toString(),
+      totalCreditCentimes: totals.totalCreditCentimes.toString(),
+      isBalanced:
+        totals.totalDebitCentimes === totals.totalCreditCentimes,
+    },
+  };
+};
+
+const getDebitBalanceCentimes = (row) =>
+  row && row.balanceSide === "DEBIT" ? BigInt(row.balanceCentimes) : 0n;
+
+const getCreditBalanceCentimes = (row) =>
+  row && row.balanceSide === "CREDIT" ? BigInt(row.balanceCentimes) : 0n;
+
+const buildAfriTaxSummary = (trialBalance = buildTrialBalanceSnapshot()) => {
+  const rowByCode = new Map(trialBalance.rows.map((row) => [row.code, row]));
+
+  const outputVatCentimes = getCreditBalanceCentimes(rowByCode.get("443100"));
+  const inputVatCentimes = getDebitBalanceCentimes(rowByCode.get("445660"));
+  const directTaxProvisionCentimes = getCreditBalanceCentimes(
+    rowByCode.get("447000")
+  );
+
+  const revenueCentimes = trialBalance.rows
+    .filter((row) => row.classNumber === 7)
+    .reduce(
+      (sum, row) =>
+        sum +
+        (BigInt(row.totalCreditCentimes) - BigInt(row.totalDebitCentimes)),
+      0n
+    );
+
+  const expenseCentimes = trialBalance.rows
+    .filter((row) => row.classNumber === 6)
+    .reduce(
+      (sum, row) =>
+        sum +
+        (BigInt(row.totalDebitCentimes) - BigInt(row.totalCreditCentimes)),
+      0n
+    );
+
+  const preTaxResultCentimes = revenueCentimes - expenseCentimes;
+  const vatDueCentimes =
+    outputVatCentimes > inputVatCentimes
+      ? outputVatCentimes - inputVatCentimes
+      : 0n;
+
+  return {
+    taxYear: 2026,
+    source: "wasi_compta_bridge",
+    dataMode: "mvp_live",
+    outputVatCentimes: outputVatCentimes.toString(),
+    inputVatCentimes: inputVatCentimes.toString(),
+    vatDueCentimes: vatDueCentimes.toString(),
+    directTaxProvisionCentimes: directTaxProvisionCentimes.toString(),
+    revenueCentimes: revenueCentimes.toString(),
+    deductibleExpenseCentimes: expenseCentimes.toString(),
+    preTaxResultCentimes: preTaxResultCentimes.toString(),
+    filingCalendar: [
+      {
+        code: "TVA-MENSUELLE",
+        label: "Declaration TVA mensuelle",
+        dueDate: "2026-03-15",
+        status: vatDueCentimes > 0n ? "A_PREPARER" : "A_VERIFIER",
+      },
+      {
+        code: "IS-ACOMPTE-T1",
+        label: "Acompte IS / BIC T1",
+        dueDate: "2026-04-15",
+        status: preTaxResultCentimes > 0n ? "SURVEILLANCE" : "AJUSTEMENT",
+      },
+      {
+        code: "RETENUES-SOURCE",
+        label: "Retenues a la source fournisseurs",
+        dueDate: "2026-03-20",
+        status: "CONTROLE",
+      },
+    ],
+  };
+};
+
+const buildComptaBridgeSummary = (trialBalance = buildTrialBalanceSnapshot()) => {
+  const journalEntriesCount = Number(
+    countAccountingJournalEntries.get()?.count ?? 0
+  );
+
+  const bankLiquidityCentimes = listAllBankAccounts
+    .all()
+    .reduce((sum, row) => sum + BigInt(row.balance_centimes), 0n);
+
+  const dexWalletLiquidityCentimes = listAllDexWallets
+    .all()
+    .reduce((sum, row) => sum + BigInt(row.xof_balance_centimes), 0n);
+
+  const dexAumCentimes = listAllDexPositionsWithPrices
+    .all()
+    .reduce(
+      (sum, row) =>
+        sum + BigInt(row.quantity_units) * BigInt(row.last_price_centimes),
+      0n
+    );
+
+  const rowByCode = new Map(trialBalance.rows.map((row) => [row.code, row]));
+  const accountingCashLedgerCentimes = getDebitBalanceCentimes(
+    rowByCode.get("521000")
+  );
+  const tax = buildAfriTaxSummary(trialBalance);
+  const moduleBreakdown = listAccountingModuleBreakdown.all().map((row) => ({
+    moduleSource: row.module_source,
+    entryCount: Number(row.entry_count ?? 0),
+    volumeCentimes: BigInt(row.volume_centimes ?? 0).toString(),
+  }));
+
+  return {
+    modulesConnected: [
+      "WASI",
+      "BANKING",
+      "AFRITRADE",
+      "AFRITAX",
+      "DEX",
+    ],
+    journalEntriesCount,
+    accountingCashLedgerCentimes:
+      accountingCashLedgerCentimes.toString(),
+    bankLiquidityCentimes: bankLiquidityCentimes.toString(),
+    dexWalletLiquidityCentimes: dexWalletLiquidityCentimes.toString(),
+    dexAumCentimes: dexAumCentimes.toString(),
+    vatDueCentimes: tax.vatDueCentimes,
+    moduleBreakdown,
+  };
+};
+
+const buildComptaOverview = () => {
+  const chart = buildComptaChart();
+  const trialBalance = buildTrialBalanceSnapshot();
+  const tax = buildAfriTaxSummary(trialBalance);
+  const bridge = buildComptaBridgeSummary(trialBalance);
+  const journal = buildRecentAccountingEntries(8);
+
+  const revenueCentimes = BigInt(tax.revenueCentimes);
+  const expenseCentimes = BigInt(tax.deductibleExpenseCentimes);
+  const preTaxResultCentimes = BigInt(tax.preTaxResultCentimes);
+
+  return {
+    chart,
+    journal,
+    trialBalance: {
+      ...trialBalance,
+      rows: trialBalance.rows.slice(0, 18),
+    },
+    tax,
+    bridge,
+    summary: {
+      activeAccountsCount: chart.accounts.length,
+      journalEntriesCount: bridge.journalEntriesCount,
+      revenueCentimes: revenueCentimes.toString(),
+      expenseCentimes: expenseCentimes.toString(),
+      preTaxResultCentimes: preTaxResultCentimes.toString(),
+      isBalanced: trialBalance.totals.isBalanced,
+    },
+  };
+};
+
 const getState = (limit = 100, authUser = null) => {
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 500) : 100;
   const allAccounts = db
@@ -1033,6 +1794,12 @@ const insertPlatformUser = db.prepare(`
   ) VALUES (
     @id, @username, @email, @passwordHash, @role, @tier, @x402Balance, 1, @createdAtUtc, @updatedAtUtc
   )
+`);
+
+const updatePlatformUserPasswordHash = db.prepare(`
+  UPDATE platform_users
+  SET password_hash = @passwordHash, updated_at_utc = @updatedAtUtc
+  WHERE id = @id
 `);
 
 const getPlatformUserByUsername = db.prepare(`
@@ -1219,6 +1986,140 @@ const listDexRecentTradesGlobal = db.prepare(`
   FROM dex_trades
   ORDER BY created_at_utc DESC
   LIMIT ?
+`);
+
+const listSyscohadaAccounts = db.prepare(`
+  SELECT code, label, class_number, category, kind
+  FROM syscohada_accounts
+  WHERE is_active = 1
+  ORDER BY code ASC
+`);
+
+const getSyscohadaAccountByCode = db.prepare(`
+  SELECT code, label, class_number, category, kind
+  FROM syscohada_accounts
+  WHERE code = ? AND is_active = 1
+  LIMIT 1
+`);
+
+const listSyscohadaClassCounts = db.prepare(`
+  SELECT class_number, COUNT(*) AS account_count
+  FROM syscohada_accounts
+  WHERE is_active = 1
+  GROUP BY class_number
+  ORDER BY class_number ASC
+`);
+
+const countAccountingJournalEntries = db.prepare(`
+  SELECT COUNT(*) AS count
+  FROM accounting_journal_entries
+  WHERE status = 'POSTED'
+`);
+
+const listAccountingModuleBreakdown = db.prepare(`
+  SELECT
+    module_source,
+    COUNT(*) AS entry_count,
+    COALESCE(SUM(CAST(total_debit_centimes AS INTEGER)), 0) AS volume_centimes
+  FROM accounting_journal_entries
+  WHERE status = 'POSTED'
+  GROUP BY module_source
+  ORDER BY module_source ASC
+`);
+
+const listRecentAccountingEntries = db.prepare(`
+  SELECT *
+  FROM accounting_journal_entries
+  WHERE status = 'POSTED'
+  ORDER BY entry_date_utc DESC, created_at_utc DESC
+  LIMIT ?
+`);
+
+const getAccountingEntryByReference = db.prepare(`
+  SELECT *
+  FROM accounting_journal_entries
+  WHERE reference = ?
+  LIMIT 1
+`);
+
+const listAccountingLinesByEntryId = db.prepare(`
+  SELECT entry_id, account_code, line_label, debit_centimes, credit_centimes, created_at_utc
+  FROM accounting_journal_lines
+  WHERE entry_id = ?
+  ORDER BY rowid ASC
+`);
+
+const insertAccountingEntry = db.prepare(`
+  INSERT INTO accounting_journal_entries (
+    id, reference, module_source, description, entry_date_utc, status,
+    total_debit_centimes, total_credit_centimes, created_at_utc, updated_at_utc
+  ) VALUES (
+    @id, @reference, @moduleSource, @description, @entryDateUtc, @status,
+    @totalDebitCentimes, @totalCreditCentimes, @createdAtUtc, @updatedAtUtc
+  )
+`);
+
+const insertAccountingLine = db.prepare(`
+  INSERT INTO accounting_journal_lines (
+    id, entry_id, account_code, line_label, debit_centimes, credit_centimes, created_at_utc
+  ) VALUES (
+    @id, @entryId, @accountCode, @lineLabel, @debitCentimes, @creditCentimes, @createdAtUtc
+  )
+`);
+
+const listTrialBalanceRows = db.prepare(`
+  SELECT
+    a.code,
+    a.label,
+    a.class_number,
+    a.category,
+    a.kind,
+    COALESCE(
+      SUM(
+        CASE
+          WHEN e.id IS NOT NULL THEN CAST(l.debit_centimes AS INTEGER)
+          ELSE 0
+        END
+      ),
+      0
+    ) AS total_debit_centimes,
+    COALESCE(
+      SUM(
+        CASE
+          WHEN e.id IS NOT NULL THEN CAST(l.credit_centimes AS INTEGER)
+          ELSE 0
+        END
+      ),
+      0
+    ) AS total_credit_centimes
+  FROM syscohada_accounts a
+  LEFT JOIN accounting_journal_lines l
+    ON l.account_code = a.code
+  LEFT JOIN accounting_journal_entries e
+    ON e.id = l.entry_id AND e.status = 'POSTED'
+  WHERE a.is_active = 1
+  GROUP BY a.code, a.label, a.class_number, a.category, a.kind
+  ORDER BY a.code ASC
+`);
+
+const listAllBankAccounts = db.prepare(`
+  SELECT id, holder, type, currency, balance_centimes
+  FROM accounts
+  ORDER BY holder ASC, type ASC
+`);
+
+const listAllDexWallets = db.prepare(`
+  SELECT user_id, xof_balance_centimes
+  FROM dex_wallets
+  ORDER BY user_id ASC
+`);
+
+const listAllDexPositionsWithPrices = db.prepare(`
+  SELECT p.user_id, p.symbol, p.quantity_units, t.last_price_centimes
+  FROM dex_positions p
+  INNER JOIN etf_tokens t ON t.symbol = p.symbol
+  WHERE t.is_active = 1
+  ORDER BY p.user_id ASC, p.symbol ASC
 `);
 
 const serializeDexOrder = (row) => ({
@@ -1572,7 +2473,7 @@ const executeDexOrderPlacement = ({ userId, symbol, side, quantityUnits, limitPr
 
 const getDemoUserByUsername = (username) => {
   if (!ALLOW_DEMO_CREDENTIALS) return null;
-  return AUTH_USERS.find((user) => user.username.toLowerCase() === username.toLowerCase()) ?? null;
+  return DEMO_USERS.find((user) => user.username.toLowerCase() === username.toLowerCase()) ?? null;
 };
 
 const serializePlatformUser = (row) => ({
@@ -1585,6 +2486,46 @@ const serializePlatformUser = (row) => ({
   is_active: Boolean(row.is_active),
   created_at: row.created_at_utc,
 });
+
+const getDefaultAccountIdsForRole = (role) =>
+  role === ROLE_CLIENT
+    ? [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS]
+    : [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS, ACCOUNT_ID_BUSINESS];
+
+const buildPlatformAuthUser = (platformUser, overrides = {}) => ({
+  id: platformUser.id,
+  username: platformUser.username,
+  displayName: platformUser.username,
+  role: platformUser.role,
+  tier: platformUser.tier,
+  x402_balance: Number(platformUser.x402_balance),
+  email: platformUser.email,
+  accountIds: getDefaultAccountIdsForRole(platformUser.role),
+  ...overrides,
+});
+
+const authenticatePlatformUser = (username, password) => {
+  const platformUser = getPlatformUserByUsername.get(String(username));
+  if (!platformUser || Number(platformUser.is_active) !== 1) {
+    return null;
+  }
+
+  const verification = verifyPassword(password, platformUser.password_hash);
+  if (!verification.valid) {
+    return null;
+  }
+
+  if (verification.needsRehash) {
+    updatePlatformUserPasswordHash.run({
+      id: platformUser.id,
+      passwordHash: hashPassword(password),
+      updatedAtUtc: new Date().toISOString(),
+    });
+    return getPlatformUserByUsername.get(platformUser.username);
+  }
+
+  return platformUser;
+};
 
 const signAccessToken = (user) =>
   jwt.sign(
@@ -2218,16 +3159,8 @@ app.get("/api/health", (_req, res) => {
   success(res, {
     service: "wasi-platform-api",
     status: "ok",
-    database: DB_PATH,
-    auth: "jwt-rbac-enabled",
-    idempotency: "required-for-mutations",
-    auditLog: "immutable-enabled",
-    dex: "wasi-etf-orderbook-enabled",
-    marketSnapshot: "unified-platform-source",
-    anthropicEnabled: Boolean(ANTHROPIC_API_KEY),
-    ollamaConfigured: Boolean(OLLAMA_API_URL),
-    llmProvider: LLM_PROVIDER,
-    allowDemoUsers: ALLOW_DEMO_CREDENTIALS,
+    timestamp: new Date().toISOString(),
+    environment: IS_PRODUCTION ? "production" : "development",
   });
 });
 
@@ -2284,28 +3217,19 @@ app.post("/api/auth/register", (req, res, next) => {
 });
 
 app.post("/api/auth/login", (req, res, next) => {
+  const username = String(req.body?.username || "").trim();
   try {
-    const username = String(req.body?.username || "").trim();
     const password = String(req.body?.password || "");
     if (!username || !password) {
       throw new ApiError(400, "username and password are required.");
     }
 
-    const platformUser = getPlatformUserByUsername.get(username);
-    if (platformUser && Number(platformUser.is_active) === 1) {
-      if (platformUser.password_hash !== hashPassword(password)) {
-        throw new ApiError(401, "Incorrect username or password");
-      }
-      const accessToken = signAccessToken({
-        id: platformUser.id,
-        username: platformUser.username,
-        displayName: platformUser.username,
-        role: platformUser.role,
-        tier: platformUser.tier,
-        x402_balance: Number(platformUser.x402_balance),
-        email: platformUser.email,
-        accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS],
-      });
+    assertAuthRateLimit(req, username);
+
+    const platformUser = authenticatePlatformUser(username, password);
+    if (platformUser) {
+      clearAuthFailures(req, username);
+      const accessToken = signAccessToken(buildPlatformAuthUser(platformUser));
       writeAuditLog({
         actorOverride: { id: platformUser.id, username: platformUser.username, role: platformUser.role },
         action: "LOGIN",
@@ -2320,6 +3244,7 @@ app.post("/api/auth/login", (req, res, next) => {
       throw new ApiError(401, "Incorrect username or password");
     }
 
+    clearAuthFailures(req, username);
     const accessToken = signAccessToken({
       ...demoUser,
       tier: "demo",
@@ -2335,6 +3260,9 @@ app.post("/api/auth/login", (req, res, next) => {
     });
     return res.json({ access_token: accessToken, token_type: "bearer" });
   } catch (error) {
+    if (error instanceof ApiError && error.statusCode === 401) {
+      recordAuthFailure(req, username);
+    }
     next(error);
   }
 });
@@ -2542,27 +3470,19 @@ app.get("/api/ussd/aggregate/summary", requireAuth, (_req, res, next) => {
 });
 
 app.post("/api/v1/banking/auth/login", (req, res, next) => {
+  const username = String(req.body?.username || "").trim();
   try {
-    const { username, password } = req.body ?? {};
+    const password = String(req.body?.password || "");
     if (!username || !password) {
       throw new ApiError(400, "username and password are required.");
     }
 
-    const platformUser = getPlatformUserByUsername.get(String(username));
-    if (platformUser && Number(platformUser.is_active) === 1) {
-      if (platformUser.password_hash !== hashPassword(String(password))) {
-        throw new ApiError(401, "Invalid credentials.");
-      }
-      const accessToken = signAccessToken({
-        id: platformUser.id,
-        username: platformUser.username,
-        displayName: platformUser.username,
-        role: platformUser.role,
-        accountIds: [ACCOUNT_ID_MAIN, ACCOUNT_ID_SAVINGS],
-        tier: platformUser.tier,
-        x402_balance: Number(platformUser.x402_balance),
-        email: platformUser.email,
-      });
+    assertAuthRateLimit(req, username);
+
+    const platformUser = authenticatePlatformUser(username, password);
+    if (platformUser) {
+      clearAuthFailures(req, username);
+      const accessToken = signAccessToken(buildPlatformAuthUser(platformUser));
       writeAuditLog({
         actorOverride: { id: platformUser.id, username: platformUser.username, role: platformUser.role },
         action: "LOGIN",
@@ -2584,10 +3504,10 @@ app.post("/api/v1/banking/auth/login", (req, res, next) => {
       return;
     }
 
-    const user = getDemoUserByUsername(String(username));
-    if (!user || user.password !== String(password)) {
+    const user = getDemoUserByUsername(username);
+    if (!user || user.password !== password) {
       writeAuditLog({
-        actorOverride: { id: "anonymous", username: String(username), role: null },
+        actorOverride: { id: "anonymous", username, role: null },
         action: "LOGIN",
         resourceType: "AUTH",
         status: AUDIT_FAILURE,
@@ -2596,6 +3516,7 @@ app.post("/api/v1/banking/auth/login", (req, res, next) => {
       throw new ApiError(401, "Invalid credentials.");
     }
 
+    clearAuthFailures(req, username);
     const accessToken = signAccessToken(user);
     writeAuditLog({
       actorOverride: {
@@ -2615,6 +3536,9 @@ app.post("/api/v1/banking/auth/login", (req, res, next) => {
       user: sanitizeUser(user),
     });
   } catch (error) {
+    if (error instanceof ApiError && error.statusCode === 401) {
+      recordAuthFailure(req, username);
+    }
     next(error);
   }
 });
@@ -3001,6 +3925,259 @@ app.post("/api/v1/banking/transfer", requireAuth, (req, res, next) => {
     next(error);
   }
 });
+
+app.get("/api/v1/compta/overview", requireAuth, (req, res, next) => {
+  try {
+    success(res, buildComptaOverview());
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/compta/chart", requireAuth, (_req, res, next) => {
+  try {
+    success(res, buildComptaChart());
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/compta/journal", requireAuth, (req, res, next) => {
+  try {
+    const limit = Number(req.query.limit ?? 20);
+    success(res, {
+      entries: buildRecentAccountingEntries(limit),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/compta/trial-balance", requireAuth, (_req, res, next) => {
+  try {
+    success(res, buildTrialBalanceSnapshot());
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/compta/bridge/summary", requireAuth, (_req, res, next) => {
+  try {
+    success(res, buildComptaBridgeSummary());
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/afritax/summary", requireAuth, (_req, res, next) => {
+  try {
+    const trialBalance = buildTrialBalanceSnapshot();
+    success(res, {
+      ...buildAfriTaxSummary(trialBalance),
+      bridge: buildComptaBridgeSummary(trialBalance),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post(
+  "/api/v1/compta/journal",
+  requireAuth,
+  requireRoles([ROLE_TELLER, ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const rawReference = String(req.body?.reference || "").trim();
+      const rawDescription = String(req.body?.description || "").trim();
+      const rawModuleSource = String(req.body?.moduleSource || "MANUAL")
+        .trim()
+        .toUpperCase();
+      const rawEntryDateUtc = String(
+        req.body?.entryDateUtc || new Date().toISOString()
+      ).trim();
+      const linesInput = Array.isArray(req.body?.lines) ? req.body.lines : [];
+
+      if (!rawDescription) {
+        throw new ApiError(400, "description is required.");
+      }
+      if (linesInput.length < 2) {
+        throw new ApiError(400, "At least two journal lines are required.");
+      }
+
+      const allowedModuleSources = new Set([
+        "BANKING",
+        "WASI",
+        "AFRITRADE",
+        "AFRITAX",
+        "DEX",
+        "MANUAL",
+      ]);
+      if (!allowedModuleSources.has(rawModuleSource)) {
+        throw new ApiError(400, "moduleSource is invalid.");
+      }
+
+      const parsedEntryDate = new Date(rawEntryDateUtc);
+      if (Number.isNaN(parsedEntryDate.getTime())) {
+        throw new ApiError(400, "entryDateUtc must be a valid ISO-8601 date.");
+      }
+      const entryDateUtc = parsedEntryDate.toISOString();
+
+      const normalizedLines = linesInput.map((line, index) => {
+        const accountCode = String(line?.accountCode || "").trim();
+        const lineLabel = String(line?.lineLabel || "").trim();
+        if (!accountCode) {
+          throw new ApiError(
+            400,
+            `lines[${index}].accountCode is required.`
+          );
+        }
+        const account = getSyscohadaAccountByCode.get(accountCode);
+        if (!account) {
+          throw new ApiError(
+            404,
+            `Unknown SYSCOHADA account: ${accountCode}.`
+          );
+        }
+
+        const debitCentimes = parseNonNegativeAmountCentimes(
+          line?.debitCentimes ?? "0",
+          `lines[${index}].debitCentimes`
+        );
+        const creditCentimes = parseNonNegativeAmountCentimes(
+          line?.creditCentimes ?? "0",
+          `lines[${index}].creditCentimes`
+        );
+
+        if (
+          (debitCentimes === 0n && creditCentimes === 0n) ||
+          (debitCentimes > 0n && creditCentimes > 0n)
+        ) {
+          throw new ApiError(
+            400,
+            `lines[${index}] must contain either a debit or a credit amount.`
+          );
+        }
+
+        return {
+          accountCode,
+          lineLabel: lineLabel || account.label,
+          debitCentimes: debitCentimes.toString(),
+          creditCentimes: creditCentimes.toString(),
+        };
+      });
+
+      const totalDebitCentimes = sumEntryLineDebits(normalizedLines);
+      const totalCreditCentimes = sumEntryLineCredits(normalizedLines);
+      if (totalDebitCentimes === 0n || totalCreditCentimes === 0n) {
+        throw new ApiError(400, "A journal entry must carry a non-zero amount.");
+      }
+      if (totalDebitCentimes !== totalCreditCentimes) {
+        throw new ApiError(400, "Journal entry is not balanced.");
+      }
+
+      const result = executeIdempotentMutation({
+        req,
+        mutate: () => {
+          const reference =
+            rawReference ||
+            `MAN-${new Date()
+              .toISOString()
+              .replace(/[-:TZ.]/g, "")
+              .slice(0, 14)}`;
+
+          if (getAccountingEntryByReference.get(reference)) {
+            throw new ApiError(409, "reference already exists.");
+          }
+
+          const now = new Date().toISOString();
+          const entryId = randomUUID();
+          const postEntry = db.transaction(() => {
+            insertAccountingEntry.run({
+              id: entryId,
+              reference,
+              moduleSource: rawModuleSource,
+              description: rawDescription,
+              entryDateUtc,
+              status: "POSTED",
+              totalDebitCentimes: totalDebitCentimes.toString(),
+              totalCreditCentimes: totalCreditCentimes.toString(),
+              createdAtUtc: now,
+              updatedAtUtc: now,
+            });
+
+            for (const line of normalizedLines) {
+              insertAccountingLine.run({
+                id: randomUUID(),
+                entryId,
+                accountCode: line.accountCode,
+                lineLabel: line.lineLabel,
+                debitCentimes: line.debitCentimes,
+                creditCentimes: line.creditCentimes,
+                createdAtUtc: now,
+              });
+            }
+
+            return {
+              ...serializeAccountingEntry({
+                id: entryId,
+                reference,
+                module_source: rawModuleSource,
+                description: rawDescription,
+                entry_date_utc: entryDateUtc,
+                status: "POSTED",
+                total_debit_centimes: totalDebitCentimes.toString(),
+                total_credit_centimes: totalCreditCentimes.toString(),
+                created_at_utc: now,
+                updated_at_utc: now,
+              }),
+              lines: listAccountingLinesByEntryId
+                .all(entryId)
+                .map(serializeAccountingLine),
+            };
+          });
+
+          return {
+            entry: postEntry(),
+            overview: buildComptaOverview(),
+          };
+        },
+      });
+
+      if (result.replayed) {
+        res.set("X-Idempotency-Replayed", "true");
+      }
+
+      writeAuditLog({
+        req,
+        action: "COMPTA_JOURNAL_POST",
+        resourceType: "ACCOUNTING_ENTRY",
+        resourceId: result.payload.entry?.id ?? null,
+        status: AUDIT_SUCCESS,
+        detail: {
+          reference: result.payload.entry?.reference ?? rawReference ?? null,
+          moduleSource: rawModuleSource,
+          idempotencyKey: result.idempotencyKey,
+          replayed: result.replayed,
+        },
+      });
+
+      success(res, result.payload, result.statusCode);
+    } catch (error) {
+      writeAuditLog({
+        req,
+        action: "COMPTA_JOURNAL_POST",
+        resourceType: "ACCOUNTING_ENTRY",
+        resourceId: null,
+        status: AUDIT_FAILURE,
+        detail: {
+          reason: error.message,
+          reference: req.body?.reference ?? null,
+        },
+      });
+      next(error);
+    }
+  }
+);
 
 app.get("/api/v1/dex/markets", (_req, res, next) => {
   try {

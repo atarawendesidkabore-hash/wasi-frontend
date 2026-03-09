@@ -3,12 +3,23 @@ const APP_STORAGE_KEY = "WASI_SELECTED_APP";
 const apps = [
   { id: "wasi", label: "WASI" },
   { id: "banking", label: "Banking" },
+  { id: "afritrade", label: "AfriTrade" },
+  { id: "compta", label: "OHADA-Compta" },
+  { id: "finance", label: "Finance Lab" },
+  { id: "afritax", label: "AfriTax" },
+  { id: "dex", label: "ETF DEX" },
 ];
 
 export const normalizeAppId = (value) => {
   const normalized = String(value || "").trim().toLowerCase();
   if (["banking", "bank", "wallet"].includes(normalized)) return "banking";
-  if (["dex", "exchange", "etf-dex"].includes(normalized)) return "wasi";
+  if (["afritrade", "trade", "trading"].includes(normalized)) return "afritrade";
+  if (["afritax", "tax", "fiscal"].includes(normalized)) return "afritax";
+  if (["compta", "ohada", "ohada-compta", "africompta"].includes(normalized))
+    return "compta";
+  if (["finance", "analysis", "corpfin", "corporate", "finance-lab"].includes(normalized))
+    return "finance";
+  if (["dex", "exchange", "etf-dex"].includes(normalized)) return "dex";
   return "wasi";
 };
 
@@ -21,6 +32,35 @@ export const getStoredAppId = () => {
 export const persistAppId = (appId) => {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(APP_STORAGE_KEY, normalizeAppId(appId));
+};
+
+export const buildAppHref = (appId, extraParams = {}) => {
+  if (typeof window === "undefined") {
+    return `?app=${normalizeAppId(appId)}`;
+  }
+  const url = new URL(window.location.href);
+  url.searchParams.set("app", normalizeAppId(appId));
+  Object.entries(extraParams).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") {
+      url.searchParams.delete(key);
+      return;
+    }
+    url.searchParams.set(key, String(value));
+  });
+  return `${url.pathname}${url.search}${url.hash}`;
+};
+
+export const navigateToApp = (appId, options = {}) => {
+  if (typeof window === "undefined") return;
+  const { replace = false, extraParams = {} } = options;
+  const normalized = normalizeAppId(appId);
+  persistAppId(normalized);
+  const targetHref = buildAppHref(normalized, extraParams);
+  if (replace) {
+    window.location.replace(targetHref);
+    return;
+  }
+  window.location.href = targetHref;
 };
 
 export function AppSwitcher({ currentApp }) {
@@ -45,7 +85,7 @@ export function AppSwitcher({ currentApp }) {
       {apps.map((app) => (
         <a
           key={app.id}
-          href={`?app=${app.id}`}
+          href={buildAppHref(app.id)}
           onClick={() => persistAppId(app.id)}
           style={{
             textDecoration: "none",

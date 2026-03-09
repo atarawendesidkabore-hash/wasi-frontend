@@ -1,6 +1,6 @@
 import { useState } from "react";
 import AfriTradeApp from "./AfriTradeApp";
-import { syncWasiTerminalSession } from "./bankingApi";
+import { navigateToApp } from "../platform/AppSwitcher";
 
 const shellStyle = {
   minHeight: "100vh",
@@ -32,8 +32,11 @@ export const BankingApp = () => {
   const [showEmbeddedTerminal, setShowEmbeddedTerminal] = useState(false);
 
   const openEmbeddedTerminal = () => {
-    syncWasiTerminalSession();
     setShowEmbeddedTerminal(true);
+  };
+
+  const openModule = (target) => {
+    navigateToApp(target);
   };
 
   if (showEmbeddedTerminal) {
@@ -77,9 +80,9 @@ export const BankingApp = () => {
   return (
     <AfriTradeApp
       onOpenWasiTerminal={openEmbeddedTerminal}
-      onOpenDex={() => {
-        window.location.href = "?app=dex";
-      }}
+      onOpenDex={() => openModule("dex")}
+      onOpenAfriTax={() => openModule("afritax")}
+      onOpenOhadaCompta={() => openModule("compta")}
       onExitAfriTrade={() => {
         setShowEmbeddedTerminal(false);
       }}

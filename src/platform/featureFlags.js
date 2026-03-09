@@ -9,9 +9,12 @@ const toBool = (value, fallback) => {
 export const PLATFORM_FEATURE_FLAGS = {
   wasi: toBool(import.meta.env.VITE_FEATURE_WASI, true),
   banking: toBool(import.meta.env.VITE_FEATURE_BANKING, true),
+  afritrade: toBool(import.meta.env.VITE_FEATURE_AFRITRADE, true),
+  compta: toBool(import.meta.env.VITE_FEATURE_COMPTA, true),
+  finance: toBool(import.meta.env.VITE_FEATURE_FINANCE, true),
+  afritax: toBool(import.meta.env.VITE_FEATURE_AFRITAX, true),
   dex: toBool(import.meta.env.VITE_FEATURE_DEX, true),
 };
 
 export const isFeatureEnabled = (featureName) =>
   Boolean(PLATFORM_FEATURE_FLAGS[featureName]);
-

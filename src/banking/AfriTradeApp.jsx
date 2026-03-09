@@ -122,6 +122,8 @@ const Modal = ({ children, onClose, title }) => (
 export default function AfriTradeApp({
   onOpenWasiTerminal,
   onOpenDex,
+  onOpenAfriTax,
+  onOpenOhadaCompta,
   onExitAfriTrade,
   initialScreen = "onboarding",
   profileOverride,
@@ -189,6 +191,22 @@ export default function AfriTradeApp({
       return;
     }
     window.location.href = "?app=dex";
+  };
+
+  const openAfriTax = () => {
+    if (typeof onOpenAfriTax === "function") {
+      onOpenAfriTax();
+      return;
+    }
+    window.location.href = "?app=afritax";
+  };
+
+  const openOhadaCompta = () => {
+    if (typeof onOpenOhadaCompta === "function") {
+      onOpenOhadaCompta();
+      return;
+    }
+    window.location.href = "?app=compta";
   };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
@@ -523,6 +541,8 @@ export default function AfriTradeApp({
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={openWasi} className="py-2 rounded-lg bg-green-600 text-white font-semibold">Open WASI</button>
             <button type="button" onClick={openDex} className="py-2 rounded-lg bg-amber-500 text-black font-semibold">Open ETF DEX</button>
+            <button type="button" onClick={openOhadaCompta} className="py-2 rounded-lg bg-slate-700 text-white font-semibold">Open OHADA-Compta</button>
+            <button type="button" onClick={openAfriTax} className="py-2 rounded-lg bg-blue-600 text-white font-semibold">Open AfriTax</button>
           </div>
         </div>
 

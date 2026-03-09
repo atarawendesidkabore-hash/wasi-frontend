@@ -6,6 +6,11 @@ import { randomUUID } from "node:crypto";
 const cwd = process.cwd();
 const gatePort = Number(process.env.RELEASE_GATE_PORT ?? 18110);
 const backendUrl = `http://127.0.0.1:${gatePort}`;
+const demoPasswords = {
+  client: `gate-client-${randomUUID()}`,
+  teller: `gate-teller-${randomUUID()}`,
+  manager: `gate-manager-${randomUUID()}`,
+};
 
 const results = [];
 const add = (name, ok, detail = "") => {
@@ -83,6 +88,11 @@ async function run() {
 
     const mainContent = await fs.readFile(path.join(cwd, "src", "main.jsx"), "utf8");
     add("Route aliases include wasi/banking/dex", /wasi/.test(mainContent) && /banking/.test(mainContent) && /dex/.test(mainContent));
+    const serverContent = await fs.readFile(path.join(cwd, "server", "index.mjs"), "utf8");
+    const seedArrayMatch = serverContent.match(/const DEX_SEED_TOKENS = \[(.*?)\];/s);
+    const seedCount = seedArrayMatch
+      ? (seedArrayMatch[1].match(/symbol:\s*"/g) || []).length
+      : 0;
 
     serverChild = spawn("node", ["server/index.mjs"], {
       cwd,
@@ -92,7 +102,11 @@ async function run() {
         ...process.env,
         PORT: String(gatePort),
         BANKING_API_PORT: String(gatePort),
+        BANKING_JWT_SECRET: "release-gate-secret",
         WASI_ALLOW_DEMO_USERS: "true",
+        WASI_DEMO_CLIENT_PASSWORD: demoPasswords.client,
+        WASI_DEMO_TELLER_PASSWORD: demoPasswords.teller,
+        WASI_DEMO_MANAGER_PASSWORD: demoPasswords.manager,
       },
     });
 
@@ -107,7 +121,7 @@ async function run() {
       const login = await httpJson(`${backendUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "username=client_demo&password=client123",
+        body: `username=client_demo&password=${encodeURIComponent(demoPasswords.client)}`,
       });
       add("Platform auth login", login.ok, login.ok ? "" : JSON.stringify(login.body).slice(0, 250));
 
@@ -126,7 +140,7 @@ async function run() {
         const dexMarkets = await httpJson(`${backendUrl}/api/v1/dex/markets`, { headers: authHeaders });
         const dexCount = Number(dexMarkets.body?.data?.markets?.length ?? 0);
         add("DEX markets endpoint", dexMarkets.ok, dexMarkets.ok ? "" : JSON.stringify(dexMarkets.body).slice(0, 250));
-        add("DEX ETF catalog size = 42", dexCount === 42, `count=${dexCount}`);
+        add("DEX ETF catalog matches seed count", dexCount === seedCount, `seed=${seedCount}, runtime=${dexCount}`);
 
         const orderBook = await httpJson(`${backendUrl}/api/v1/dex/orderbook/WASI-COMP?depth=5`, { headers: authHeaders });
         add("DEX orderbook endpoint", orderBook.ok && orderBook.body?.data?.orderBook?.symbol === "WASI-COMP");

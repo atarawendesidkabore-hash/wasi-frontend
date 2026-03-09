@@ -12,12 +12,6 @@ import {
 } from "./dexApi";
 import { DexTerminalBoard } from "./components/DexTerminalBoard";
 
-const DEMO_CREDENTIALS = [
-  { role: "CLIENT", username: "client_demo", password: "client123" },
-  { role: "TELLER", username: "teller_demo", password: "teller123" },
-  { role: "MANAGER", username: "manager_demo", password: "manager123" },
-];
-
 const toBigInt = (value) => BigInt(String(value ?? "0"));
 
 const formatCentimes = (value) => {
@@ -70,8 +64,8 @@ export const DexApp = () => {
   const [orderBook, setOrderBook] = useState({ symbol: "", bids: [], asks: [] });
   const [portfolio, setPortfolio] = useState(null);
   const [loginForm, setLoginForm] = useState({
-    username: DEMO_CREDENTIALS[0].username,
-    password: DEMO_CREDENTIALS[0].password,
+    username: "",
+    password: "",
   });
   const [orderForm, setOrderForm] = useState({
     side: "BUY",

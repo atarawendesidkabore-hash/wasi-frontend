@@ -6,6 +6,7 @@ const cwd = process.cwd();
 const requestedModel = process.argv[2] || process.env.OLLAMA_MODEL || "llama3.1:8b";
 const withTests = process.argv.includes("--with-tests");
 const reportsDir = path.join(cwd, "ops", "reports");
+const demoClientPassword = String(process.env.WASI_DEMO_CLIENT_PASSWORD || "").trim();
 
 const MAX_SECTION_CHARS = 12000;
 
@@ -79,10 +80,20 @@ async function getRuntimeChecks() {
   checks.push(await httpProbe("http://127.0.0.1:3000/?app=dex"));
   checks.push(await httpProbe("http://127.0.0.1:8010/api/health"));
 
+  if (!demoClientPassword) {
+    checks.push({
+      url: "http://127.0.0.1:8010/api/v1/banking/auth/login",
+      ok: false,
+      status: 0,
+      body: "SKIPPED: set WASI_DEMO_CLIENT_PASSWORD to run authenticated demo probes.",
+    });
+    return checks;
+  }
+
   const loginProbe = await httpProbe("http://127.0.0.1:8010/api/v1/banking/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: "client_demo", password: "client123" }),
+    body: JSON.stringify({ username: "client_demo", password: demoClientPassword }),
   });
   checks.push(loginProbe);
 
@@ -254,7 +265,7 @@ async function run() {
     runtimeChecks,
     files,
     expectedFacts: {
-      dexEtfCatalogCount: 42,
+      dexEtfCatalogCount: seedEtfCount,
       routes: ["/?app=wasi", "/?app=banking", "/?app=dex"],
       dexEndpoints: [
         "/api/v1/dex/markets",

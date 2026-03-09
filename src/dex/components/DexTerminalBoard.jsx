@@ -371,6 +371,9 @@ export function DexTerminalBoard({
             </div>
           ) : (
             <form onSubmit={onLogin} style={{ padding: "10px 12px", display: "grid", gap: 8 }}>
+              <div style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12, lineHeight: 1.5 }}>
+                Use a platform account. Demo access is available only when explicitly enabled.
+              </div>
               <input
                 value={loginForm.username}
                 onChange={(event) =>
