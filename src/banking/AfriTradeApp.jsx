@@ -27,6 +27,9 @@ import {
   User,
   X,
 } from "lucide-react";
+import { ManagerAuditPanel } from "./ManagerAuditPanel";
+import { ManagerApprovalPanel } from "./ManagerApprovalPanel";
+import { TellerApprovalPanel } from "./TellerApprovalPanel";
 
 const STORAGE_KEYS = {
   activeTab: "afritrade_active_tab",
@@ -127,6 +130,27 @@ export default function AfriTradeApp({
   onExitAfriTrade,
   initialScreen = "onboarding",
   profileOverride,
+  authUser = null,
+  onLogout,
+  userApprovals = [],
+  userApprovalStatus = "PENDING",
+  onUserApprovalStatusChange,
+  userApprovalsLoading = false,
+  userApprovalsError = "",
+  onRefreshUserApprovals,
+  managerApprovals = [],
+  managerApprovalStatus = "PENDING",
+  onManagerApprovalStatusChange,
+  managerApprovalsLoading = false,
+  managerApprovalsError = "",
+  managerActionApprovalId = null,
+  onRefreshManagerApprovals,
+  onApproveManagerApproval,
+  onRejectManagerApproval,
+  managerAuditEntries = [],
+  managerAuditLoading = false,
+  managerAuditError = "",
+  onRefreshManagerAudit,
 }) {
   const [currentScreen, setCurrentScreen] = useState(initialScreen);
   const [onboardingSlide, setOnboardingSlide] = useState(0);
@@ -160,6 +184,22 @@ export default function AfriTradeApp({
   const [toasts, setToasts] = useState([]);
 
   const userProfile = { ...DEFAULT_PROFILE, ...(profileOverride || {}) };
+  const displayName = authUser?.displayName || authUser?.username || userProfile.name;
+  const displayFirstName =
+    displayName.split(" ").filter(Boolean).at(-1) || displayName;
+  const isManager = authUser?.role === "MANAGER";
+  const isTeller = authUser?.role === "TELLER";
+  const tabs = [
+    { id: "portfolio", label: "Portefeuille", icon: PieChart },
+    { id: "trade", label: "Marches", icon: BarChart3 },
+    { id: "microfinance", label: "Prets", icon: CreditCard },
+    { id: "activity", label: "Activite", icon: Clock },
+    ...((isManager || isTeller)
+      ? [{ id: "approvals", label: isManager ? "Approvals" : "Suivi", icon: Shield }]
+      : []),
+    ...(isManager ? [{ id: "audit", label: "Audit", icon: FileText }] : []),
+    { id: "account", label: "Compte", icon: User },
+  ];
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.activeTab, activeTab);
@@ -286,6 +326,9 @@ export default function AfriTradeApp({
             setShowSettingsModal(false);
             setCurrentScreen("login");
             notify("Session fermee.", "ok");
+            if (typeof onLogout === "function") {
+              onLogout();
+            }
             if (typeof onExitAfriTrade === "function") {
               onExitAfriTrade();
             }
@@ -477,8 +520,8 @@ export default function AfriTradeApp({
 
   const AccountTab = () => (
     <div className="space-y-4">
-      <div className="bg-white p-6 rounded-xl shadow-sm text-center"><div className="w-20 h-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-3xl text-white font-bold">{userProfile.name.split(" ").map((n) => n[0]).join("")}</span></div><h2 className="text-xl font-bold">{userProfile.name}</h2><p className="text-gray-600">{userProfile.email}</p><p className="text-sm text-gray-500 mt-2">Membre depuis {userProfile.memberSince}</p></div>
-      <div className="bg-white p-4 rounded-xl shadow-sm space-y-3"><div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span className="text-gray-600">Numero de compte</span><span className="font-medium">{userProfile.accountNumber}</span></div><div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span className="text-gray-600">Telephone</span><span className="font-medium">{userProfile.phone}</span></div><div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span className="text-gray-600">Agence</span><span className="font-medium">{userProfile.branchLocation}</span></div><button type="button" onClick={() => setShowKycModal(true)} className="w-full p-3 bg-green-50 text-green-700 rounded-lg font-medium">Documents KYC</button></div>
+      <div className="bg-white p-6 rounded-xl shadow-sm text-center"><div className="w-20 h-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-3xl text-white font-bold">{displayName.split(" ").map((n) => n[0]).join("")}</span></div><h2 className="text-xl font-bold">{displayName}</h2><p className="text-gray-600">{authUser?.email || userProfile.email}</p><p className="text-sm text-gray-500 mt-2">Membre depuis {userProfile.memberSince}</p></div>
+      <div className="bg-white p-4 rounded-xl shadow-sm space-y-3"><div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span className="text-gray-600">Numero de compte</span><span className="font-medium">{userProfile.accountNumber}</span></div><div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span className="text-gray-600">Telephone</span><span className="font-medium">{userProfile.phone}</span></div><div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span className="text-gray-600">Agence</span><span className="font-medium">{userProfile.branchLocation}</span></div><div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span className="text-gray-600">Role</span><span className="font-medium">{authUser?.role || "CLIENT"}</span></div><div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span className="text-gray-600">Username</span><span className="font-medium">{authUser?.username || "local_user"}</span></div><button type="button" onClick={() => setShowKycModal(true)} className="w-full p-3 bg-green-50 text-green-700 rounded-lg font-medium">Documents KYC</button></div>
     </div>
   );
 
@@ -524,7 +567,7 @@ export default function AfriTradeApp({
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-2xl font-bold">AfriTrade</h1>
-            <p className="text-green-100 text-sm">Bonjour, {userProfile.name.split(" ")[1]}</p>
+            <p className="text-green-100 text-sm">Bonjour, {displayFirstName}</p>
           </div>
           <div className="flex space-x-2">
             <button type="button" onClick={() => setShowNotificationsModal(true)} className="p-2 bg-green-500/30 rounded-full hover:bg-green-500/50 relative"><Bell className="w-5 h-5" />{unreadCount > 0 ? <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 rounded-full px-1">{unreadCount}</span> : null}</button>
@@ -533,9 +576,20 @@ export default function AfriTradeApp({
           </div>
         </div>
         <div className="text-center"><p className="text-green-100 text-sm mb-1">Valeur totale du portefeuille</p><div className="flex items-center justify-center space-x-2"><p className="text-4xl font-bold">{showAccountBalance ? formatCFA(PORTFOLIO.totalValue) : "••••••"}</p><button type="button" onClick={() => setShowAccountBalance((v) => !v)}>{showAccountBalance ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}</button></div><div className={`flex items-center justify-center mt-2 ${PORTFOLIO.dayChange >= 0 ? "text-green-200" : "text-red-200"}`}>{PORTFOLIO.dayChange >= 0 ? <ArrowUpRight className="w-4 h-4 mr-1" /> : <ArrowDownRight className="w-4 h-4 mr-1" />}<span className="font-medium">{formatCFA(PORTFOLIO.dayChange)} ({PORTFOLIO.dayChangePercent > 0 ? "+" : ""}{PORTFOLIO.dayChangePercent}%)</span></div></div>
+        {authUser?.role ? <div className="mt-4 flex justify-center"><span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide text-white">{authUser.role}</span></div> : null}
       </div>
 
       <div className="p-4 -mt-6">
+        {isManager ? (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
+            Controle interne actif: les operations a risque eleve doivent etre approuvees par un manager avant execution.
+          </div>
+        ) : null}
+        {isTeller ? (
+          <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 shadow-sm">
+            Les operations sensibles que vous initiez sont visibles dans l'onglet Suivi jusqu'a la decision manager.
+          </div>
+        ) : null}
         <div className="bg-white rounded-xl shadow-md p-4 mb-4">
           <div className="font-bold text-sm text-gray-700 mb-2">WASI Investment Hub</div>
           <div className="grid grid-cols-2 gap-2">
@@ -549,13 +603,16 @@ export default function AfriTradeApp({
         <div className="grid grid-cols-3 gap-3"><button type="button" onClick={openWasi} className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg flex flex-col items-center space-y-2"><div className="p-3 bg-green-100 rounded-full"><Plus className="w-5 h-5 text-green-600" /></div><span className="font-medium text-sm">Investir</span></button><button type="button" onClick={() => setShowTransferModal(true)} className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg flex flex-col items-center space-y-2"><div className="p-3 bg-blue-100 rounded-full"><Send className="w-5 h-5 text-blue-600" /></div><span className="font-medium text-sm">Transferer</span></button><button type="button" onClick={() => setShowDepositModal(true)} className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg flex flex-col items-center space-y-2"><div className="p-3 bg-purple-100 rounded-full"><Banknote className="w-5 h-5 text-purple-600" /></div><span className="font-medium text-sm">Deposer</span></button></div>
       </div>
 
-      <div className="flex justify-around p-4 bg-white shadow-sm sticky top-0 z-10">{[{ id: "portfolio", label: "Portefeuille", icon: PieChart }, { id: "trade", label: "Marches", icon: BarChart3 }, { id: "microfinance", label: "Prets", icon: CreditCard }, { id: "activity", label: "Activite", icon: Clock }, { id: "account", label: "Compte", icon: User }].map((tab) => (<button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center p-2 rounded-lg transition-all ${activeTab === tab.id ? "bg-green-100 text-green-700" : "text-gray-500"}`}><tab.icon className="w-5 h-5 mb-1" /><span className="text-xs font-medium">{tab.label}</span></button>))}</div>
+      <div className="flex justify-around p-4 bg-white shadow-sm sticky top-0 z-10">{tabs.map((tab) => (<button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center p-2 rounded-lg transition-all ${activeTab === tab.id ? "bg-green-100 text-green-700" : "text-gray-500"}`}><tab.icon className="w-5 h-5 mb-1" /><span className="text-xs font-medium">{tab.label}</span></button>))}</div>
 
       <div className="p-4">
         {activeTab === "portfolio" && <PortfolioTab />}
         {activeTab === "trade" && <TradeTab />}
         {activeTab === "microfinance" && <MicrofinanceTab />}
         {activeTab === "activity" && <ActivityTab />}
+        {activeTab === "approvals" && isManager && <ManagerApprovalPanel approvals={managerApprovals} currentStatus={managerApprovalStatus} onStatusChange={onManagerApprovalStatusChange} onRefresh={onRefreshManagerApprovals} onApprove={onApproveManagerApproval} onReject={onRejectManagerApproval} loading={managerApprovalsLoading} actionApprovalId={managerActionApprovalId} error={managerApprovalsError} />}
+        {activeTab === "approvals" && isTeller && <TellerApprovalPanel approvals={userApprovals} currentStatus={userApprovalStatus} onStatusChange={onUserApprovalStatusChange} onRefresh={onRefreshUserApprovals} loading={userApprovalsLoading} error={userApprovalsError} />}
+        {activeTab === "audit" && isManager && <ManagerAuditPanel entries={managerAuditEntries} onRefresh={onRefreshManagerAudit} loading={managerAuditLoading} error={managerAuditError} />}
         {activeTab === "account" && <AccountTab />}
       </div>
 

@@ -128,6 +128,78 @@ export const fetchBankingState = async (limit = 100) => {
   return toBigIntState(data);
 };
 
+export const fetchBankingApprovals = async ({
+  status = "PENDING",
+  limit = 100,
+} = {}) => {
+  const safeStatus = String(status || "PENDING").trim().toUpperCase();
+  const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 100;
+  const data = await request(
+    `/api/v1/banking/approvals?status=${encodeURIComponent(
+      safeStatus
+    )}&limit=${safeLimit}`,
+    {
+      method: "GET",
+    }
+  );
+  return data.approvals || [];
+};
+
+export const fetchMyBankingApprovals = async ({
+  status = "PENDING",
+  limit = 100,
+} = {}) => {
+  const safeStatus = String(status || "PENDING").trim().toUpperCase();
+  const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 100;
+  const data = await request(
+    `/api/v1/banking/my-approvals?status=${encodeURIComponent(
+      safeStatus
+    )}&limit=${safeLimit}`,
+    {
+      method: "GET",
+    }
+  );
+  return data.approvals || [];
+};
+
+export const fetchBankingAudit = async ({ limit = 100 } = {}) => {
+  const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 100;
+  const data = await request(`/api/v1/banking/audit?limit=${safeLimit}`, {
+    method: "GET",
+  });
+  return data.entries || [];
+};
+
+export const approveBankingApproval = async ({
+  approvalId,
+  decisionNote = "Approved from manager console",
+  idempotencyKey = createIdempotencyKey("approval-approve"),
+}) => {
+  const data = await request(`/api/v1/banking/approvals/${approvalId}/approve`, {
+    method: "POST",
+    idempotencyKey,
+    body: JSON.stringify({
+      decisionNote,
+    }),
+  });
+  return data;
+};
+
+export const rejectBankingApproval = async ({
+  approvalId,
+  decisionNote = "Rejected from manager console",
+  idempotencyKey = createIdempotencyKey("approval-reject"),
+}) => {
+  const data = await request(`/api/v1/banking/approvals/${approvalId}/reject`, {
+    method: "POST",
+    idempotencyKey,
+    body: JSON.stringify({
+      decisionNote,
+    }),
+  });
+  return data;
+};
+
 export const postDeposit = async ({
   accountId,
   amountCentimes,

@@ -1863,6 +1863,15 @@ const listBankingApprovalsByStatus = db.prepare(`
   LIMIT ?
 `);
 
+const listBankingApprovalsByInitiator = db.prepare(`
+  SELECT *
+  FROM banking_operation_approvals
+  WHERE initiated_by_user_id = ?
+    AND status = ?
+  ORDER BY created_at_utc DESC
+  LIMIT ?
+`);
+
 const updateBankingApprovalDecision = db.prepare(`
   UPDATE banking_operation_approvals
   SET status = @status,
@@ -4204,6 +4213,31 @@ app.get(
     }
   }
 );
+
+app.get("/api/v1/banking/my-approvals", requireAuth, (req, res, next) => {
+  try {
+    const rawStatus = String(req.query.status || APPROVAL_STATUS_PENDING)
+      .trim()
+      .toUpperCase();
+    const status = [
+      APPROVAL_STATUS_PENDING,
+      APPROVAL_STATUS_APPROVED,
+      APPROVAL_STATUS_REJECTED,
+    ].includes(rawStatus)
+      ? rawStatus
+      : APPROVAL_STATUS_PENDING;
+    const limit = Number(req.query.limit ?? 100);
+    const safeLimit = Number.isFinite(limit)
+      ? Math.min(Math.max(limit, 1), 500)
+      : 100;
+    const approvals = listBankingApprovalsByInitiator
+      .all(req.authUser?.sub ?? "", status, safeLimit)
+      .map(serializeApproval);
+    success(res, { approvals });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.post(
   "/api/v1/banking/approvals/:approvalId/approve",
