@@ -24,6 +24,8 @@ export const clearDexSession = () => {
   setAccessToken(null);
 };
 
+export const hasDexSession = () => Boolean(getAccessToken());
+
 const request = async (path, init = {}) => {
   const { idempotencyKey = null, ...fetchInit } = init;
   const token = getAccessToken();

@@ -7,6 +7,7 @@ import {
   fetchDexMe,
   fetchDexOrderBook,
   fetchDexPortfolio,
+  hasDexSession,
   loginDex,
   placeDexOrder,
 } from "./dexApi";
@@ -114,12 +115,16 @@ export const DexApp = () => {
         setBackendConnected(true);
         await refreshPublicData();
 
-        try {
-          const me = await fetchDexMe();
-          if (cancelled) return;
-          setAuthUser(me);
-        } catch {
-          if (cancelled) return;
+        if (hasDexSession()) {
+          try {
+            const me = await fetchDexMe();
+            if (cancelled) return;
+            setAuthUser(me);
+          } catch {
+            if (cancelled) return;
+            setAuthUser(null);
+          }
+        } else if (!cancelled) {
           setAuthUser(null);
         }
       } catch {

@@ -59,6 +59,13 @@ const parseCsvValues = (value) =>
     .map((entry) => entry.trim())
     .filter(Boolean);
 
+const parseCentimeLimit = (value, fallback) => {
+  const normalized = String(value ?? fallback).trim();
+  if (!/^\d+$/.test(normalized)) return BigInt(fallback);
+  const parsed = BigInt(normalized);
+  return parsed > 0n ? parsed : BigInt(fallback);
+};
+
 const PORT = Number(process.env.BANKING_API_PORT ?? process.env.PORT ?? 8010);
 const MAX_SAFE_AMOUNT_CENTIMES = BigInt(Number.MAX_SAFE_INTEGER);
 const MAX_IDEMPOTENCY_KEY_LENGTH = 128;
@@ -78,6 +85,14 @@ const AUTH_RATE_LIMIT_MAX_ATTEMPTS = Number(
 );
 const PASSWORD_HASH_KEY_LENGTH = 64;
 const PASSWORD_HASH_VERSION = "scrypt-v1";
+const CLIENT_TRANSFER_MAX_CENTIMES = parseCentimeLimit(
+  process.env.BANKING_CLIENT_TRANSFER_MAX_CENTIMES,
+  "50000000"
+);
+const BANKING_APPROVAL_THRESHOLD_CENTIMES = parseCentimeLimit(
+  process.env.BANKING_APPROVAL_THRESHOLD_CENTIMES,
+  "100000000"
+);
 const LEGACY_DEFAULT_DEV_PASSWORD_SECRET = !IS_PRODUCTION
   ? "wasi-dev-insecure-secret"
   : "";
@@ -128,6 +143,9 @@ const DEX_STATUS_OPEN = "OPEN";
 const DEX_STATUS_PARTIAL = "PARTIAL";
 const DEX_STATUS_FILLED = "FILLED";
 const DEX_STATUS_CANCELLED = "CANCELLED";
+const APPROVAL_STATUS_PENDING = "PENDING";
+const APPROVAL_STATUS_APPROVED = "APPROVED";
+const APPROVAL_STATUS_REJECTED = "REJECTED";
 
 if (!JWT_SECRET_FROM_ENV && !IS_PRODUCTION) {
   // eslint-disable-next-line no-console
@@ -201,6 +219,30 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_audit_log_created
   ON audit_log(created_at_utc DESC);
+
+  CREATE TABLE IF NOT EXISTS banking_operation_approvals (
+    id TEXT PRIMARY KEY,
+    operation_type TEXT NOT NULL CHECK (operation_type IN ('DEPOSIT','WITHDRAW','TRANSFER')),
+    status TEXT NOT NULL CHECK (status IN ('PENDING','APPROVED','REJECTED')),
+    initiated_by_user_id TEXT NOT NULL,
+    initiated_by_username TEXT,
+    initiated_by_role TEXT,
+    approved_by_user_id TEXT,
+    approved_by_username TEXT,
+    account_id TEXT,
+    from_account_id TEXT,
+    to_account_id TEXT,
+    amount_centimes TEXT NOT NULL,
+    description TEXT NOT NULL,
+    request_body_json TEXT NOT NULL,
+    decision_note TEXT,
+    created_at_utc TEXT NOT NULL,
+    decided_at_utc TEXT,
+    updated_at_utc TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_banking_approvals_status_created
+  ON banking_operation_approvals(status, created_at_utc DESC);
 
   CREATE TRIGGER IF NOT EXISTS trg_audit_log_no_update
   BEFORE UPDATE ON audit_log
@@ -1405,6 +1447,36 @@ const serializeTransaction = (row) => ({
   createdAtUtc: row.created_at_utc,
 });
 
+const serializeApproval = (row) => {
+  let requestBody = null;
+  try {
+    requestBody = row.request_body_json ? JSON.parse(row.request_body_json) : null;
+  } catch {
+    requestBody = { raw: row.request_body_json };
+  }
+
+  return {
+    id: row.id,
+    operationType: row.operation_type,
+    status: row.status,
+    initiatedByUserId: row.initiated_by_user_id,
+    initiatedByUsername: row.initiated_by_username,
+    initiatedByRole: row.initiated_by_role,
+    approvedByUserId: row.approved_by_user_id ?? null,
+    approvedByUsername: row.approved_by_username ?? null,
+    accountId: row.account_id ?? null,
+    fromAccountId: row.from_account_id ?? null,
+    toAccountId: row.to_account_id ?? null,
+    amountCentimes: row.amount_centimes,
+    description: row.description,
+    requestBody,
+    decisionNote: row.decision_note ?? null,
+    createdAtUtc: row.created_at_utc,
+    decidedAtUtc: row.decided_at_utc ?? null,
+    updatedAtUtc: row.updated_at_utc,
+  };
+};
+
 const serializeAuditEntry = (row) => {
   let detail = null;
   if (row.detail_json) {
@@ -1760,6 +1832,46 @@ const insertTransaction = db.prepare(`
   ) VALUES (
     @id, @accountId, @kind, @amountCentimes, @description, @transferGroupId, @createdAtUtc
   )
+`);
+
+const insertBankingApproval = db.prepare(`
+  INSERT INTO banking_operation_approvals (
+    id, operation_type, status, initiated_by_user_id, initiated_by_username, initiated_by_role,
+    approved_by_user_id, approved_by_username, account_id, from_account_id, to_account_id,
+    amount_centimes, description, request_body_json, decision_note, created_at_utc,
+    decided_at_utc, updated_at_utc
+  ) VALUES (
+    @id, @operationType, @status, @initiatedByUserId, @initiatedByUsername, @initiatedByRole,
+    @approvedByUserId, @approvedByUsername, @accountId, @fromAccountId, @toAccountId,
+    @amountCentimes, @description, @requestBodyJson, @decisionNote, @createdAtUtc,
+    @decidedAtUtc, @updatedAtUtc
+  )
+`);
+
+const getBankingApprovalById = db.prepare(`
+  SELECT *
+  FROM banking_operation_approvals
+  WHERE id = ?
+  LIMIT 1
+`);
+
+const listBankingApprovalsByStatus = db.prepare(`
+  SELECT *
+  FROM banking_operation_approvals
+  WHERE status = ?
+  ORDER BY created_at_utc DESC
+  LIMIT ?
+`);
+
+const updateBankingApprovalDecision = db.prepare(`
+  UPDATE banking_operation_approvals
+  SET status = @status,
+      approved_by_user_id = @approvedByUserId,
+      approved_by_username = @approvedByUsername,
+      decision_note = @decisionNote,
+      decided_at_utc = @decidedAtUtc,
+      updated_at_utc = @updatedAtUtc
+  WHERE id = @id
 `);
 
 const findIdempotencyRecord = db.prepare(`
@@ -2581,6 +2693,220 @@ const writeAuditLog = ({
     // eslint-disable-next-line no-console
     console.error("audit_log_write_failed", error.message);
   }
+};
+
+const formatCentimeAmount = (amountCentimes) => {
+  const amount = BigInt(amountCentimes);
+  const whole = amount / 100n;
+  const fraction = amount % 100n;
+  return `${whole.toString()}.${fraction.toString().padStart(2, "0")} XOF`;
+};
+
+const createPendingApprovalPayload = ({
+  req,
+  operationType,
+  amountCentimes,
+  description,
+  requestBody,
+  accountId = null,
+  fromAccountId = null,
+  toAccountId = null,
+}) => {
+  const now = new Date().toISOString();
+  const approvalId = randomUUID();
+  insertBankingApproval.run({
+    id: approvalId,
+    operationType,
+    status: APPROVAL_STATUS_PENDING,
+    initiatedByUserId: req.authUser?.sub ?? "anonymous",
+    initiatedByUsername: req.authUser?.username ?? null,
+    initiatedByRole: req.authUser?.role ?? null,
+    approvedByUserId: null,
+    approvedByUsername: null,
+    accountId,
+    fromAccountId,
+    toAccountId,
+    amountCentimes: amountCentimes.toString(),
+    description,
+    requestBodyJson: JSON.stringify(requestBody ?? {}),
+    decisionNote: null,
+    createdAtUtc: now,
+    decidedAtUtc: null,
+    updatedAtUtc: now,
+  });
+
+  return {
+    approval: serializeApproval(getBankingApprovalById.get(approvalId)),
+    state: getState(100, req.authUser),
+    message: `${operationType} pending manager approval for ${formatCentimeAmount(amountCentimes)}.`,
+  };
+};
+
+const executeDepositOperation = ({ accountId, amount, note, authUser }) => {
+  const transactionResult = db.transaction(() => {
+    const account = getAccountOrThrow(accountId);
+    const nextBalance = BigInt(account.balance_centimes) + amount;
+
+    if (nextBalance > MAX_SAFE_AMOUNT_CENTIMES) {
+      throw new ApiError(400, "Resulting balance exceeds supported bounds.");
+    }
+
+    const now = new Date().toISOString();
+    updateAccountBalance.run({
+      id: accountId,
+      balanceCentimes: nextBalance.toString(),
+      updatedAtUtc: now,
+    });
+
+    const transaction = {
+      id: randomUUID(),
+      accountId,
+      kind: "DEPOSIT",
+      amountCentimes: amount.toString(),
+      description: note,
+      transferGroupId: null,
+      createdAtUtc: now,
+    };
+    insertTransaction.run(transaction);
+    return transaction;
+  })();
+
+  return {
+    transaction: serializeTransaction({
+      ...transactionResult,
+      account_id: transactionResult.accountId,
+      amount_centimes: transactionResult.amountCentimes,
+      transfer_group_id: transactionResult.transferGroupId,
+      created_at_utc: transactionResult.createdAtUtc,
+    }),
+    state: getState(100, authUser),
+  };
+};
+
+const executeWithdrawOperation = ({ accountId, amount, note, authUser }) => {
+  const transactionResult = db.transaction(() => {
+    const account = getAccountOrThrow(accountId);
+    const currentBalance = BigInt(account.balance_centimes);
+
+    if (currentBalance < amount) {
+      throw new ApiError(400, "Insufficient funds.");
+    }
+
+    const nextBalance = currentBalance - amount;
+    const now = new Date().toISOString();
+    updateAccountBalance.run({
+      id: accountId,
+      balanceCentimes: nextBalance.toString(),
+      updatedAtUtc: now,
+    });
+
+    const transaction = {
+      id: randomUUID(),
+      accountId,
+      kind: "WITHDRAWAL",
+      amountCentimes: amount.toString(),
+      description: note,
+      transferGroupId: null,
+      createdAtUtc: now,
+    };
+    insertTransaction.run(transaction);
+    return transaction;
+  })();
+
+  return {
+    transaction: serializeTransaction({
+      ...transactionResult,
+      account_id: transactionResult.accountId,
+      amount_centimes: transactionResult.amountCentimes,
+      transfer_group_id: transactionResult.transferGroupId,
+      created_at_utc: transactionResult.createdAtUtc,
+    }),
+    state: getState(100, authUser),
+  };
+};
+
+const executeTransferOperation = ({
+  fromAccountId,
+  toAccountId,
+  amount,
+  note,
+  authUser,
+}) => {
+  const transferResult = db.transaction(() => {
+    const fromAccount = getAccountOrThrow(fromAccountId);
+    const toAccount = getAccountOrThrow(toAccountId);
+
+    const fromBalance = BigInt(fromAccount.balance_centimes);
+    const toBalance = BigInt(toAccount.balance_centimes);
+    if (fromBalance < amount) {
+      throw new ApiError(400, "Insufficient funds.");
+    }
+
+    const nextFrom = fromBalance - amount;
+    const nextTo = toBalance + amount;
+    if (nextTo > MAX_SAFE_AMOUNT_CENTIMES) {
+      throw new ApiError(
+        400,
+        "Resulting destination balance exceeds supported bounds."
+      );
+    }
+
+    const now = new Date().toISOString();
+    const transferGroupId = randomUUID();
+    updateAccountBalance.run({
+      id: fromAccountId,
+      balanceCentimes: nextFrom.toString(),
+      updatedAtUtc: now,
+    });
+    updateAccountBalance.run({
+      id: toAccountId,
+      balanceCentimes: nextTo.toString(),
+      updatedAtUtc: now,
+    });
+
+    const transferOut = {
+      id: randomUUID(),
+      accountId: fromAccountId,
+      kind: "TRANSFER_OUT",
+      amountCentimes: amount.toString(),
+      description: `${note} -> ${toAccount.holder}`,
+      transferGroupId,
+      createdAtUtc: now,
+    };
+    const transferIn = {
+      id: randomUUID(),
+      accountId: toAccountId,
+      kind: "TRANSFER_IN",
+      amountCentimes: amount.toString(),
+      description: `${note} <- ${fromAccount.holder}`,
+      transferGroupId,
+      createdAtUtc: now,
+    };
+
+    insertTransaction.run(transferOut);
+    insertTransaction.run(transferIn);
+    return { transferOut, transferIn };
+  })();
+
+  return {
+    transactions: [
+      serializeTransaction({
+        ...transferResult.transferOut,
+        account_id: transferResult.transferOut.accountId,
+        amount_centimes: transferResult.transferOut.amountCentimes,
+        transfer_group_id: transferResult.transferOut.transferGroupId,
+        created_at_utc: transferResult.transferOut.createdAtUtc,
+      }),
+      serializeTransaction({
+        ...transferResult.transferIn,
+        account_id: transferResult.transferIn.accountId,
+        amount_centimes: transferResult.transferIn.amountCentimes,
+        transfer_group_id: transferResult.transferIn.transferGroupId,
+        created_at_utc: transferResult.transferIn.createdAtUtc,
+      }),
+    ],
+    state: getState(100, authUser),
+  };
 };
 
 const executeIdempotentMutation = ({ req, mutate }) => {
@@ -3586,66 +3912,48 @@ app.get(
   }
 );
 
-app.post(
-  "/api/v1/banking/deposit",
-  requireAuth,
-  requireRoles([ROLE_TELLER, ROLE_MANAGER]),
-  (req, res, next) => {
-    try {
-      const { accountId, amountCentimes, description } = req.body ?? {};
-      if (!accountId || typeof accountId !== "string") {
-        throw new ApiError(400, "accountId is required.");
-      }
+  app.post(
+    "/api/v1/banking/deposit",
+    requireAuth,
+    requireRoles([ROLE_TELLER, ROLE_MANAGER]),
+    (req, res, next) => {
+      try {
+        const { accountId, amountCentimes, description } = req.body ?? {};
+        if (!accountId || typeof accountId !== "string") {
+          throw new ApiError(400, "accountId is required.");
+        }
 
-      const amount = parseAmountCentimes(amountCentimes);
-      const note =
-        typeof description === "string" && description.trim()
-          ? description.trim()
-          : "Manual deposit";
+        const amount = parseAmountCentimes(amountCentimes);
+        const note =
+          typeof description === "string" && description.trim()
+            ? description.trim()
+            : "Manual deposit";
 
-      const result = executeIdempotentMutation({
-        req,
-        mutate: () => {
-          const transactionResult = db.transaction(() => {
-            const account = getAccountOrThrow(accountId);
-            const nextBalance = BigInt(account.balance_centimes) + amount;
-
-            if (nextBalance > MAX_SAFE_AMOUNT_CENTIMES) {
-              throw new ApiError(400, "Resulting balance exceeds supported bounds.");
+        const result = executeIdempotentMutation({
+          req,
+          mutate: () => {
+            if (
+              req.authUser?.role === ROLE_TELLER &&
+              amount >= BANKING_APPROVAL_THRESHOLD_CENTIMES
+            ) {
+              return createPendingApprovalPayload({
+                req,
+                operationType: "DEPOSIT",
+                amountCentimes: amount,
+                description: note,
+                requestBody: { accountId, amountCentimes: amount.toString(), description: note },
+                accountId,
+              });
             }
 
-            const now = new Date().toISOString();
-            updateAccountBalance.run({
-              id: accountId,
-              balanceCentimes: nextBalance.toString(),
-              updatedAtUtc: now,
-            });
-
-            const transaction = {
-              id: randomUUID(),
+            return executeDepositOperation({
               accountId,
-              kind: "DEPOSIT",
-              amountCentimes: amount.toString(),
-              description: note,
-              transferGroupId: null,
-              createdAtUtc: now,
-            };
-            insertTransaction.run(transaction);
-            return transaction;
-          })();
-
-          return {
-            transaction: serializeTransaction({
-              ...transactionResult,
-              account_id: transactionResult.accountId,
-              amount_centimes: transactionResult.amountCentimes,
-              transfer_group_id: transactionResult.transferGroupId,
-              created_at_utc: transactionResult.createdAtUtc,
-            }),
-            state: getState(100, req.authUser),
-          };
-        },
-      });
+              amount,
+              note,
+              authUser: req.authUser,
+            });
+          },
+        });
 
       if (result.replayed) {
         res.set("X-Idempotency-Replayed", "true");
@@ -3681,10 +3989,10 @@ app.post(
   }
 );
 
-app.post(
-  "/api/v1/banking/withdraw",
-  requireAuth,
-  requireRoles([ROLE_TELLER, ROLE_MANAGER]),
+  app.post(
+    "/api/v1/banking/withdraw",
+    requireAuth,
+    requireRoles([ROLE_TELLER, ROLE_MANAGER]),
   (req, res, next) => {
     try {
       const { accountId, amountCentimes, description } = req.body ?? {};
@@ -3693,55 +4001,36 @@ app.post(
       }
 
       const amount = parseAmountCentimes(amountCentimes);
-      const note =
-        typeof description === "string" && description.trim()
-          ? description.trim()
-          : "Manual withdrawal";
+        const note =
+          typeof description === "string" && description.trim()
+            ? description.trim()
+            : "Manual withdrawal";
 
-      const result = executeIdempotentMutation({
-        req,
-        mutate: () => {
-          const transactionResult = db.transaction(() => {
-            const account = getAccountOrThrow(accountId);
-            const currentBalance = BigInt(account.balance_centimes);
-
-            if (currentBalance < amount) {
-              throw new ApiError(400, "Insufficient funds.");
+        const result = executeIdempotentMutation({
+          req,
+          mutate: () => {
+            if (
+              req.authUser?.role === ROLE_TELLER &&
+              amount >= BANKING_APPROVAL_THRESHOLD_CENTIMES
+            ) {
+              return createPendingApprovalPayload({
+                req,
+                operationType: "WITHDRAW",
+                amountCentimes: amount,
+                description: note,
+                requestBody: { accountId, amountCentimes: amount.toString(), description: note },
+                accountId,
+              });
             }
 
-            const nextBalance = currentBalance - amount;
-            const now = new Date().toISOString();
-            updateAccountBalance.run({
-              id: accountId,
-              balanceCentimes: nextBalance.toString(),
-              updatedAtUtc: now,
-            });
-
-            const transaction = {
-              id: randomUUID(),
+            return executeWithdrawOperation({
               accountId,
-              kind: "WITHDRAWAL",
-              amountCentimes: amount.toString(),
-              description: note,
-              transferGroupId: null,
-              createdAtUtc: now,
-            };
-            insertTransaction.run(transaction);
-            return transaction;
-          })();
-
-          return {
-            transaction: serializeTransaction({
-              ...transactionResult,
-              account_id: transactionResult.accountId,
-              amount_centimes: transactionResult.amountCentimes,
-              transfer_group_id: transactionResult.transferGroupId,
-              created_at_utc: transactionResult.createdAtUtc,
-            }),
-            state: getState(100, req.authUser),
-          };
-        },
-      });
+              amount,
+              note,
+              authUser: req.authUser,
+            });
+          },
+        });
 
       if (result.replayed) {
         res.set("X-Idempotency-Replayed", "true");
@@ -3803,6 +4092,14 @@ app.post("/api/v1/banking/transfer", requireAuth, (req, res, next) => {
     }
 
     const amount = parseAmountCentimes(amountCentimes);
+    if (currentRole === ROLE_CLIENT && amount > CLIENT_TRANSFER_MAX_CENTIMES) {
+      throw new ApiError(
+        403,
+        `Client transfer limit exceeded. Maximum allowed is ${formatCentimeAmount(
+          CLIENT_TRANSFER_MAX_CENTIMES
+        )}.`
+      );
+    }
     const note =
       typeof description === "string" && description.trim()
         ? description.trim()
@@ -3811,81 +4108,33 @@ app.post("/api/v1/banking/transfer", requireAuth, (req, res, next) => {
     const result = executeIdempotentMutation({
       req,
       mutate: () => {
-        const transferResult = db.transaction(() => {
-          const fromAccount = getAccountOrThrow(fromAccountId);
-          const toAccount = getAccountOrThrow(toAccountId);
-
-          const fromBalance = BigInt(fromAccount.balance_centimes);
-          const toBalance = BigInt(toAccount.balance_centimes);
-          if (fromBalance < amount) {
-            throw new ApiError(400, "Insufficient funds.");
-          }
-
-          const nextFrom = fromBalance - amount;
-          const nextTo = toBalance + amount;
-          if (nextTo > MAX_SAFE_AMOUNT_CENTIMES) {
-            throw new ApiError(
-              400,
-              "Resulting destination balance exceeds supported bounds."
-            );
-          }
-
-          const now = new Date().toISOString();
-          const transferGroupId = randomUUID();
-          updateAccountBalance.run({
-            id: fromAccountId,
-            balanceCentimes: nextFrom.toString(),
-            updatedAtUtc: now,
+        if (
+          req.authUser?.role === ROLE_TELLER &&
+          amount >= BANKING_APPROVAL_THRESHOLD_CENTIMES
+        ) {
+          return createPendingApprovalPayload({
+            req,
+            operationType: "TRANSFER",
+            amountCentimes: amount,
+            description: note,
+            requestBody: {
+              fromAccountId,
+              toAccountId,
+              amountCentimes: amount.toString(),
+              description: note,
+            },
+            fromAccountId,
+            toAccountId,
           });
-          updateAccountBalance.run({
-            id: toAccountId,
-            balanceCentimes: nextTo.toString(),
-            updatedAtUtc: now,
-          });
+        }
 
-          const transferOut = {
-            id: randomUUID(),
-            accountId: fromAccountId,
-            kind: "TRANSFER_OUT",
-            amountCentimes: amount.toString(),
-            description: `${note} -> ${toAccount.holder}`,
-            transferGroupId,
-            createdAtUtc: now,
-          };
-          const transferIn = {
-            id: randomUUID(),
-            accountId: toAccountId,
-            kind: "TRANSFER_IN",
-            amountCentimes: amount.toString(),
-            description: `${note} <- ${fromAccount.holder}`,
-            transferGroupId,
-            createdAtUtc: now,
-          };
-
-          insertTransaction.run(transferOut);
-          insertTransaction.run(transferIn);
-          return { transferOut, transferIn };
-        })();
-
-        return {
-          transactions: [
-            serializeTransaction({
-              ...transferResult.transferOut,
-              account_id: transferResult.transferOut.accountId,
-              amount_centimes: transferResult.transferOut.amountCentimes,
-              transfer_group_id: transferResult.transferOut.transferGroupId,
-              created_at_utc: transferResult.transferOut.createdAtUtc,
-            }),
-            serializeTransaction({
-              ...transferResult.transferIn,
-              account_id: transferResult.transferIn.accountId,
-              amount_centimes: transferResult.transferIn.amountCentimes,
-              transfer_group_id: transferResult.transferIn.transferGroupId,
-              created_at_utc: transferResult.transferIn.createdAtUtc,
-            }),
-          ],
-          state: getState(100, req.authUser),
-        };
+        return executeTransferOperation({
+          fromAccountId,
+          toAccountId,
+          amount,
+          note,
+          authUser: req.authUser,
+        });
       },
     });
 
@@ -3925,6 +4174,219 @@ app.post("/api/v1/banking/transfer", requireAuth, (req, res, next) => {
     next(error);
   }
 });
+
+app.get(
+  "/api/v1/banking/approvals",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const rawStatus = String(req.query.status || APPROVAL_STATUS_PENDING)
+        .trim()
+        .toUpperCase();
+      const status = [
+        APPROVAL_STATUS_PENDING,
+        APPROVAL_STATUS_APPROVED,
+        APPROVAL_STATUS_REJECTED,
+      ].includes(rawStatus)
+        ? rawStatus
+        : APPROVAL_STATUS_PENDING;
+      const limit = Number(req.query.limit ?? 100);
+      const safeLimit = Number.isFinite(limit)
+        ? Math.min(Math.max(limit, 1), 500)
+        : 100;
+      const approvals = listBankingApprovalsByStatus
+        .all(status, safeLimit)
+        .map(serializeApproval);
+      success(res, { approvals });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.post(
+  "/api/v1/banking/approvals/:approvalId/approve",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const approvalId = String(req.params.approvalId || "").trim();
+      if (!approvalId) {
+        throw new ApiError(400, "approvalId is required.");
+      }
+
+      const result = executeIdempotentMutation({
+        req,
+        mutate: () => {
+          const approval = getBankingApprovalById.get(approvalId);
+          if (!approval) {
+            throw new ApiError(404, "Approval not found.");
+          }
+          if (approval.status !== APPROVAL_STATUS_PENDING) {
+            throw new ApiError(400, "Approval is no longer pending.");
+          }
+          if (approval.initiated_by_user_id === req.authUser?.sub) {
+            throw new ApiError(403, "Maker-checker violation: self-approval is not allowed.");
+          }
+
+          const requestBody = JSON.parse(approval.request_body_json || "{}");
+          const amount = BigInt(approval.amount_centimes);
+          const now = new Date().toISOString();
+          let operationResult;
+
+          if (approval.operation_type === "DEPOSIT") {
+            operationResult = executeDepositOperation({
+              accountId: approval.account_id,
+              amount,
+              note: approval.description,
+              authUser: req.authUser,
+            });
+          } else if (approval.operation_type === "WITHDRAW") {
+            operationResult = executeWithdrawOperation({
+              accountId: approval.account_id,
+              amount,
+              note: approval.description,
+              authUser: req.authUser,
+            });
+          } else if (approval.operation_type === "TRANSFER") {
+            operationResult = executeTransferOperation({
+              fromAccountId: approval.from_account_id,
+              toAccountId: approval.to_account_id,
+              amount,
+              note: approval.description,
+              authUser: req.authUser,
+            });
+          } else {
+            throw new ApiError(400, "Unsupported approval type.");
+          }
+
+          updateBankingApprovalDecision.run({
+            id: approvalId,
+            status: APPROVAL_STATUS_APPROVED,
+            approvedByUserId: req.authUser?.sub ?? null,
+            approvedByUsername: req.authUser?.username ?? null,
+            decisionNote: String(req.body?.decisionNote || "Approved").trim(),
+            decidedAtUtc: now,
+            updatedAtUtc: now,
+          });
+
+          return {
+            approval: serializeApproval(getBankingApprovalById.get(approvalId)),
+            requestBody,
+            ...operationResult,
+          };
+        },
+      });
+
+      if (result.replayed) {
+        res.set("X-Idempotency-Replayed", "true");
+      }
+
+      writeAuditLog({
+        req,
+        action: "APPROVAL_APPROVE",
+        resourceType: "BANKING_APPROVAL",
+        resourceId: approvalId,
+        status: AUDIT_SUCCESS,
+        detail: {
+          idempotencyKey: result.idempotencyKey,
+          replayed: result.replayed,
+        },
+      });
+
+      success(res, result.payload, result.statusCode);
+    } catch (error) {
+      writeAuditLog({
+        req,
+        action: "APPROVAL_APPROVE",
+        resourceType: "BANKING_APPROVAL",
+        resourceId: req.params?.approvalId ?? null,
+        status: AUDIT_FAILURE,
+        detail: {
+          reason: error.message,
+        },
+      });
+      next(error);
+    }
+  }
+);
+
+app.post(
+  "/api/v1/banking/approvals/:approvalId/reject",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const approvalId = String(req.params.approvalId || "").trim();
+      if (!approvalId) {
+        throw new ApiError(400, "approvalId is required.");
+      }
+
+      const result = executeIdempotentMutation({
+        req,
+        mutate: () => {
+          const approval = getBankingApprovalById.get(approvalId);
+          if (!approval) {
+            throw new ApiError(404, "Approval not found.");
+          }
+          if (approval.status !== APPROVAL_STATUS_PENDING) {
+            throw new ApiError(400, "Approval is no longer pending.");
+          }
+          if (approval.initiated_by_user_id === req.authUser?.sub) {
+            throw new ApiError(403, "Maker-checker violation: self-rejection is not allowed.");
+          }
+
+          const now = new Date().toISOString();
+          updateBankingApprovalDecision.run({
+            id: approvalId,
+            status: APPROVAL_STATUS_REJECTED,
+            approvedByUserId: req.authUser?.sub ?? null,
+            approvedByUsername: req.authUser?.username ?? null,
+            decisionNote: String(req.body?.decisionNote || "Rejected").trim(),
+            decidedAtUtc: now,
+            updatedAtUtc: now,
+          });
+
+          return {
+            approval: serializeApproval(getBankingApprovalById.get(approvalId)),
+            state: getState(100, req.authUser),
+          };
+        },
+      });
+
+      if (result.replayed) {
+        res.set("X-Idempotency-Replayed", "true");
+      }
+
+      writeAuditLog({
+        req,
+        action: "APPROVAL_REJECT",
+        resourceType: "BANKING_APPROVAL",
+        resourceId: approvalId,
+        status: AUDIT_SUCCESS,
+        detail: {
+          idempotencyKey: result.idempotencyKey,
+          replayed: result.replayed,
+        },
+      });
+
+      success(res, result.payload, result.statusCode);
+    } catch (error) {
+      writeAuditLog({
+        req,
+        action: "APPROVAL_REJECT",
+        resourceType: "BANKING_APPROVAL",
+        resourceId: req.params?.approvalId ?? null,
+        status: AUDIT_FAILURE,
+        detail: {
+          reason: error.message,
+        },
+      });
+      next(error);
+    }
+  }
+);
 
 app.get("/api/v1/compta/overview", requireAuth, (req, res, next) => {
   try {

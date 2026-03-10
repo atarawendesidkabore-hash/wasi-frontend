@@ -79,6 +79,7 @@ export const BankingApp = () => {
 
   return (
     <AfriTradeApp
+      initialScreen="main"
       onOpenWasiTerminal={openEmbeddedTerminal}
       onOpenDex={() => openModule("dex")}
       onOpenAfriTax={() => openModule("afritax")}

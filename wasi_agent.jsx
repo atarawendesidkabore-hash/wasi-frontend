@@ -188,7 +188,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
       setDexOrderForm((previous) => ({ ...previous, symbol: effectiveSymbol }));
 
       const bookResponse = await fetchWithApiFailover(
-        `/api/v1/dex/orderbook/${encodeURIComponent(effectiveSymbol)}depth=12`,
+        `/api/v1/dex/orderbook/${encodeURIComponent(effectiveSymbol)}?depth=12`,
         { headers: commonHeaders }
       );
       const bookPayload = await parseDexPayload(bookResponse);
@@ -480,7 +480,7 @@ function WASIAgent({ authToken, userInfo, onLogout }) {
     (async () => {
       try {
         const response = await fetchWithApiFailover(
-          `/api/v1/dex/orderbook/${encodeURIComponent(dexSelectedSymbol)}depth=12`,
+          `/api/v1/dex/orderbook/${encodeURIComponent(dexSelectedSymbol)}?depth=12`,
           { headers: { Authorization: `Bearer ${backendToken}` } }
         );
         const payload = await parseDexPayload(response);
