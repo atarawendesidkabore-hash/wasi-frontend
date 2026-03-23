@@ -10,6 +10,8 @@ import { AfriTradeModuleApp } from "./afritrade/AfriTradeModuleApp";
 import { AfriTaxApp } from "./afritax/AfriTaxApp";
 import { OhadaComptaApp } from "./compta/OhadaComptaApp";
 import { FinanceWorkbenchApp } from "./finance/FinanceWorkbenchApp";
+import { WorkspaceHomeApp } from "./platform/WorkspaceHomeApp";
+import { CommercialDemoKitApp } from "./platform/CommercialDemoKitApp";
 
 const params = new URLSearchParams(window.location.search);
 const rawApp = params.get("app");
@@ -25,6 +27,14 @@ if (forceLogin) {
 const FallbackApp = WasiApp;
 
 const AppRoute = () => {
+  if (selectedApp === "home") {
+    return <WorkspaceHomeApp />;
+  }
+
+  if (selectedApp === "sales") {
+    return <CommercialDemoKitApp />;
+  }
+
   if (selectedApp === "banking") {
     return isFeatureEnabled("banking") ? <BankingApp /> : <FallbackApp />;
   }

@@ -12,6 +12,10 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import jwt from "jsonwebtoken";
 import Database from "better-sqlite3";
+import {
+  SYSCOHADA_CLASS_LABELS,
+  SYSCOHADA_SEED_ACCOUNTS,
+} from "./data/syscohadaSeed.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,11 +81,14 @@ if (IS_PRODUCTION && !JWT_SECRET_FROM_ENV) {
 const JWT_SECRET = JWT_SECRET_FROM_ENV || randomBytes(32).toString("hex");
 const JWT_EXPIRES_IN = process.env.BANKING_JWT_EXPIRES_IN ?? "12h";
 const PASSWORD_PEPPER = String(process.env.BANKING_PASSWORD_PEPPER || "");
+if (IS_PRODUCTION && !PASSWORD_PEPPER) {
+  console.warn("WARNING: BANKING_PASSWORD_PEPPER is not set. Set it for stronger password hashing.");
+}
 const AUTH_RATE_LIMIT_WINDOW_MS = Number(
-  process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000
+  process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? 30 * 60 * 1000
 );
 const AUTH_RATE_LIMIT_MAX_ATTEMPTS = Number(
-  process.env.AUTH_RATE_LIMIT_MAX_ATTEMPTS ?? 8
+  process.env.AUTH_RATE_LIMIT_MAX_ATTEMPTS ?? 5
 );
 const PASSWORD_HASH_KEY_LENGTH = 64;
 const PASSWORD_HASH_VERSION = "scrypt-v1";
@@ -93,9 +100,7 @@ const BANKING_APPROVAL_THRESHOLD_CENTIMES = parseCentimeLimit(
   process.env.BANKING_APPROVAL_THRESHOLD_CENTIMES,
   "100000000"
 );
-const LEGACY_DEFAULT_DEV_PASSWORD_SECRET = !IS_PRODUCTION
-  ? "wasi-dev-insecure-secret"
-  : "";
+const LEGACY_DEFAULT_DEV_PASSWORD_SECRET = "";
 const LEGACY_PASSWORD_SECRETS = [
   process.env.LEGACY_PASSWORD_SECRET,
   process.env.BANKING_JWT_SECRET,
@@ -347,6 +352,8 @@ db.exec(`
     class_number INTEGER NOT NULL CHECK (class_number BETWEEN 1 AND 8),
     category TEXT NOT NULL,
     kind TEXT NOT NULL CHECK (kind IN ('DEBIT','CREDIT','BOTH')),
+    normal_side TEXT NOT NULL DEFAULT 'DEBIT' CHECK (normal_side IN ('DEBIT','CREDIT','BOTH')),
+    statement_section TEXT NOT NULL DEFAULT 'OTHER_ASSET',
     is_active INTEGER NOT NULL DEFAULT 1,
     created_at_utc TEXT NOT NULL,
     updated_at_utc TEXT NOT NULL
@@ -358,6 +365,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS accounting_journal_entries (
     id TEXT PRIMARY KEY,
     reference TEXT NOT NULL UNIQUE,
+    journal_code TEXT NOT NULL DEFAULT 'OD',
     module_source TEXT NOT NULL,
     description TEXT NOT NULL,
     entry_date_utc TEXT NOT NULL,
@@ -410,6 +418,34 @@ const ensureDexSchema = () => {
 };
 
 ensureDexSchema();
+const ensureComptaSchemaExtensions = () => {
+  const accountColumns = db
+    .prepare("PRAGMA table_info(syscohada_accounts)")
+    .all()
+    .map((column) => column.name);
+  if (!accountColumns.includes("normal_side")) {
+    db.exec(
+      "ALTER TABLE syscohada_accounts ADD COLUMN normal_side TEXT NOT NULL DEFAULT 'DEBIT'"
+    );
+  }
+  if (!accountColumns.includes("statement_section")) {
+    db.exec(
+      "ALTER TABLE syscohada_accounts ADD COLUMN statement_section TEXT NOT NULL DEFAULT 'OTHER_ASSET'"
+    );
+  }
+
+  const journalColumns = db
+    .prepare("PRAGMA table_info(accounting_journal_entries)")
+    .all()
+    .map((column) => column.name);
+  if (!journalColumns.includes("journal_code")) {
+    db.exec(
+      "ALTER TABLE accounting_journal_entries ADD COLUMN journal_code TEXT NOT NULL DEFAULT 'OD'"
+    );
+  }
+};
+
+ensureComptaSchemaExtensions();
 db.exec(`
   CREATE INDEX IF NOT EXISTS idx_etf_tokens_category_active
   ON etf_tokens(category, is_active, symbol);
@@ -533,48 +569,10 @@ const DEX_SEED_POSITIONS = [
   { userId: "usr-manager-demo", symbol: "WASI-EQ", quantityUnits: "600" },
 ];
 
-const SYSCOHADA_CLASS_LABELS = {
-  1: "Capitaux",
-  2: "Immobilisations",
-  3: "Stocks",
-  4: "Tiers",
-  5: "Tresorerie",
-  6: "Charges",
-  7: "Produits",
-  8: "Hors activites ordinaires",
-};
-
-const SYSCOHADA_SEED_ACCOUNTS = [
-  { code: "101000", label: "Capital social", classNumber: 1, category: "CAPITAUX_PROPRES", kind: "CREDIT" },
-  { code: "106100", label: "Reserves libres", classNumber: 1, category: "CAPITAUX_PROPRES", kind: "CREDIT" },
-  { code: "131000", label: "Resultat net de l'exercice", classNumber: 1, category: "RESULTAT", kind: "CREDIT" },
-  { code: "211000", label: "Logiciels et plateformes", classNumber: 2, category: "IMMOBILISATIONS_INCORPORELLES", kind: "DEBIT" },
-  { code: "244000", label: "Mobilier et materiel de bureau", classNumber: 2, category: "IMMOBILISATIONS_CORPORELLES", kind: "DEBIT" },
-  { code: "371000", label: "Marchandises et produits digitaux", classNumber: 3, category: "STOCKS", kind: "DEBIT" },
-  { code: "401100", label: "Fournisseurs", classNumber: 4, category: "DETTES_FOURNISSEURS", kind: "CREDIT" },
-  { code: "411100", label: "Clients", classNumber: 4, category: "CREANCES_CLIENTS", kind: "DEBIT" },
-  { code: "421000", label: "Personnel remuneration due", classNumber: 4, category: "DETTES_SOCIALES", kind: "CREDIT" },
-  { code: "443100", label: "TVA facturee", classNumber: 4, category: "TVA_COLLECTEE", kind: "CREDIT" },
-  { code: "445660", label: "TVA deductible sur biens et services", classNumber: 4, category: "TVA_DEDUCTIBLE", kind: "DEBIT" },
-  { code: "447000", label: "Etat - impots et taxes dus", classNumber: 4, category: "FISCALITE", kind: "CREDIT" },
-  { code: "521000", label: "Banque - Ecobank", classNumber: 5, category: "BANQUE", kind: "DEBIT" },
-  { code: "571000", label: "Caisse XOF", classNumber: 5, category: "CAISSE", kind: "DEBIT" },
-  { code: "601100", label: "Achats de services cloud", classNumber: 6, category: "ACHATS", kind: "DEBIT" },
-  { code: "616100", label: "Loyers et charges locatives", classNumber: 6, category: "SERVICES_EXTERNES", kind: "DEBIT" },
-  { code: "628100", label: "Autres services externes", classNumber: 6, category: "SERVICES_EXTERNES", kind: "DEBIT" },
-  { code: "641100", label: "Salaires et traitements", classNumber: 6, category: "PERSONNEL", kind: "DEBIT" },
-  { code: "671200", label: "Charges financieres et provisions fiscales", classNumber: 6, category: "CHARGES_FINANCIERES", kind: "DEBIT" },
-  { code: "701100", label: "Ventes de solutions digitales", classNumber: 7, category: "VENTES", kind: "CREDIT" },
-  { code: "706100", label: "Commissions bancaires et trading", classNumber: 7, category: "SERVICES", kind: "CREDIT" },
-  { code: "706200", label: "Frais de marche DEX", classNumber: 7, category: "SERVICES", kind: "CREDIT" },
-  { code: "707100", label: "Services data et intelligence WASI", classNumber: 7, category: "SERVICES", kind: "CREDIT" },
-  { code: "811000", label: "Produits hors activites ordinaires", classNumber: 8, category: "HAO_PRODUITS", kind: "CREDIT" },
-  { code: "831000", label: "Charges hors activites ordinaires", classNumber: 8, category: "HAO_CHARGES", kind: "DEBIT" },
-];
-
 const ACCOUNTING_SEED_ENTRIES = [
   {
     reference: "CAP-2026-001",
+    journalCode: "BQ",
     moduleSource: "BANKING",
     description: "Apport initial en capital pour la plateforme WASI",
     entryDateUtc: "2026-01-03T09:00:00.000Z",
@@ -585,6 +583,7 @@ const ACCOUNTING_SEED_ENTRIES = [
   },
   {
     reference: "WASI-2026-001",
+    journalCode: "VT",
     moduleSource: "WASI",
     description: "Facturation abonnement intelligence economique",
     entryDateUtc: "2026-01-10T11:00:00.000Z",
@@ -596,6 +595,7 @@ const ACCOUNTING_SEED_ENTRIES = [
   },
   {
     reference: "AFT-2026-001",
+    journalCode: "VT",
     moduleSource: "AFRITRADE",
     description: "Commissions de trading clients",
     entryDateUtc: "2026-01-14T14:00:00.000Z",
@@ -607,6 +607,7 @@ const ACCOUNTING_SEED_ENTRIES = [
   },
   {
     reference: "DEX-2026-001",
+    journalCode: "VT",
     moduleSource: "DEX",
     description: "Frais ETF DEX encaisses",
     entryDateUtc: "2026-01-17T16:30:00.000Z",
@@ -618,6 +619,7 @@ const ACCOUNTING_SEED_ENTRIES = [
   },
   {
     reference: "CLD-2026-001",
+    journalCode: "AC",
     moduleSource: "WASI",
     description: "Facture fournisseur infrastructure cloud",
     entryDateUtc: "2026-01-20T09:15:00.000Z",
@@ -629,6 +631,7 @@ const ACCOUNTING_SEED_ENTRIES = [
   },
   {
     reference: "PAY-2026-001",
+    journalCode: "BQ",
     moduleSource: "BANKING",
     description: "Reglement facture cloud",
     entryDateUtc: "2026-01-25T13:45:00.000Z",
@@ -639,16 +642,18 @@ const ACCOUNTING_SEED_ENTRIES = [
   },
   {
     reference: "SAL-2026-001",
+    journalCode: "OD",
     moduleSource: "BANKING",
     description: "Paie equipe produit et operations",
     entryDateUtc: "2026-01-28T18:00:00.000Z",
     lines: [
-      { accountCode: "641100", lineLabel: "Salaires", debitCentimes: "1200000000", creditCentimes: "0" },
+      { accountCode: "661100", lineLabel: "Salaires", debitCentimes: "1200000000", creditCentimes: "0" },
       { accountCode: "521000", lineLabel: "Paiement salaires", debitCentimes: "0", creditCentimes: "1200000000" },
     ],
   },
   {
     reference: "TAX-2026-001",
+    journalCode: "OD",
     moduleSource: "AFRITAX",
     description: "Provision fiscale mensuelle",
     entryDateUtc: "2026-01-31T17:00:00.000Z",
@@ -1154,15 +1159,17 @@ const ensureComptaSeedData = () => {
 
   const upsertAccount = db.prepare(`
     INSERT INTO syscohada_accounts (
-      code, label, class_number, category, kind, is_active, created_at_utc, updated_at_utc
+      code, label, class_number, category, kind, normal_side, statement_section, is_active, created_at_utc, updated_at_utc
     ) VALUES (
-      @code, @label, @classNumber, @category, @kind, 1, @createdAtUtc, @updatedAtUtc
+      @code, @label, @classNumber, @category, @kind, @normalSide, @statementSection, 1, @createdAtUtc, @updatedAtUtc
     )
     ON CONFLICT(code) DO UPDATE SET
       label = excluded.label,
       class_number = excluded.class_number,
       category = excluded.category,
       kind = excluded.kind,
+      normal_side = excluded.normal_side,
+      statement_section = excluded.statement_section,
       is_active = 1,
       updated_at_utc = excluded.updated_at_utc
   `);
@@ -1188,10 +1195,10 @@ const ensureComptaSeedData = () => {
 
   const insertEntry = db.prepare(`
     INSERT INTO accounting_journal_entries (
-      id, reference, module_source, description, entry_date_utc, status,
+      id, reference, journal_code, module_source, description, entry_date_utc, status,
       total_debit_centimes, total_credit_centimes, created_at_utc, updated_at_utc
     ) VALUES (
-      @id, @reference, @moduleSource, @description, @entryDateUtc, 'POSTED',
+      @id, @reference, @journalCode, @moduleSource, @description, @entryDateUtc, 'POSTED',
       @totalDebitCentimes, @totalCreditCentimes, @createdAtUtc, @updatedAtUtc
     )
   `);
@@ -1213,6 +1220,7 @@ const ensureComptaSeedData = () => {
       insertEntry.run({
         id: entryId,
         reference: entry.reference,
+        journalCode: entry.journalCode ?? "OD",
         moduleSource: entry.moduleSource,
         description: entry.description,
         entryDateUtc: entry.entryDateUtc,
@@ -1302,7 +1310,7 @@ const clearAuthFailures = (req, username) => {
 };
 
 const isCorsOriginAllowed = (origin) => {
-  if (!origin) return true;
+  if (!origin) return !IS_PRODUCTION;
   if (CORS_ALLOWED_ORIGINS.size > 0) {
     return CORS_ALLOWED_ORIGINS.has(origin);
   }
@@ -1328,8 +1336,20 @@ app.use(
     ],
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: false, limit: "100kb" }));
+
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  if (IS_PRODUCTION) {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+  next();
+});
 
 const success = (res, data, statusCode = 200) =>
   res.status(statusCode).json({
@@ -1532,6 +1552,8 @@ const serializeSyscohadaAccount = (row) => ({
   classLabel: SYSCOHADA_CLASS_LABELS[Number(row.class_number)] ?? "Classe",
   category: row.category,
   kind: row.kind,
+  normalSide: row.normal_side,
+  statementSection: row.statement_section,
 });
 
 const serializeAccountingLine = (row) => ({
@@ -1546,6 +1568,7 @@ const serializeAccountingLine = (row) => ({
 const serializeAccountingEntry = (row) => ({
   id: row.id,
   reference: row.reference,
+  journalCode: row.journal_code ?? "OD",
   moduleSource: row.module_source,
   description: row.description,
   entryDateUtc: row.entry_date_utc,
@@ -1610,6 +1633,8 @@ const buildTrialBalanceSnapshot = () => {
       classLabel: SYSCOHADA_CLASS_LABELS[Number(row.class_number)] ?? "Classe",
       category: row.category,
       kind: row.kind,
+      normalSide: row.normal_side,
+      statementSection: row.statement_section,
       totalDebitCentimes: totalDebitCentimes.toString(),
       totalCreditCentimes: totalCreditCentimes.toString(),
       balanceSide,
@@ -1643,6 +1668,455 @@ const getDebitBalanceCentimes = (row) =>
 
 const getCreditBalanceCentimes = (row) =>
   row && row.balanceSide === "CREDIT" ? BigInt(row.balanceCentimes) : 0n;
+
+const getSignedRowNetCentimes = (row) =>
+  BigInt(row.totalDebitCentimes) - BigInt(row.totalCreditCentimes);
+
+const sumRowsByPrefixes = (rows, prefixes, orientation = "DEBIT") =>
+  rows.reduce((sum, row) => {
+    if (!prefixes.some((prefix) => row.code.startsWith(prefix))) {
+      return sum;
+    }
+
+    const signedNet = getSignedRowNetCentimes(row);
+    return orientation === "DEBIT" ? sum + signedNet : sum - signedNet;
+  }, 0n);
+
+const sumRowsByStatementSections = (rows, sections, orientation = "DEBIT") =>
+  rows.reduce((sum, row) => {
+    if (!sections.includes(row.statementSection)) {
+      return sum;
+    }
+
+    const signedNet = getSignedRowNetCentimes(row);
+    return orientation === "DEBIT" ? sum + signedNet : sum - signedNet;
+  }, 0n);
+
+const buildIncomeStatementSnapshot = (trialBalance = buildTrialBalanceSnapshot()) => {
+  const rows = trialBalance.rows;
+
+  const salesRevenueCentimes = sumRowsByPrefixes(
+    rows,
+    ["701", "702", "703", "704", "706", "707", "708"],
+    "CREDIT"
+  );
+  const stockAndProducedRevenueCentimes = sumRowsByPrefixes(
+    rows,
+    ["721", "731"],
+    "CREDIT"
+  );
+  const otherOperatingRevenueCentimes = sumRowsByPrefixes(
+    rows,
+    ["751", "754", "781", "791"],
+    "CREDIT"
+  );
+  const purchasesCentimes = sumRowsByPrefixes(
+    rows,
+    ["601", "602", "603", "604", "605", "606"],
+    "DEBIT"
+  );
+  const transportCentimes = sumRowsByPrefixes(rows, ["611", "612", "613"], "DEBIT");
+  const externalServicesCentimes = sumRowsByPrefixes(
+    rows,
+    [
+      "621",
+      "622",
+      "623",
+      "624",
+      "625",
+      "626",
+      "627",
+      "628",
+      "631",
+      "632",
+      "633",
+      "634",
+      "635",
+      "636",
+      "637",
+      "638",
+    ],
+    "DEBIT"
+  );
+  const taxesAndDutiesCentimes = sumRowsByPrefixes(
+    rows,
+    ["641", "645", "646"],
+    "DEBIT"
+  );
+  const personnelCentimes = sumRowsByPrefixes(rows, ["661", "664", "665"], "DEBIT");
+  const depreciationCentimes = sumRowsByPrefixes(rows, ["681", "691"], "DEBIT");
+  const financialExpenseCentimes = sumRowsByPrefixes(
+    rows,
+    ["671", "672", "675"],
+    "DEBIT"
+  );
+  const financialIncomeCentimes = sumRowsByPrefixes(rows, ["771"], "CREDIT");
+  const incomeTaxCentimes = sumRowsByPrefixes(rows, ["695"], "DEBIT");
+  const haoRevenueCentimes = sumRowsByPrefixes(rows, ["811", "881"], "CREDIT");
+  const haoExpenseCentimes = sumRowsByPrefixes(rows, ["831", "871"], "DEBIT");
+
+  const grossMarginCentimes = salesRevenueCentimes - purchasesCentimes;
+  const valueAddedCentimes =
+    salesRevenueCentimes +
+    stockAndProducedRevenueCentimes +
+    otherOperatingRevenueCentimes -
+    purchasesCentimes -
+    transportCentimes -
+    externalServicesCentimes;
+  const ebeCentimes =
+    valueAddedCentimes - taxesAndDutiesCentimes - personnelCentimes;
+  const operatingResultCentimes = ebeCentimes - depreciationCentimes;
+  const financialResultCentimes =
+    financialIncomeCentimes - financialExpenseCentimes;
+  const ordinaryResultBeforeTaxCentimes =
+    operatingResultCentimes + financialResultCentimes;
+  const ordinaryResultAfterTaxCentimes =
+    ordinaryResultBeforeTaxCentimes - incomeTaxCentimes;
+  const haoResultCentimes = haoRevenueCentimes - haoExpenseCentimes;
+  const netResultCentimes =
+    ordinaryResultAfterTaxCentimes + haoResultCentimes;
+
+  return {
+    rows: [
+      {
+        code: "CA",
+        label: "Chiffre d'affaires et prestations",
+        amountCentimes: salesRevenueCentimes.toString(),
+      },
+      {
+        code: "PS",
+        label: "Production stockee et immobilisee",
+        amountCentimes: (
+          stockAndProducedRevenueCentimes + otherOperatingRevenueCentimes
+        ).toString(),
+      },
+      {
+        code: "ACH",
+        label: "Achats consommes",
+        amountCentimes: purchasesCentimes.toString(),
+      },
+      {
+        code: "TRP",
+        label: "Transports",
+        amountCentimes: transportCentimes.toString(),
+      },
+      {
+        code: "SE",
+        label: "Services exterieurs et autres services",
+        amountCentimes: externalServicesCentimes.toString(),
+      },
+      {
+        code: "IT",
+        label: "Impots et taxes",
+        amountCentimes: taxesAndDutiesCentimes.toString(),
+      },
+      {
+        code: "PER",
+        label: "Charges de personnel",
+        amountCentimes: personnelCentimes.toString(),
+      },
+      {
+        code: "DAP",
+        label: "Dotations aux amortissements et provisions",
+        amountCentimes: depreciationCentimes.toString(),
+      },
+      {
+        code: "RF",
+        label: "Resultat financier",
+        amountCentimes: financialResultCentimes.toString(),
+      },
+      {
+        code: "HAO",
+        label: "Resultat hors activites ordinaires",
+        amountCentimes: haoResultCentimes.toString(),
+      },
+      {
+        code: "IS",
+        label: "Impot sur le resultat",
+        amountCentimes: incomeTaxCentimes.toString(),
+      },
+      {
+        code: "RN",
+        label: "Resultat net",
+        amountCentimes: netResultCentimes.toString(),
+      },
+    ],
+    aggregates: {
+      salesRevenueCentimes: salesRevenueCentimes.toString(),
+      stockAndProducedRevenueCentimes:
+        stockAndProducedRevenueCentimes.toString(),
+      otherOperatingRevenueCentimes:
+        otherOperatingRevenueCentimes.toString(),
+      purchasesCentimes: purchasesCentimes.toString(),
+      transportCentimes: transportCentimes.toString(),
+      externalServicesCentimes: externalServicesCentimes.toString(),
+      taxesAndDutiesCentimes: taxesAndDutiesCentimes.toString(),
+      personnelCentimes: personnelCentimes.toString(),
+      depreciationCentimes: depreciationCentimes.toString(),
+      financialExpenseCentimes: financialExpenseCentimes.toString(),
+      financialIncomeCentimes: financialIncomeCentimes.toString(),
+      grossMarginCentimes: grossMarginCentimes.toString(),
+      valueAddedCentimes: valueAddedCentimes.toString(),
+      ebeCentimes: ebeCentimes.toString(),
+      operatingResultCentimes: operatingResultCentimes.toString(),
+      financialResultCentimes: financialResultCentimes.toString(),
+      ordinaryResultBeforeTaxCentimes:
+        ordinaryResultBeforeTaxCentimes.toString(),
+      ordinaryResultAfterTaxCentimes:
+        ordinaryResultAfterTaxCentimes.toString(),
+      incomeTaxCentimes: incomeTaxCentimes.toString(),
+      haoRevenueCentimes: haoRevenueCentimes.toString(),
+      haoExpenseCentimes: haoExpenseCentimes.toString(),
+      haoResultCentimes: haoResultCentimes.toString(),
+      netResultCentimes: netResultCentimes.toString(),
+    },
+  };
+};
+
+const buildBalanceSheetSnapshot = (trialBalance = buildTrialBalanceSnapshot()) => {
+  const rows = trialBalance.rows;
+  const incomeStatement = buildIncomeStatementSnapshot(trialBalance);
+  const postedCurrentResultCentimes = sumRowsByStatementSections(
+    rows,
+    ["CURRENT_RESULT"],
+    "CREDIT"
+  );
+  const currentResultCentimes =
+    postedCurrentResultCentimes !== 0n
+      ? postedCurrentResultCentimes
+      : BigInt(incomeStatement.aggregates.netResultCentimes);
+
+  const fixedAssetGrossCentimes = sumRowsByStatementSections(
+    rows,
+    ["FIXED_ASSET"],
+    "DEBIT"
+  );
+  const accumulatedDepreciationCentimes = sumRowsByStatementSections(
+    rows,
+    ["ACCUM_DEPRECIATION"],
+    "CREDIT"
+  );
+  const fixedAssetNetCentimes =
+    fixedAssetGrossCentimes - accumulatedDepreciationCentimes;
+
+  const inventoryGrossCentimes = sumRowsByStatementSections(
+    rows,
+    ["INVENTORY"],
+    "DEBIT"
+  );
+  const inventoryDepreciationCentimes = sumRowsByStatementSections(
+    rows,
+    ["INVENTORY_DEPRECIATION"],
+    "CREDIT"
+  );
+  const inventoryNetCentimes =
+    inventoryGrossCentimes - inventoryDepreciationCentimes;
+
+  const receivablesCentimes = sumRowsByStatementSections(
+    rows,
+    ["RECEIVABLE", "TAX_RECEIVABLE", "OTHER_ASSET"],
+    "DEBIT"
+  );
+
+  const cashNetCentimes = sumRowsByStatementSections(rows, ["CASH"], "DEBIT");
+  const treasuryAssetCentimes =
+    cashNetCentimes > 0n ? cashNetCentimes : 0n;
+  const treasuryLiabilityCentimes =
+    cashNetCentimes < 0n ? 0n - cashNetCentimes : 0n;
+
+  const equityCentimes = sumRowsByStatementSections(
+    rows,
+    ["EQUITY"],
+    "CREDIT"
+  );
+  const provisionsCentimes = sumRowsByStatementSections(
+    rows,
+    ["PROVISION"],
+    "CREDIT"
+  );
+  const longTermLiabilitiesCentimes = sumRowsByStatementSections(
+    rows,
+    ["LONG_TERM_LIABILITY"],
+    "CREDIT"
+  );
+  const currentLiabilitiesCentimes = sumRowsByStatementSections(
+    rows,
+    ["PAYABLE", "TAX_PAYABLE", "OTHER_LIABILITY"],
+    "CREDIT"
+  );
+
+  const totalActifCentimes =
+    fixedAssetNetCentimes +
+    inventoryNetCentimes +
+    receivablesCentimes +
+    treasuryAssetCentimes;
+  const totalPassifCentimes =
+    equityCentimes +
+    currentResultCentimes +
+    provisionsCentimes +
+    longTermLiabilitiesCentimes +
+    currentLiabilitiesCentimes +
+    treasuryLiabilityCentimes;
+
+  return {
+    actif: [
+      {
+        code: "AI",
+        label: "Actif immobilise net",
+        amountCentimes: fixedAssetNetCentimes.toString(),
+        detail: {
+          grossCentimes: fixedAssetGrossCentimes.toString(),
+          depreciationCentimes: accumulatedDepreciationCentimes.toString(),
+        },
+      },
+      {
+        code: "ACS",
+        label: "Stocks nets",
+        amountCentimes: inventoryNetCentimes.toString(),
+        detail: {
+          grossCentimes: inventoryGrossCentimes.toString(),
+          depreciationCentimes: inventoryDepreciationCentimes.toString(),
+        },
+      },
+      {
+        code: "ACR",
+        label: "Creances et comptes de regularisation",
+        amountCentimes: receivablesCentimes.toString(),
+      },
+      {
+        code: "TRESO",
+        label: "Tresorerie active",
+        amountCentimes: treasuryAssetCentimes.toString(),
+      },
+    ],
+    passif: [
+      {
+        code: "CP",
+        label: "Capitaux propres hors resultat",
+        amountCentimes: equityCentimes.toString(),
+      },
+      {
+        code: "RN",
+        label: "Resultat de l'exercice",
+        amountCentimes: currentResultCentimes.toString(),
+      },
+      {
+        code: "PROV",
+        label: "Provisions pour risques et charges",
+        amountCentimes: provisionsCentimes.toString(),
+      },
+      {
+        code: "DLMT",
+        label: "Dettes financieres et ressources durables",
+        amountCentimes: longTermLiabilitiesCentimes.toString(),
+      },
+      {
+        code: "DCT",
+        label: "Dettes a court terme",
+        amountCentimes: currentLiabilitiesCentimes.toString(),
+      },
+      {
+        code: "TRESO-P",
+        label: "Concours bancaires et tresorerie passive",
+        amountCentimes: treasuryLiabilityCentimes.toString(),
+      },
+    ],
+    totals: {
+      totalActifCentimes: totalActifCentimes.toString(),
+      totalPassifCentimes: totalPassifCentimes.toString(),
+      differenceCentimes: (totalActifCentimes - totalPassifCentimes).toString(),
+      isBalanced: totalActifCentimes === totalPassifCentimes,
+    },
+  };
+};
+
+const buildLedgerSnapshot = (accountCode, limit = 200) => {
+  const account = getSyscohadaAccountByCode.get(accountCode);
+  if (!account) {
+    throw new ApiError(404, `Unknown SYSCOHADA account: ${accountCode}.`);
+  }
+
+  const safeLimit = Number.isFinite(limit)
+    ? Math.min(Math.max(Number(limit), 1), 500)
+    : 200;
+  const ledgerRows = listLedgerLinesByAccountCode.all(accountCode);
+
+  let runningBalanceCentimes = 0n;
+  const entries = ledgerRows.map((row) => {
+    runningBalanceCentimes +=
+      BigInt(row.debit_centimes) - BigInt(row.credit_centimes);
+
+    const counterpartLines = listAccountingLinesByEntryId
+      .all(row.entry_id)
+      .filter((line) => line.account_code !== accountCode)
+      .map((line) => `${line.account_code} ${line.line_label}`);
+
+    return {
+      entryId: row.entry_id,
+      reference: row.reference,
+      journalCode: row.journal_code ?? "OD",
+      moduleSource: row.module_source,
+      description: row.description,
+      entryDateUtc: row.entry_date_utc,
+      lineLabel: row.line_label,
+      debitCentimes: String(row.debit_centimes),
+      creditCentimes: String(row.credit_centimes),
+      counterpartSummary: counterpartLines.join(" | "),
+      runningBalanceSide:
+        runningBalanceCentimes === 0n
+          ? "FLAT"
+          : runningBalanceCentimes > 0n
+            ? "DEBIT"
+            : "CREDIT",
+      runningBalanceCentimes:
+        (runningBalanceCentimes >= 0n
+          ? runningBalanceCentimes
+          : 0n - runningBalanceCentimes
+        ).toString(),
+    };
+  });
+
+  const totalDebitCentimes = entries.reduce(
+    (sum, row) => sum + BigInt(row.debitCentimes),
+    0n
+  );
+  const totalCreditCentimes = entries.reduce(
+    (sum, row) => sum + BigInt(row.creditCentimes),
+    0n
+  );
+
+  return {
+    account: serializeSyscohadaAccount(account),
+    totals: {
+      entryCount: entries.length,
+      totalDebitCentimes: totalDebitCentimes.toString(),
+      totalCreditCentimes: totalCreditCentimes.toString(),
+      closingBalanceSide:
+        runningBalanceCentimes === 0n
+          ? "FLAT"
+          : runningBalanceCentimes > 0n
+            ? "DEBIT"
+            : "CREDIT",
+      closingBalanceCentimes:
+        (runningBalanceCentimes >= 0n
+          ? runningBalanceCentimes
+          : 0n - runningBalanceCentimes
+        ).toString(),
+    },
+    entries: entries.slice(-safeLimit).reverse(),
+  };
+};
+
+const buildComptaStatements = (trialBalance = buildTrialBalanceSnapshot()) => {
+  const incomeStatement = buildIncomeStatementSnapshot(trialBalance);
+  const balanceSheet = buildBalanceSheetSnapshot(trialBalance);
+
+  return {
+    trialBalance,
+    incomeStatement,
+    balanceSheet,
+  };
+};
 
 const buildAfriTaxSummary = (trialBalance = buildTrialBalanceSnapshot()) => {
   const rowByCode = new Map(trialBalance.rows.map((row) => [row.code, row]));
@@ -2110,14 +2584,14 @@ const listDexRecentTradesGlobal = db.prepare(`
 `);
 
 const listSyscohadaAccounts = db.prepare(`
-  SELECT code, label, class_number, category, kind
+  SELECT code, label, class_number, category, kind, normal_side, statement_section
   FROM syscohada_accounts
   WHERE is_active = 1
   ORDER BY code ASC
 `);
 
 const getSyscohadaAccountByCode = db.prepare(`
-  SELECT code, label, class_number, category, kind
+  SELECT code, label, class_number, category, kind, normal_side, statement_section
   FROM syscohada_accounts
   WHERE code = ? AND is_active = 1
   LIMIT 1
@@ -2170,12 +2644,32 @@ const listAccountingLinesByEntryId = db.prepare(`
   ORDER BY rowid ASC
 `);
 
+const listLedgerLinesByAccountCode = db.prepare(`
+  SELECT
+    l.entry_id,
+    l.account_code,
+    l.line_label,
+    l.debit_centimes,
+    l.credit_centimes,
+    l.created_at_utc,
+    e.reference,
+    e.journal_code,
+    e.module_source,
+    e.description,
+    e.entry_date_utc
+  FROM accounting_journal_lines l
+  INNER JOIN accounting_journal_entries e
+    ON e.id = l.entry_id
+  WHERE e.status = 'POSTED' AND l.account_code = ?
+  ORDER BY e.entry_date_utc ASC, e.created_at_utc ASC, l.rowid ASC
+`);
+
 const insertAccountingEntry = db.prepare(`
   INSERT INTO accounting_journal_entries (
-    id, reference, module_source, description, entry_date_utc, status,
+    id, reference, journal_code, module_source, description, entry_date_utc, status,
     total_debit_centimes, total_credit_centimes, created_at_utc, updated_at_utc
   ) VALUES (
-    @id, @reference, @moduleSource, @description, @entryDateUtc, @status,
+    @id, @reference, @journalCode, @moduleSource, @description, @entryDateUtc, @status,
     @totalDebitCentimes, @totalCreditCentimes, @createdAtUtc, @updatedAtUtc
   )
 `);
@@ -2195,6 +2689,8 @@ const listTrialBalanceRows = db.prepare(`
     a.class_number,
     a.category,
     a.kind,
+    a.normal_side,
+    a.statement_section,
     COALESCE(
       SUM(
         CASE
@@ -2219,7 +2715,14 @@ const listTrialBalanceRows = db.prepare(`
   LEFT JOIN accounting_journal_entries e
     ON e.id = l.entry_id AND e.status = 'POSTED'
   WHERE a.is_active = 1
-  GROUP BY a.code, a.label, a.class_number, a.category, a.kind
+  GROUP BY
+    a.code,
+    a.label,
+    a.class_number,
+    a.category,
+    a.kind,
+    a.normal_side,
+    a.statement_section
   ORDER BY a.code ASC
 `);
 
@@ -3243,9 +3746,9 @@ const buildChatResponse = (queryText) => {
   const top = Object.entries(indices).sort((a, b) => b[1] - a[1]).slice(0, 3);
   const composite = Math.round(buildComposite(indices) * 10) / 10;
   const content =
-    `WASI live snapshot: composite ${composite}. ` +
-    `Top countries: ${top.map(([code, value]) => `${code} ${value}`).join(", ")}. ` +
-    `Query received: "${queryText}".`;
+    `Point de situation WASI : composite ${composite}. ` +
+    `Pays en tete : ${top.map(([code, value]) => `${code} ${value}`).join(", ")}. ` +
+    `Question recue : "${queryText}".`;
 
   return {
     id: randomUUID(),
@@ -4457,6 +4960,32 @@ app.get("/api/v1/compta/trial-balance", requireAuth, (_req, res, next) => {
   }
 });
 
+app.get("/api/v1/compta/ledger", requireAuth, (req, res, next) => {
+  try {
+    const accountCode = String(req.query.accountCode || "").trim();
+    const limit = Number(req.query.limit ?? 200);
+    if (!accountCode) {
+      throw new ApiError(400, "accountCode is required.");
+    }
+    success(res, buildLedgerSnapshot(accountCode, limit));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/compta/statements", requireAuth, (_req, res, next) => {
+  try {
+    const trialBalance = buildTrialBalanceSnapshot();
+    success(res, {
+      ...buildComptaStatements(trialBalance),
+      tax: buildAfriTaxSummary(trialBalance),
+      bridge: buildComptaBridgeSummary(trialBalance),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/api/v1/compta/bridge/summary", requireAuth, (_req, res, next) => {
   try {
     success(res, buildComptaBridgeSummary());
@@ -4484,6 +5013,9 @@ app.post(
   (req, res, next) => {
     try {
       const rawReference = String(req.body?.reference || "").trim();
+      const rawJournalCode = String(req.body?.journalCode || "OD")
+        .trim()
+        .toUpperCase();
       const rawDescription = String(req.body?.description || "").trim();
       const rawModuleSource = String(req.body?.moduleSource || "MANUAL")
         .trim()
@@ -4510,6 +5042,18 @@ app.post(
       ]);
       if (!allowedModuleSources.has(rawModuleSource)) {
         throw new ApiError(400, "moduleSource is invalid.");
+      }
+      const allowedJournalCodes = new Set([
+        "AC",
+        "VT",
+        "BQ",
+        "CA",
+        "OD",
+        "AN",
+        "EX",
+      ]);
+      if (!allowedJournalCodes.has(rawJournalCode)) {
+        throw new ApiError(400, "journalCode is invalid.");
       }
 
       const parsedEntryDate = new Date(rawEntryDateUtc);
@@ -4591,6 +5135,7 @@ app.post(
             insertAccountingEntry.run({
               id: entryId,
               reference,
+              journalCode: rawJournalCode,
               moduleSource: rawModuleSource,
               description: rawDescription,
               entryDateUtc,
@@ -4617,6 +5162,7 @@ app.post(
               ...serializeAccountingEntry({
                 id: entryId,
                 reference,
+                journal_code: rawJournalCode,
                 module_source: rawModuleSource,
                 description: rawDescription,
                 entry_date_utc: entryDateUtc,
@@ -4651,6 +5197,7 @@ app.post(
         status: AUDIT_SUCCESS,
         detail: {
           reference: result.payload.entry?.reference ?? rawReference ?? null,
+          journalCode: rawJournalCode,
           moduleSource: rawModuleSource,
           idempotencyKey: result.idempotencyKey,
           replayed: result.replayed,
@@ -4675,7 +5222,7 @@ app.post(
   }
 );
 
-app.get("/api/v1/dex/markets", (_req, res, next) => {
+app.get("/api/v1/dex/markets", requireAuth, (_req, res, next) => {
   try {
     const markets = getDexMarkets();
     success(res, {
@@ -4687,7 +5234,7 @@ app.get("/api/v1/dex/markets", (_req, res, next) => {
   }
 });
 
-app.get("/api/v1/dex/orderbook/:symbol", (req, res, next) => {
+app.get("/api/v1/dex/orderbook/:symbol", requireAuth, (req, res, next) => {
   try {
     const symbol = String(req.params.symbol || "").trim().toUpperCase();
     if (!symbol) {
@@ -4869,7 +5416,17 @@ app.post("/api/v1/dex/orders/:orderId/cancel", requireAuth, (req, res, next) => 
 
 app.use((error, _req, res, _next) => {
   const statusCode = error instanceof ApiError ? error.statusCode : 500;
-  failure(res, statusCode, error.message ?? "Unknown error");
+  const safeMessage =
+    error instanceof ApiError
+      ? error.message
+      : IS_PRODUCTION
+        ? "Internal server error"
+        : (error.message ?? "Unknown error");
+  if (statusCode >= 500) {
+    // eslint-disable-next-line no-console
+    console.error("[ERROR]", error);
+  }
+  failure(res, statusCode, safeMessage);
 });
 
 app.use((_req, res) => {

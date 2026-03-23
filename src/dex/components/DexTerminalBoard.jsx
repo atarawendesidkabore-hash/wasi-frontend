@@ -8,6 +8,7 @@ import {
   changeColor,
   fmtSigned,
 } from "../../platform/terminalChrome";
+import { buildAppHref } from "../../platform/AppSwitcher";
 
 const sectionTitle = (title) => (
   <div style={{ ...terminalSectionHeaderStyle, fontSize: 13 }}>{title}</div>
@@ -51,6 +52,18 @@ export function DexTerminalBoard({
       .sort((a, b) => Number(b.volume24hUnits || 0) - Number(a.volume24hUnits || 0))
       .slice(0, 8);
   }, [markets]);
+
+  const selectedMarket = useMemo(
+    () => markets.find((market) => market.symbol === selectedSymbol) ?? markets[0] ?? null,
+    [markets, selectedSymbol]
+  );
+
+  const bridgeLinks = [
+    { label: "WASI INTEL", href: buildAppHref("wasi") },
+    { label: "AFRITRADE EXEC", href: buildAppHref("afritrade") },
+    { label: "BANKING MGR", href: buildAppHref("banking", { bankingProfile: "manager" }) },
+    { label: "BANKING CLIENT", href: buildAppHref("banking", { bankingProfile: "client" }) },
+  ];
 
   const tickerItems = [
     { kind: "brand" },
@@ -347,6 +360,71 @@ export function DexTerminalBoard({
         </section>
 
         <section style={{ ...terminalPanelStyle, borderTop: "none", borderRight: "none", overflow: "auto" }}>
+          {sectionTitle("ETF / PONT AFRITRADE")}
+          <div style={{ padding: "10px 12px", display: "grid", gap: 10, fontSize: 13, lineHeight: 1.5 }}>
+            <div style={{ display: "grid", gap: 2 }}>
+              <div style={{ color: TERMINAL_COLORS.amber, fontWeight: 700, fontSize: 16 }}>
+                {selectedMarket?.symbol || "AUCUN ETF"}
+              </div>
+              <div style={{ color: TERMINAL_COLORS.textMuted }}>
+                {selectedMarket?.category || "Panier multi-actifs"} - lecture de marche reliee a AfriTrade.
+              </div>
+            </div>
+
+            <div
+              style={{
+                border: `1px solid ${TERMINAL_COLORS.border}`,
+                background: TERMINAL_COLORS.bgSoft,
+                padding: "10px 12px",
+                display: "grid",
+                gap: 8,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ color: TERMINAL_COLORS.textMuted }}>Dernier prix</span>
+                <span style={{ color: TERMINAL_COLORS.text }}>
+                  {selectedMarket ? formatCentimes(selectedMarket.lastPriceCentimes || "0") : "--"}
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ color: TERMINAL_COLORS.textMuted }}>Variation 24h</span>
+                <span style={{ color: changeColor(selectedMarket?.changePct24h || 0) }}>
+                  {fmtSigned(selectedMarket?.changePct24h || 0, 2)}%
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ color: TERMINAL_COLORS.textMuted }}>Volume 24h</span>
+                <span style={{ color: TERMINAL_COLORS.text }}>
+                  {selectedMarket?.volume24hUnits || "--"} unites
+                </span>
+              </div>
+            </div>
+
+            <div style={{ color: TERMINAL_COLORS.textMuted }}>
+              Lecture WASI / cotation ETF DEX / execution AfriTrade / mouvement bancaire client.
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {bridgeLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  style={{
+                    textDecoration: "none",
+                    border: `1px solid ${TERMINAL_COLORS.amber}`,
+                    color: TERMINAL_COLORS.amber,
+                    background: "transparent",
+                    padding: "8px 10px",
+                    textAlign: "center",
+                    fontSize: 12,
+                  }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
           {sectionTitle("SESSION")}
           {authUser ? (
             <div style={{ padding: "10px 12px", fontSize: 13, lineHeight: 1.7 }}>

@@ -11,6 +11,23 @@ node_modules/
 dist/
 .vite/
 .env
+.env.*
+*.env
+!.env.example
+
+# Tokens and secrets
+_stress_token.txt
+*.pem
+*.key
+
+# Database files at root
+*.db
+*.db-wal
+*.db-shm
+
+# Stress test artifacts
+stress_results_*.csv
+stress_report.html
 
 # Logs
 npm-debug.log*

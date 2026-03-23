@@ -45,17 +45,32 @@ const createIdempotencyKey = (prefix) => {
 export const fetchComptaOverview = async () =>
   request("/api/v1/compta/overview", { method: "GET" });
 
+export const fetchComptaChart = async () =>
+  request("/api/v1/compta/chart", { method: "GET" });
+
 export const fetchComptaJournal = async (limit = 20) =>
   request(`/api/v1/compta/journal?limit=${limit}`, { method: "GET" });
 
 export const fetchComptaTrialBalance = async () =>
   request("/api/v1/compta/trial-balance", { method: "GET" });
 
+export const fetchComptaLedger = async (accountCode, limit = 200) =>
+  request(
+    `/api/v1/compta/ledger?accountCode=${encodeURIComponent(
+      accountCode
+    )}&limit=${limit}`,
+    { method: "GET" }
+  );
+
+export const fetchComptaStatements = async () =>
+  request("/api/v1/compta/statements", { method: "GET" });
+
 export const fetchAfriTaxSummary = async () =>
   request("/api/v1/afritax/summary", { method: "GET" });
 
 export const postComptaJournalEntry = async ({
   reference,
+  journalCode = "OD",
   moduleSource = "MANUAL",
   description,
   entryDateUtc,
@@ -69,6 +84,7 @@ export const postComptaJournalEntry = async ({
     },
     body: JSON.stringify({
       reference,
+      journalCode,
       moduleSource,
       description,
       entryDateUtc,
