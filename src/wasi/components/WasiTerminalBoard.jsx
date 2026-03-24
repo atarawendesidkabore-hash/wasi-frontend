@@ -420,7 +420,7 @@ export function WasiTerminalBoard({
       : []),
   ];
 
-  const tickerUsername = userInfo?.username || "guest";
+  const tickerUsername = userInfo?.username || "invite";
   const tickerCredit =
     typeof userInfo?.x402_balance === "number"
       ? `${userInfo.x402_balance} CR`
@@ -686,7 +686,7 @@ export function WasiTerminalBoard({
                   {Number(wasiComposite || 0).toFixed(1)}
                 </td>
                 <td style={{ ...terminalCellStyle, color: TERMINAL_COLORS.green }}>
-                  {isLive ? "+LIVE" : isSnapshot ? "SNAP" : "DEMO"}
+                  {isLive ? "+DIRECT" : isSnapshot ? "INST" : "DEMO"}
                 </td>
                 <td style={{ ...terminalCellStyle, color: TERMINAL_COLORS.info }}>
                   {gradeFromScore(Number(wasiComposite || 0))}
@@ -698,7 +698,7 @@ export function WasiTerminalBoard({
         </section>
 
         <section style={{ ...terminalPanelStyle, borderTop: "none", overflow: "auto" }}>
-          <div style={terminalSectionHeaderStyle}>WEST AFRICAN MARKETS</div>
+          <div style={terminalSectionHeaderStyle}>MARCHES OUEST-AFRICAINS</div>
 
           <div style={{ borderBottom: `1px solid ${TERMINAL_COLORS.border}` }}>
             <div
@@ -711,15 +711,15 @@ export function WasiTerminalBoard({
                   ? `${brvmHeader.symbol} ${brvmHeader.displayIndexValue.toLocaleString("fr-FR", {
                     maximumFractionDigits: 2,
                   })} ${fmtSigned(brvmHeader.displayChangePct, 2)}%`
-                  : isLive ? "LIVE" : isSnapshot ? "SNAPSHOT" : "DEMO"}
+                  : isLive ? "DIRECT" : isSnapshot ? "INSTANTANE" : "DEMO"}
               </span>
             </div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
                   <th style={terminalCellStyle}>TICKER</th>
-                  <th style={terminalCellStyle}>NAME</th>
-                  <th style={terminalCellStyle}>LAST</th>
+                  <th style={terminalCellStyle}>NOM</th>
+                  <th style={terminalCellStyle}>DERNIER</th>
                   <th style={terminalCellStyle}>CHG</th>
                   <th style={terminalCellStyle}>%CHG</th>
                   <th style={terminalCellStyle}>VOL</th>
@@ -761,15 +761,15 @@ export function WasiTerminalBoard({
                   ? `${ngxHeader.symbol} ${ngxHeader.displayIndexValue.toLocaleString("fr-FR", {
                     maximumFractionDigits: 2,
                   })} ${fmtSigned(ngxHeader.displayChangePct, 2)}%`
-                  : isLive ? "LIVE" : isSnapshot ? "SNAPSHOT" : "DEMO"}
+                  : isLive ? "DIRECT" : isSnapshot ? "INSTANTANE" : "DEMO"}
               </span>
             </div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
                   <th style={terminalCellStyle}>TICKER</th>
-                  <th style={terminalCellStyle}>NAME</th>
-                  <th style={terminalCellStyle}>LAST</th>
+                  <th style={terminalCellStyle}>NOM</th>
+                  <th style={terminalCellStyle}>DERNIER</th>
                   <th style={terminalCellStyle}>CHG</th>
                   <th style={terminalCellStyle}>%CHG</th>
                   <th style={terminalCellStyle}>VOL</th>
@@ -811,15 +811,15 @@ export function WasiTerminalBoard({
                   ? `${gseHeader.symbol} ${gseHeader.displayIndexValue.toLocaleString("fr-FR", {
                     maximumFractionDigits: 2,
                   })} ${fmtSigned(gseHeader.displayChangePct, 2)}%`
-                  : isLive ? "LIVE" : isSnapshot ? "SNAPSHOT" : "DEMO"}
+                  : isLive ? "DIRECT" : isSnapshot ? "INSTANTANE" : "DEMO"}
               </span>
             </div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
                   <th style={terminalCellStyle}>TICKER</th>
-                  <th style={terminalCellStyle}>NAME</th>
-                  <th style={terminalCellStyle}>LAST</th>
+                  <th style={terminalCellStyle}>NOM</th>
+                  <th style={terminalCellStyle}>DERNIER</th>
                   <th style={terminalCellStyle}>CHG</th>
                   <th style={terminalCellStyle}>%CHG</th>
                   <th style={terminalCellStyle}>VOL</th>
@@ -855,20 +855,20 @@ export function WasiTerminalBoard({
               style={{ ...terminalSectionHeaderStyle, fontSize: 13, cursor: umoaHeader ? "pointer" : "default" }}
               onClick={() => umoaHeader && openMarketDetail(umoaHeader)}
             >
-              UMOA TITRES - SOVEREIGN BONDS{" "}
+              UMOA TITRES - OBLIGATIONS SOUVERAINES{" "}
               <span style={{ float: "right", color: TERMINAL_COLORS.green }}>
                 {umoaHeader
                   ? `${umoaHeader.symbol} ${umoaHeader.displayIndexValue.toLocaleString("fr-FR", {
                     maximumFractionDigits: 2,
                   })} ${fmtSigned(umoaHeader.displayChangePct, 2)}%`
-                  : isLive ? "LIVE" : isSnapshot ? "SNAPSHOT" : "DEMO"}
+                  : isLive ? "DIRECT" : isSnapshot ? "INSTANTANE" : "DEMO"}
               </span>
             </div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
-                  <th style={terminalCellStyle}>BOND</th>
-                  <th style={terminalCellStyle}>ISSUE</th>
+                  <th style={terminalCellStyle}>OBLIGATION</th>
+                  <th style={terminalCellStyle}>EMISSION</th>
                   <th style={terminalCellStyle}>PX</th>
                   <th style={terminalCellStyle}>CHG</th>
                   <th style={terminalCellStyle}>%CHG</th>
@@ -900,7 +900,7 @@ export function WasiTerminalBoard({
             </table>
           </div>
 
-          <div style={{ ...terminalSectionHeaderStyle, fontSize: 13 }}>AI CONSOLE</div>
+          <div style={{ ...terminalSectionHeaderStyle, fontSize: 13 }}>CONSOLE IA</div>
           <div style={{ padding: "8px 10px", minHeight: 180, maxHeight: 280, overflowY: "auto" }}>
             {latestMessages.length === 0 ? (
               <div style={{ color: TERMINAL_COLORS.textMuted, fontSize: 13 }}>
@@ -923,7 +923,7 @@ export function WasiTerminalBoard({
                       marginRight: 8,
                     }}
                   >
-                    {message.role === "assistant" ? "WASI" : "USER"}:
+                    {message.role === "assistant" ? "WASI" : "VOUS"}:
                   </span>
                   <span style={{ fontSize: 13, color: TERMINAL_COLORS.text }}>
                     <span style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
@@ -985,13 +985,13 @@ export function WasiTerminalBoard({
             </button>
           </div>
 
-          <div style={{ ...terminalSectionHeaderStyle, fontSize: 13 }}>COMMODITIES</div>
+          <div style={{ ...terminalSectionHeaderStyle, fontSize: 13 }}>MATIERES PREMIERES</div>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
                 <th style={terminalCellStyle}>SYM</th>
-                <th style={terminalCellStyle}>NAME</th>
-                <th style={terminalCellStyle}>PRICE/UNIT</th>
+                <th style={terminalCellStyle}>NOM</th>
+                <th style={terminalCellStyle}>PRIX/UNITE</th>
                 <th style={terminalCellStyle}>CHG</th>
                 <th style={terminalCellStyle}>YTD</th>
               </tr>
@@ -1020,9 +1020,9 @@ export function WasiTerminalBoard({
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
-                <th style={terminalCellStyle}>SYMBOL</th>
+                <th style={terminalCellStyle}>SYMBOLE</th>
                 <th style={terminalCellStyle}>CAT</th>
-                <th style={terminalCellStyle}>LAST</th>
+                <th style={terminalCellStyle}>DERNIER</th>
                 <th style={terminalCellStyle}>BID</th>
                 <th style={terminalCellStyle}>ASK</th>
                 <th style={terminalCellStyle}>VOL</th>
@@ -1061,12 +1061,12 @@ export function WasiTerminalBoard({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
             <div style={{ borderRight: `1px solid ${TERMINAL_COLORS.border}` }}>
               <div style={{ ...terminalSectionHeaderStyle, fontSize: 13, color: TERMINAL_COLORS.green }}>
-                DEX BIDS ({dexOrderBook?.symbol || dexSelectedSymbol})
+                ACHATS DEX ({dexOrderBook?.symbol || dexSelectedSymbol})
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
-                    <th style={terminalCellStyle}>PRICE</th>
+                    <th style={terminalCellStyle}>PRIX</th>
                     <th style={terminalCellStyle}>QTY</th>
                     <th style={terminalCellStyle}>NOTIONAL</th>
                   </tr>
@@ -1086,12 +1086,12 @@ export function WasiTerminalBoard({
             </div>
             <div>
               <div style={{ ...terminalSectionHeaderStyle, fontSize: 13, color: TERMINAL_COLORS.red }}>
-                DEX ASKS ({dexOrderBook?.symbol || dexSelectedSymbol})
+                VENTES DEX ({dexOrderBook?.symbol || dexSelectedSymbol})
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
-                    <th style={terminalCellStyle}>PRICE</th>
+                    <th style={terminalCellStyle}>PRIX</th>
                     <th style={terminalCellStyle}>QTY</th>
                     <th style={terminalCellStyle}>NOTIONAL</th>
                   </tr>
@@ -1111,13 +1111,13 @@ export function WasiTerminalBoard({
             </div>
           </div>
 
-          <div style={{ ...terminalSectionHeaderStyle, fontSize: 13 }}>DEX RECENT TRADES</div>
+          <div style={{ ...terminalSectionHeaderStyle, fontSize: 13 }}>TRANSACTIONS DEX RECENTES</div>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ color: TERMINAL_COLORS.textMuted, fontSize: 12 }}>
-                <th style={terminalCellStyle}>TIME</th>
-                <th style={terminalCellStyle}>SYMBOL</th>
-                <th style={terminalCellStyle}>PRICE</th>
+                <th style={terminalCellStyle}>HEURE</th>
+                <th style={terminalCellStyle}>SYMBOLE</th>
+                <th style={terminalCellStyle}>PRIX</th>
                 <th style={terminalCellStyle}>QTY</th>
                 <th style={terminalCellStyle}>NOTIONAL</th>
               </tr>
@@ -1146,9 +1146,9 @@ export function WasiTerminalBoard({
           }}
         >
           <div style={terminalSectionHeaderStyle}>
-            WATCHLIST
+            LISTE DE SUIVI
             <span style={{ float: "right", color: isLive ? TERMINAL_COLORS.green : TERMINAL_COLORS.amber }}>
-              {isLive ? "LIVE" : isSnapshot ? "SNAP" : "DEMO"}
+              {isLive ? "DIRECT" : isSnapshot ? "INST" : "DEMO"}
             </span>
           </div>
           <div style={{ padding: "4px 8px" }}>
@@ -1177,9 +1177,9 @@ export function WasiTerminalBoard({
           </div>
 
           <div style={terminalSectionHeaderStyle}>
-            ALERTS
+            ALERTES
             <span style={{ float: "right", color: isLive ? TERMINAL_COLORS.green : TERMINAL_COLORS.amber }}>
-              {isLive ? "LIVE" : isSnapshot ? "SNAP" : "DEMO"}
+              {isLive ? "DIRECT" : isSnapshot ? "INST" : "DEMO"}
             </span>
           </div>
           <div style={{ padding: "4px 8px" }}>
@@ -1214,7 +1214,7 @@ export function WasiTerminalBoard({
             )}
           </div>
 
-          <div style={terminalSectionHeaderStyle}>DEX ORDER ENTRY</div>
+          <div style={terminalSectionHeaderStyle}>SAISIE D'ORDRE DEX</div>
           <div style={{ padding: "8px 10px", display: "grid", gap: 8 }}>
             <select
               value={dexOrderForm?.side || "BUY"}
@@ -1229,8 +1229,8 @@ export function WasiTerminalBoard({
                 fontFamily: "inherit",
               }}
             >
-              <option value="BUY">BUY</option>
-              <option value="SELL">SELL</option>
+              <option value="BUY">ACHAT</option>
+              <option value="SELL">VENTE</option>
             </select>
             <select
               value={dexOrderForm?.symbol || dexSelectedSymbol || ""}
@@ -1261,7 +1261,7 @@ export function WasiTerminalBoard({
                   quantityUnits: event.target.value,
                 }))
               }
-              placeholder="Quantity units"
+              placeholder="Quantite"
               style={{
                 border: `1px solid ${TERMINAL_COLORS.border}`,
                 background: TERMINAL_COLORS.bgSoft,
@@ -1278,7 +1278,7 @@ export function WasiTerminalBoard({
                   limitPriceXof: event.target.value,
                 }))
               }
-              placeholder="Limit price XOF (ex: 9500.00)"
+              placeholder="Prix limite XOF (ex. 9500.00)"
               style={{
                 border: `1px solid ${TERMINAL_COLORS.border}`,
                 background: TERMINAL_COLORS.bgSoft,
@@ -1301,7 +1301,7 @@ export function WasiTerminalBoard({
                 opacity: dexSubmitting ? 0.6 : 1,
               }}
             >
-              {dexSubmitting ? "SUBMITTING..." : "SUBMIT ORDER"}
+              {dexSubmitting ? "ENVOI..." : "SOUMETTRE L'ORDRE"}
             </button>
             <div
               style={{
@@ -1319,24 +1319,24 @@ export function WasiTerminalBoard({
             </div>
           </div>
 
-          <div style={terminalSectionHeaderStyle}>DEX PORTFOLIO</div>
+          <div style={terminalSectionHeaderStyle}>PORTEFEUILLE DEX</div>
           <div style={{ padding: "8px 10px", fontSize: 12, lineHeight: 1.7, color: TERMINAL_COLORS.text }}>
-            CASH: <span style={{ color: TERMINAL_COLORS.green }}>
+            TRESORERIE : <span style={{ color: TERMINAL_COLORS.green }}>
               {formatCentimes(dexWallet?.xofBalanceCentimes || "0")}
             </span>
             <br />
-            AVAILABLE: <span style={{ color: TERMINAL_COLORS.cyan }}>
+            DISPONIBLE : <span style={{ color: TERMINAL_COLORS.cyan }}>
               {formatCentimes(dexWallet?.availableXofCentimes || "0")}
             </span>
             <br />
             POSITIONS: {(dexPositions || []).length}
           </div>
 
-          <div style={terminalSectionHeaderStyle}>DEX OPEN ORDERS</div>
+          <div style={terminalSectionHeaderStyle}>ORDRES DEX OUVERTS</div>
           <div style={{ padding: "4px 8px" }}>
             {(dexOpenOrders || []).length === 0 ? (
               <div style={{ ...terminalCellStyle, color: TERMINAL_COLORS.textMuted }}>
-                No open orders.
+                Aucun ordre ouvert.
               </div>
             ) : (
               dexOpenOrders.slice(0, 8).map((order) => (
@@ -1368,22 +1368,22 @@ export function WasiTerminalBoard({
                       fontFamily: "inherit",
                     }}
                   >
-                    CANCEL
+                    ANNULER
                   </button>
                 </div>
               ))
             )}
           </div>
 
-          <div style={terminalSectionHeaderStyle}>STATUS</div>
+          <div style={terminalSectionHeaderStyle}>STATUT</div>
           <div style={{ padding: "8px 10px", fontSize: 12, lineHeight: 1.7, color: TERMINAL_COLORS.textMuted }}>
-            SOURCE: {backendConnected ? "WASI API" : "FALLBACK"} ({dataSource || "unknown"})
+            SOURCE : {backendConnected ? "WASI API" : "SECOURS"} ({dataSource || "inconnu"})
             <br />
-            USER: {userInfo?.username || "anonymous"}
+            UTILISATEUR : {userInfo?.username || "anonyme"}
             <br />
-            MODES: F1=HELP | F5=REFRESH | F8=ALERTS
+            MODES : F1=AIDE | F5=ACTUALISER | F8=ALERTES
             <br />
-            DEX: {(dexMarkets || []).length} ETFs | {dexOpenOrders.length} OPEN ORDERS
+            DEX : {(dexMarkets || []).length} ETFs | {dexOpenOrders.length} ORDRES OUVERTS
             <br />
             <button
               type="button"
@@ -1399,11 +1399,11 @@ export function WasiTerminalBoard({
                 fontFamily: "inherit",
               }}
             >
-              OPEN USSD ANALYTICS
+              OUVRIR L'ANALYSE USSD
             </button>
             {dexError ? (
               <div style={{ marginTop: 8, color: TERMINAL_COLORS.red }}>
-                DEX ERROR: {dexError}
+                ERREUR DEX : {dexError}
               </div>
             ) : null}
           </div>

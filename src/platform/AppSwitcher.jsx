@@ -37,7 +37,7 @@ const ACCESS_KEYS = {
   },
   "WASI-DEMO-DM01": {
     name: "Demo investisseur",
-    role: "Invite demo",
+    role: "Invite de demonstration",
     tier: "BASIC",
     quotaLabel: "50 req",
   },
@@ -49,14 +49,14 @@ const ACCESS_KEYS = {
   },
   "WASI-ESG-ES01": {
     name: "ESG Finance Paris",
-    role: "Academique",
+    role: "Partenaire academique",
     tier: "BASIC",
     quotaLabel: "50 req",
   },
 };
 
 const WORKSPACE_BRIDGE_HINTS = {
-  home: "Accueil manager de la suite relie a Intelligence, DEX, Banque et Finance Ops.",
+  home: "Accueil de pilotage de la suite relie a Intelligence, DEX, Banque et Operations Finance.",
   intelligence:
     "WASI Intelligence alimente les hypotheses, puis DEX et AfriTrade transforment la lecture de marche en action.",
   execution:
@@ -324,7 +324,7 @@ const AccessGate = ({
           marginBottom: 32,
         }}
       >
-        UNIFIED PLATFORM · AFRITRADE · V2.0
+        PLATEFORME UNIFIEE · AFRITRADE · V2.0
       </div>
       <input
         ref={inputRef}
@@ -386,7 +386,7 @@ const AccessGate = ({
           lineHeight: 1.8,
         }}
       >
-        WASI Intelligence · WASI DEX · AfriTrade Banking
+        WASI Intelligence · WASI DEX · Banque AfriTrade
         <br />
         Cle demo : WASI-DEMO-DM01
         <br />
@@ -402,7 +402,7 @@ const getConnectionLinks = (workspaceId, bankingProfile) => {
 
   if (workspaceId === "intelligence") {
     return [
-      { label: "Banque manager", ...managerRoute },
+      { label: "Banque - gestion", ...managerRoute },
       { label: "Vue client AfriTrade", ...clientRoute },
       { label: "Ouvrir le DEX", appId: "dex" },
     ];
@@ -414,13 +414,13 @@ const getConnectionLinks = (workspaceId, bankingProfile) => {
       { label: "WASI DEX", appId: "dex" },
       bankingProfile === "manager"
         ? { label: "Vue client", ...clientRoute }
-        : { label: "Vue manager", ...managerRoute },
+        : { label: "Vue gestion", ...managerRoute },
     ];
   }
 
   if (workspaceId === "financeops") {
     return [
-      { label: "Banque manager", ...managerRoute },
+      { label: "Banque - gestion", ...managerRoute },
       { label: "WASI Intelligence", appId: "wasi" },
       { label: "DEX cote", appId: "dex" },
     ];
@@ -628,7 +628,7 @@ export function AppSwitcher({ currentApp }) {
         tone: getStatusTone(bridgeSnapshot.wasiState),
       },
       {
-        label: "BANKING 8010",
+        label: "BANQUE 8010",
         value: getStatusLabel(bridgeSnapshot.bankingState),
         tone: getStatusTone(bridgeSnapshot.bankingState),
       },
@@ -716,7 +716,7 @@ export function AppSwitcher({ currentApp }) {
     },
     {
       id: "execution",
-      label: "BANKING",
+      label: "BANQUE",
       active: activeWorkspace.id === "execution",
       onClick: () =>
         activeWorkspace.id === "execution" && activeApp.id === "afritrade"
@@ -815,7 +815,7 @@ export function AppSwitcher({ currentApp }) {
                 letterSpacing: 2,
               }}
             >
-              UNIFIED PLATFORM
+              PLATEFORME UNIFIEE
             </div>
           </div>
 
@@ -880,14 +880,14 @@ export function AppSwitcher({ currentApp }) {
               onClick={() => persistAppId("finance")}
               style={shellActionLinkStyle(activeWorkspace.id === "financeops")}
             >
-              FINANCE OPS
+              OPERATIONS FINANCE
             </a>
             <a
               href={buildAppHref("sales")}
               onClick={() => persistAppId("sales")}
               style={shellActionLinkStyle(active === "sales")}
             >
-              KIT DEMO
+              KIT DE DEMO
             </a>
             <a
               href={buildAppHref("banking", { bankingProfile: "client" })}
@@ -905,7 +905,7 @@ export function AppSwitcher({ currentApp }) {
                 active === "banking" && currentBankingProfile === "manager"
               )}
             >
-              MANAGER
+              GESTION
             </a>
             <a
               href="http://127.0.0.1:3006/"
@@ -1000,7 +1000,7 @@ export function AppSwitcher({ currentApp }) {
                 color: "#94a3b8",
               }}
             >
-              PONT WASI
+              PASSERELLE WASI
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button
@@ -1032,7 +1032,7 @@ export function AppSwitcher({ currentApp }) {
                   fontFamily: shellMono,
                 }}
               >
-                Changer cle
+                Changer de cle
               </button>
               <button
                 type="button"
@@ -1085,7 +1085,7 @@ export function AppSwitcher({ currentApp }) {
               color: "#64748b",
             }}
           >
-            Connexions directes
+            Acces directs
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {connectionLinks.map((link) => (
@@ -1114,7 +1114,7 @@ export function AppSwitcher({ currentApp }) {
                 color: "#64748b",
               }}
             >
-              Modules lies
+              Modules associes
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {workspaceModules.map((app) => (
@@ -1141,7 +1141,7 @@ export function AppSwitcher({ currentApp }) {
               color: "#64748b",
             }}
           >
-            Etapes conseillees
+            Etapes recommandees
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {nextWorkspaces.map((workspace) => (
@@ -1215,7 +1215,7 @@ export function AppSwitcher({ currentApp }) {
           }}
           style={recallButtonStyle}
         >
-          Pont WASI
+          Passerelle WASI
         </button>
         {!panelVisible ? (
           <button type="button" onClick={() => navigateToApp("home")} style={recallButtonStyle}>

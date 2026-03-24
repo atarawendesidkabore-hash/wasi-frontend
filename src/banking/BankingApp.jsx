@@ -15,6 +15,32 @@ import {
 
 const ROLE_TELLER = "TELLER";
 const ROLE_MANAGER = "MANAGER";
+const ROLE_CLIENT = "CLIENT";
+const OFFLINE_DEMO_SESSION_KEY = "WASI_BANKING_OFFLINE_DEMO_USER";
+
+const DEMO_BANKING_PROFILES = [
+  {
+    username: "client_demo",
+    password: "WasiClient2026!",
+    role: ROLE_CLIENT,
+    label: "Client",
+    description: "Vue portefeuille, transferts et operations personnelles.",
+  },
+  {
+    username: "teller_demo",
+    password: "WasiTeller2026!",
+    role: ROLE_TELLER,
+    label: "Teller",
+    description: "Vue operations, suivi et traitement en front office.",
+  },
+  {
+    username: "manager_demo",
+    password: "WasiManager2026!",
+    role: ROLE_MANAGER,
+    label: "Manager",
+    description: "Vue controle, validations et audit.",
+  },
+];
 
 const shellStyle = {
   minHeight: "100vh",
@@ -83,8 +109,96 @@ const primaryButtonStyle = {
   cursor: "pointer",
 };
 
-const sanitizeErrorMessage = (error) =>
-  error instanceof Error ? error.message : "Une erreur inattendue est survenue.";
+const isNetworkError = (error) => {
+  const message = error instanceof Error ? error.message : "";
+  return /failed to fetch|networkerror|load failed|fetch/i.test(message);
+};
+
+const sanitizeErrorMessage = (error) => {
+  if (isNetworkError(error)) {
+    return "API bancaire indisponible. Utilisez un profil demo local ou demarrez le backend bancaire.";
+  }
+
+  if (error instanceof Error && error.message === "HTTP 401") {
+    return "Identifiants invalides.";
+  }
+
+  return error instanceof Error
+    ? error.message
+    : "Une erreur inattendue est survenue.";
+};
+
+const buildOfflineDemoUser = (profile) => ({
+  id: `demo-${String(profile.role || "client").toLowerCase()}`,
+  username: profile.username,
+  displayName: `${profile.label} demo`,
+  email: `${profile.username}@wasi.demo`,
+  role: profile.role,
+  demoMode: "LOCAL",
+});
+
+const persistOfflineDemoSession = (user) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(
+    OFFLINE_DEMO_SESSION_KEY,
+    JSON.stringify(user)
+  );
+};
+
+const readOfflineDemoSession = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(OFFLINE_DEMO_SESSION_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    window.sessionStorage.removeItem(OFFLINE_DEMO_SESSION_KEY);
+    return null;
+  }
+};
+
+const clearOfflineDemoSession = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.removeItem(OFFLINE_DEMO_SESSION_KEY);
+};
+
+const isOfflineDemoUser = (user) => Boolean(user?.demoMode === "LOCAL");
+
+const resolveRequestedDemoProfile = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const rawProfile = String(params.get("bankingProfile") || "")
+    .trim()
+    .toLowerCase();
+
+  if (!rawProfile) {
+    return null;
+  }
+
+  return (
+    DEMO_BANKING_PROFILES.find((profile) => {
+      const role = String(profile.role || "").trim().toLowerCase();
+      const username = String(profile.username || "").trim().toLowerCase();
+      const label = String(profile.label || "").trim().toLowerCase();
+      return [role, username, label].includes(rawProfile);
+    }) || null
+  );
+};
 
 const BankingLoginScreen = ({
   credentials,
@@ -92,6 +206,7 @@ const BankingLoginScreen = ({
   onSubmit,
   loginPending,
   loginError,
+  onQuickFill,
 }) => (
   <main style={loginShellStyle}>
     <section style={loginCardStyle}>
@@ -111,21 +226,87 @@ const BankingLoginScreen = ({
             letterSpacing: 0.6,
           }}
         >
-          BANKING CONTROL
+          CONTROLE BANCAIRE
         </div>
         <h1 style={{ margin: "16px 0 6px", fontSize: 30, lineHeight: 1.1 }}>
-          Console Banking et validation manager
+          Acces Banque par role
         </h1>
         <p style={{ color: "#94a3b8", margin: 0 }}>
-          Connectez-vous avec un profil Banking pour acceder aux operations et a
-          la file d'approbation.
+          Choisissez un profil client, teller ou manager pour ouvrir
+          l'interface qui correspond a votre usage.
         </p>
+      </div>
+
+      <div style={{ display: "grid", gap: 10, marginBottom: 18 }}>
+        <div
+          style={{
+            color: "#94a3b8",
+            fontSize: 12,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+          }}
+        >
+          Choisir une interface
+        </div>
+        <div style={{ display: "grid", gap: 10 }}>
+          {DEMO_BANKING_PROFILES.map((profile) => (
+            <button
+              key={profile.username}
+              type="button"
+              onClick={() => onQuickFill?.(profile)}
+              style={{
+                textAlign: "left",
+                borderRadius: 14,
+                border:
+                  credentials.username === profile.username
+                    ? "1px solid rgba(96,165,250,0.65)"
+                    : "1px solid rgba(148,163,184,0.18)",
+                background:
+                  credentials.username === profile.username
+                    ? "rgba(30,64,175,0.18)"
+                    : "rgba(15,23,42,0.6)",
+                color: "#e2e8f0",
+                padding: "12px 14px",
+                cursor: "pointer",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  alignItems: "center",
+                }}
+              >
+                <strong>{profile.label}</strong>
+                <span
+                  style={{
+                    borderRadius: 999,
+                    border: "1px solid rgba(148,163,184,0.18)",
+                    padding: "4px 8px",
+                    fontSize: 11,
+                    letterSpacing: 1,
+                    color: "#93c5fd",
+                  }}
+                >
+                  {profile.role}
+                </span>
+              </div>
+              <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 6 }}>
+                {profile.description}
+              </div>
+              <div style={{ color: "#cbd5e1", fontSize: 12, marginTop: 8 }}>
+                {profile.username} / {profile.password}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
         <label style={{ display: "grid", gap: 8 }}>
           <span style={{ fontSize: 13, color: "#cbd5e1", fontWeight: 700 }}>
-            Username
+            Nom d'utilisateur
           </span>
           <input
             type="text"
@@ -134,13 +315,13 @@ const BankingLoginScreen = ({
             onChange={onChange}
             style={inputStyle}
             autoComplete="username"
-            placeholder="manager_demo"
+            placeholder="client_demo"
           />
         </label>
 
         <label style={{ display: "grid", gap: 8 }}>
           <span style={{ fontSize: 13, color: "#cbd5e1", fontWeight: 700 }}>
-            Password
+            Mot de passe
           </span>
           <input
             type="password"
@@ -174,7 +355,8 @@ const BankingLoginScreen = ({
       </form>
 
       <div style={{ marginTop: 18, color: "#94a3b8", fontSize: 13 }}>
-        Compte manager de demonstration: <strong>manager_demo</strong>
+        Les profils de demonstration ci-dessus permettent de comparer
+        directement les interfaces client, teller et manager.
       </div>
     </section>
   </main>
@@ -202,6 +384,7 @@ export const BankingApp = () => {
   const [managerAuditEntries, setManagerAuditEntries] = useState([]);
   const [managerAuditLoading, setManagerAuditLoading] = useState(false);
   const [managerAuditError, setManagerAuditError] = useState("");
+  const [lastAutoProfileKey, setLastAutoProfileKey] = useState("");
 
   const openEmbeddedTerminal = () => {
     setShowEmbeddedTerminal(true);
@@ -225,7 +408,7 @@ export const BankingApp = () => {
   };
 
   const loadManagerApprovals = async (status = approvalStatus, user = bankingUser) => {
-    if (user?.role !== ROLE_MANAGER) {
+    if (user?.role !== ROLE_MANAGER || isOfflineDemoUser(user)) {
       resetManagerConsole();
       return;
     }
@@ -246,7 +429,7 @@ export const BankingApp = () => {
     status = userApprovalStatus,
     user = bankingUser
   ) => {
-    if (user?.role !== ROLE_TELLER) {
+    if (user?.role !== ROLE_TELLER || isOfflineDemoUser(user)) {
       resetTellerConsole();
       return;
     }
@@ -264,7 +447,7 @@ export const BankingApp = () => {
   };
 
   const loadManagerAudit = async (user = bankingUser) => {
-    if (user?.role !== ROLE_MANAGER) {
+    if (user?.role !== ROLE_MANAGER || isOfflineDemoUser(user)) {
       setManagerAuditEntries([]);
       setManagerAuditError("");
       return;
@@ -289,12 +472,14 @@ export const BankingApp = () => {
       try {
         const user = await fetchCurrentBankingUser();
         if (!isMounted) return;
+        clearOfflineDemoSession();
         setBankingUser(user);
         syncWasiTerminalSession();
       } catch {
         if (!isMounted) return;
         clearBankingSession();
-        setBankingUser(null);
+        const offlineUser = readOfflineDemoSession();
+        setBankingUser(offlineUser || null);
       } finally {
         if (isMounted) {
           setBootstrapping(false);
@@ -308,6 +493,28 @@ export const BankingApp = () => {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (bootstrapping) {
+      return;
+    }
+
+    const requestedProfile = resolveRequestedDemoProfile();
+    if (!requestedProfile) {
+      return;
+    }
+
+    const profileKey = `${requestedProfile.username}:${requestedProfile.password}`;
+    if (lastAutoProfileKey === profileKey) {
+      return;
+    }
+
+    setCredentials({
+      username: requestedProfile.username,
+      password: requestedProfile.password,
+    });
+    setLastAutoProfileKey(profileKey);
+  }, [bootstrapping, lastAutoProfileKey]);
 
   useEffect(() => {
     if (bankingUser?.role === ROLE_MANAGER) {
@@ -339,19 +546,47 @@ export const BankingApp = () => {
     setLoginPending(true);
     setLoginError("");
 
+    const normalizedUsername = String(credentials.username || "")
+      .trim()
+      .toLowerCase();
+    const matchedDemoProfile =
+      DEMO_BANKING_PROFILES.find(
+        (profile) =>
+          profile.username === normalizedUsername &&
+          profile.password === credentials.password
+      ) || null;
+
     try {
       const user = await loginBanking(credentials);
+      clearOfflineDemoSession();
       syncWasiTerminalSession();
       setBankingUser(user);
       setShowEmbeddedTerminal(false);
     } catch (error) {
+      if (matchedDemoProfile) {
+        const demoUser = buildOfflineDemoUser(matchedDemoProfile);
+        persistOfflineDemoSession(demoUser);
+        clearBankingSession();
+        setBankingUser(demoUser);
+        setShowEmbeddedTerminal(false);
+        return;
+      }
       setLoginError(sanitizeErrorMessage(error));
     } finally {
       setLoginPending(false);
     }
   };
 
+  const handleQuickFill = (profile) => {
+    setCredentials({
+      username: profile.username,
+      password: profile.password,
+    });
+    setLoginError("");
+  };
+
   const handleLogout = () => {
+    clearOfflineDemoSession();
     clearBankingSession();
     setBankingUser(null);
     setShowEmbeddedTerminal(false);
@@ -360,6 +595,13 @@ export const BankingApp = () => {
   };
 
   const handleApprovalDecision = async (approvalId, decisionNote, decision) => {
+    if (isOfflineDemoUser(bankingUser)) {
+      setManagerApprovalsError(
+        "Mode demonstration local actif. Les validations manager ne sont pas synchronisees."
+      );
+      return;
+    }
+
     setManagerActionApprovalId(approvalId);
     setManagerApprovalsError("");
     try {
@@ -398,6 +640,7 @@ export const BankingApp = () => {
         onSubmit={handleLoginSubmit}
         loginPending={loginPending}
         loginError={loginError}
+        onQuickFill={handleQuickFill}
       />
     );
   }
@@ -415,13 +658,13 @@ export const BankingApp = () => {
               borderBottom: "1px solid #1e3a8a",
             }}
           >
-            <strong>WASI Terminal (Embedded in Banking)</strong>
+            <strong>Terminal WASI integre a la banque</strong>
             <button
               type="button"
               style={buttonStyle}
               onClick={() => setShowEmbeddedTerminal(false)}
             >
-              Retour Banking
+              Retour banque
             </button>
           </div>
           <iframe

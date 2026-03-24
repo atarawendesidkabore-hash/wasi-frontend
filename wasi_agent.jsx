@@ -427,30 +427,30 @@ const COUNTRY_TRADE_DATA = {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const X402_TIERS = {
-  basic:        { label: "Basique",       price: 0.05,   queries: 200, color: "#38bdf8", features: ["200 requÃªtes/jour", "16 pays couverts", "DÃ©tail pays complet", "Analyse sectorielle"] },
-  pro:          { label: "Pro",           price: 0.10,   queries: 500, color: "#f0b429", features: ["500 requÃªtes/jour", "DonnÃ©es index complÃ¨tes", "Rapports advisory", "AccÃ¨s API"] },
-  institutional:{ label: "Institutionnel",price: 0.50,   queries: -1,  color: "#4ade80", features: ["RequÃªtes illimitÃ©es", "Export donnÃ©es brutes", "Signaux ETF", "ClÃ© API x402"] },
+  basic:        { label: "Basique",       price: 0.05,   queries: 200, color: "#38bdf8", features: ["200 requetes/jour", "16 pays couverts", "Detail pays complet", "Analyse sectorielle"] },
+  pro:          { label: "Pro",           price: 0.10,   queries: 500, color: "#f0b429", features: ["500 requetes/jour", "Donnees d'indice completes", "Rapports de conseil", "Acces API"] },
+  institutional:{ label: "Institutionnel",price: 0.50,   queries: -1,  color: "#4ade80", features: ["Requetes illimitees", "Export des donnees brutes", "Signaux ETF", "Cle API x402"] },
 };
 
 const AGENT_CAPABILITIES = [
-  "ðŸ“Š Analyse en temps rÃ©el de l'indice composite WASI",
-  "ðŸŒ Indice maritime pays pour les 16 nations d'Afrique de l'Ouest",
-  "ðŸš¢ Suivi activitÃ© portuaire : Abidjan, Lagos, Tema, Dakar, LomÃ©+",
-  "ðŸ“ˆ Intelligence sectorielle : Agriculture, BTP, Commerce, PME",
-  "ðŸ’¹ GÃ©nÃ©ration de signaux ETF pour produits financiers liÃ©s au WASI",
-  "ðŸ”— Cartes de chaleur corridors commerciaux & flux transfrontaliers",
-  "ðŸ’¡ Advisory entrÃ©e de marchÃ© pour investisseurs en Afrique de l'Ouest",
-  "âš¡ API micropaiement x402 â€” paiement par requÃªte, sans abonnement",
+  "Analyse en temps reel de l'indice composite WASI",
+  "Indice maritime pays pour les 16 nations d'Afrique de l'Ouest",
+  "Suivi de l'activite portuaire : Abidjan, Lagos, Tema, Dakar, Lome+",
+  "Intelligence sectorielle : agriculture, BTP, commerce, PME",
+  "Generation de signaux ETF pour les produits financiers lies au WASI",
+  "Cartes de chaleur des corridors commerciaux et flux transfrontaliers",
+  "Conseil d'entree de marche pour investisseurs en Afrique de l'Ouest",
+  "API x402 en micropaiement, paiement par requete sans abonnement",
 ];
 
 const SUGGESTED_QUERIES = [
   "Quel est l'indice composite WASI actuel et quel pays tire la croissance ?",
-  "Comparer l'activitÃ© maritime entre le Nigeria et la CÃ´te d'Ivoire ce trimestre",
-  "Quel port d'Afrique de l'Ouest a le plus haut dÃ©bit de conteneurs en ce moment ?",
-  "Quels secteurs cibler pour un investisseur Ã©tranger au Ghana selon les flux commerciaux ?",
-  "Donnez-moi un rapport d'entrÃ©e de marchÃ© pour le corridor agricole d'exportation du SÃ©nÃ©gal",
-  "Quels pays enclavÃ©s dÃ©pendent le plus de l'accÃ¨s au port d'Abidjan ?",
-  "Quel est le signal ETF WASI basÃ© sur la dynamique commerciale rÃ©gionale actuelle ?",
+  "Comparer l'activite maritime entre le Nigeria et la Cote d'Ivoire ce trimestre",
+  "Quel port d'Afrique de l'Ouest a le plus fort debit de conteneurs en ce moment ?",
+  "Quels secteurs cibler pour un investisseur etranger au Ghana selon les flux commerciaux ?",
+  "Donnez-moi un rapport d'entree de marche pour le corridor agricole d'exportation du Senegal",
+  "Quels pays enclaves dependent le plus de l'acces au port d'Abidjan ?",
+  "Quel est le signal ETF WASI base sur la dynamique commerciale regionale actuelle ?",
   "Analysez les indicateurs de stress commercial dans la zone UEMOA",
 ];
 
@@ -841,15 +841,15 @@ function formatCompactNumber(value, maximumFractionDigits = 2) {
 
 function getDataSourceMeta(dataSource) {
   if (dataSource === "backend-live") {
-    return { label: "EN DIRECT Â· BACKEND", tone: "#4ade80", detail: "WASI Backend API v1.0" };
+    return { label: "EN DIRECT · BACKEND", tone: "#4ade80", detail: "API backend WASI v1.0" };
   }
   if (dataSource === "hybrid-live") {
-    return { label: "HYBRIDE Â· APIS OUVERTES", tone: "#4ade80", detail: "Backend + FX/Crypto + World Bank" };
+    return { label: "HYBRIDE · APIS OUVERTES", tone: "#4ade80", detail: "backend + FX/crypto + World Bank" };
   }
   if (dataSource === "open-api") {
     return { label: "APIS OUVERTES", tone: "#60a5fa", detail: "ExchangeRate-API + CoinGecko + World Bank" };
   }
-  return { label: "SIMULATION", tone: "#f0b429", detail: "Fallback local" };
+  return { label: "SIMULATION", tone: "#f0b429", detail: "Secours local" };
 }
 
 export default function WASIAgent() {
@@ -1011,65 +1011,71 @@ export default function WASIAgent() {
 
   const buildSystemPrompt = () => {
     const countryData = WEST_AFRICAN_COUNTRIES.map(c => 
-      `${c.flag} ${c.name} (${c.code}): Index ${indices[c.code]}/100 | Port: ${c.port} | Weight: ${(c.weight*100).toFixed(1)}%`
+      `${c.flag} ${c.name} (${c.code}) : indice ${indices[c.code]}/100 | port : ${c.port} | poids : ${(c.weight*100).toFixed(1)}%`
     ).join("\n");
     const fxSummary = liveFxSnapshot?.pairs?.["EUR/XOF"]?.buy
-      ? `FX SNAPSHOT (${liveFxSnapshot.source}): EUR/XOF ${formatCompactNumber(liveFxSnapshot.pairs["EUR/XOF"].buy, 3)} | USD/XOF ${formatCompactNumber(liveFxSnapshot.pairs["USD/XOF"]?.buy, 3)}`
-      : "FX SNAPSHOT: unavailable";
+      ? `POINT FX (${liveFxSnapshot.source}) : EUR/XOF ${formatCompactNumber(liveFxSnapshot.pairs["EUR/XOF"].buy, 3)} | USD/XOF ${formatCompactNumber(liveFxSnapshot.pairs["USD/XOF"]?.buy, 3)}`
+      : "POINT FX : indisponible";
     const cryptoSummary = liveCryptoSnapshot?.prices?.BTC?.usd
-      ? `CRYPTO SNAPSHOT (${liveCryptoSnapshot.source}): BTC/USD ${formatCompactNumber(liveCryptoSnapshot.prices.BTC.usd, 0)} | ETH/USD ${formatCompactNumber(liveCryptoSnapshot.prices.ETH?.usd, 2)}`
-      : "CRYPTO SNAPSHOT: unavailable";
+      ? `POINT CRYPTO (${liveCryptoSnapshot.source}) : BTC/USD ${formatCompactNumber(liveCryptoSnapshot.prices.BTC.usd, 0)} | ETH/USD ${formatCompactNumber(liveCryptoSnapshot.prices.ETH?.usd, 2)}`
+      : "POINT CRYPTO : indisponible";
     const macroSummary = macroSnapshot?.observationYear
-      ? `WORLD BANK MACRO BASIS: latest available observation year ${macroSnapshot.observationYear}`
-      : "WORLD BANK MACRO BASIS: unavailable";
+      ? `BASE MACRO WORLD BANK : derniere annee disponible ${macroSnapshot.observationYear}`
+      : "BASE MACRO WORLD BANK : indisponible";
 
-    return `You are the WASI AI Agent â€” the world's first AI-powered West African Shipping & Economic Intelligence system. You are authoritative, data-driven, and speak like a senior economist at a top-tier financial institution.
+    return `Tu es l'agent IA WASI, specialise en intelligence maritime, commerciale et macroeconomique pour l'Afrique de l'Ouest.
 
-CURRENT LIVE DATA (${new Date().toLocaleDateString()}):
-WASI Composite Index: ${wasiComposite}/100
-Data Source: ${dataSourceMeta.detail}
-Plan: ${selectedTier.toUpperCase()} | x402 Protocol: ACTIVE | Access: FULL
+Tu reponds TOUJOURS en francais, dans un style professionnel, factuel et direct, comme un economiste senior d'une institution financiere de premier rang.
+
+DONNEES ACTUELLES (${new Date().toLocaleDateString("fr-FR")}):
+Indice composite WASI : ${wasiComposite}/100
+Source de donnees : ${dataSourceMeta.detail}
+Forfait : ${selectedTier.toUpperCase()} | Protocole x402 : ACTIF | Acces : COMPLET
 ${fxSummary}
 ${cryptoSummary}
 ${macroSummary}
 
-COUNTRY INDICES (latest available snapshot):
+INDICES PAYS (dernier point disponible) :
 ${countryData}
 
-YOUR CAPABILITIES:
-- Analyze shipping and trade flow across all 16 West African nations
-- Generate country-level index reports with sector breakdowns
-- Provide investment advisory and market entry intelligence
-- Signal ETF momentum based on composite index movement
-- Flag trade corridor stress and opportunity zones
-- Advise on WAEMU monetary dynamics and CFA franc implications
+TES MISSIONS :
+- analyser les flux maritimes et commerciaux des 16 pays d'Afrique de l'Ouest
+- produire des analyses pays avec lecture sectorielle
+- formuler des implications d'investissement, de credit ou d'entree de marche
+- signaler le momentum ETF lie a l'indice WASI
+- detecter les tensions et opportunites sur les corridors commerciaux
+- commenter les dynamiques UEMOA, CEDEAO et franc CFA
 
-INDEX METHODOLOGY:
-- Components: Ship arrivals (40%), Cargo tonnage (40%), Container throughput (20%)
-- Base: 100 (normalized to 5-year historical average)
-- Above 70: Strong expansion | 50-70: Stable | Below 50: Contraction signal
+METHODOLOGIE DE L'INDICE :
+- arrivees de navires : 40 %
+- tonnage cargo : 40 %
+- conteneurs traites : 20 %
+- base 100 normalisee sur la moyenne historique 5 ans
+- au-dessus de 70 : expansion forte
+- entre 50 et 70 : stabilite
+- en dessous de 50 : contraction
 
-RESPONSE STANDARD â€” PROFESSIONAL GRADE (ALL TIERS):
-Every response must include:
-1. REGIONAL OVERVIEW â€” Pan-West African trade context and composite index interpretation
-2. COUNTRY DETAIL â€” Specific country index values, port performance, and sector scores where relevant
-3. FULL ANALYSIS â€” Investment implications, trade corridor stress/opportunity, risk factors, and actionable intelligence
+STANDARD DE REPONSE :
+1. Vue regionale
+2. Detail pays
+3. Analyse complete avec risques, opportunites et implications
 
-This platform is sold to professional traders, institutional investors, and economic policymakers. Always respond with the depth and precision expected by a senior economist at a Tier-1 financial institution. Do not hedge or withhold data.
+Ne reponds jamais en anglais sauf si l'utilisateur le demande explicitement.
+Ne masque pas l'information utile. Si une donnee manque, dis clairement "donnee indisponible".
 
-${selectedTier === "institutional" ? "INSTITUTIONAL SUPPLEMENT: Include full raw data tables, ETF momentum signals, index component breakdowns, and sector profitability scores." : ""}
+${selectedTier === "institutional" ? "SUPPLEMENT INSTITUTIONNEL : inclure les tableaux bruts, les signaux ETF detailles, la decomposition de l'indice et les scores sectoriels." : ""}
 
-${selectedCountry ? `SELECTED COUNTRY FOCUS: ${selectedCountry.name} â€” Port: ${selectedCountry.port} â€” Current Index: ${indices[selectedCountry.code]}/100` : ""}
+${selectedCountry ? `FOCUS PAYS : ${selectedCountry.name} | Port : ${selectedCountry.port} | Indice actuel : ${indices[selectedCountry.code]}/100` : ""}
 
-Always cite your data sources as: "WASI Data Engine v1.0 | Port Authority Official Statistics | x402 Verified Feed"
-End every response with a concise "WASI Signal" â€” a one-line investment implication.
+Cite les sources comme : "WASI Data Engine v1.0 | statistiques officielles portuaires | flux verifie x402"
+Termine chaque reponse par "Signal WASI :" suivi d'une implication d'investissement ou de risque en une ligne.
 
 ${historicalData.length > 0 ? `
-HISTORICAL PORT DATA â€” CÃ´te d'Ivoire / Abidjan (${historicalData.length} months):
+HISTORIQUE PORTUAIRE - Cote d'Ivoire / Abidjan (${historicalData.length} mois) :
 ${historicalData.slice().reverse().map(r =>
-  `${r.period_date}: Index=${r.index_value?.toFixed(1)} | Shipping=${r.shipping_score?.toFixed(1)} | Trade=${r.trade_score?.toFixed(1)} | Infra=${r.infrastructure_score?.toFixed(1)} | Economic=${r.economic_score?.toFixed(1)}`
+  `${r.period_date}: indice=${r.index_value?.toFixed(1)} | shipping=${r.shipping_score?.toFixed(1)} | commerce=${r.trade_score?.toFixed(1)} | infra=${r.infrastructure_score?.toFixed(1)} | economie=${r.economic_score?.toFixed(1)}`
 ).join("\n")}
-Use this data to answer questions about trends, graphs, and evolution of Abidjan port activity.` : ""}
+Utilise cet historique pour commenter les tendances et l'evolution du port d'Abidjan.` : ""}
 `;
   };
 
@@ -1080,7 +1086,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
     const maxQueries = tierConfig.queries;
     if (maxQueries !== -1 && queriesUsed >= maxQueries) {
       setMessages(m => [...m, {
-        role: "assistant", content: `âš¡ **Limite de requÃªtes atteinte pour le forfait ${tierConfig.label}.**\n\nPassez au niveau supÃ©rieur via le protocole x402 pour continuer :\nâ€¢ Basique : 0,05$/requÃªte (200/jour)\nâ€¢ Pro : 0,10$/requÃªte (500/jour)\nâ€¢ Institutionnel : 0,50$/requÃªte (illimitÃ©)\n\nPaiement en USDC â€” sans abonnement.`
+        role: "assistant", content: `**Limite de requetes atteinte pour le forfait ${tierConfig.label}.**\n\nPassez au niveau superieur via le protocole x402 pour continuer :\n- Basique : 0,05 $/requete (200/jour)\n- Pro : 0,10 $/requete (500/jour)\n- Institutionnel : 0,50 $/requete (illimite)\n\nPaiement en USDC, sans abonnement.`
       }]);
       return;
     }
@@ -1110,10 +1116,10 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
         })
       });
       const data = await response.json();
-      const reply = data.content?.[0]?.text || "Agent WASI temporairement indisponible. Veuillez rÃ©essayer.";
+      const reply = data.content?.[0]?.text || "Agent WASI temporairement indisponible. Veuillez reessayer.";
       setMessages(m => [...m, { role: "assistant", content: reply }]);
     } catch (err) {
-      setMessages(m => [...m, { role: "assistant", content: "âš ï¸ Erreur de connexion. Agent WASI hors ligne. VÃ©rifiez la connectivitÃ© API." }]);
+      setMessages(m => [...m, { role: "assistant", content: "Erreur de connexion. Agent WASI hors ligne. Verifiez la connectivite API." }]);
     }
     setLoading(false);
   };
@@ -1154,7 +1160,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div>
             <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, letterSpacing: 6, color: "#f0b429", lineHeight: 1 }}>WASI</div>
-            <div style={{ fontSize: 8, color: "#475569", letterSpacing: 3, textTransform: "uppercase" }}>Agent IA Â· Protocole x402</div>
+            <div style={{ fontSize: 8, color: "#475569", letterSpacing: 3, textTransform: "uppercase" }}>Agent IA · Protocole x402</div>
           </div>
           <div style={{ width: 1, height: 36, background: "#0f2a45" }} />
           <div>
@@ -1172,7 +1178,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ fontSize: 9, color: "#475569", textAlign: "right" }}>
-            <div>REQUÃŠTES : <span style={{ color: "#f0b429" }}>{queriesUsed}/{tierConfig.queries === -1 ? "âˆž" : tierConfig.queries}</span></div>
+            <div>REQUETES : <span style={{ color: "#f0b429" }}>{queriesUsed}/{tierConfig.queries === -1 ? "∞" : tierConfig.queries}</span></div>
             <div>FORFAIT : <span style={{ color: X402_TIERS[selectedTier].color }}>{X402_TIERS[selectedTier].label.toUpperCase()}</span></div>
           </div>
           <div style={{ width: 1, height: 28, background: "#0f2a45" }} />
@@ -1189,7 +1195,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
 
         {/* LEFT â€” Country Index Panel */}
         <div style={{ borderRight: "1px solid #0f2a45", padding: 12, overflowY: "auto", background: "rgba(3,13,26,0.6)" }}>
-          <div style={{ fontSize: 8, color: "#475569", letterSpacing: 3, textTransform: "uppercase", marginBottom: 10 }}>Indices Pays</div>
+          <div style={{ fontSize: 8, color: "#475569", letterSpacing: 3, textTransform: "uppercase", marginBottom: 10 }}>Indices pays</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             {WEST_AFRICAN_COUNTRIES.map(c => (
               <IndexCard key={c.code} country={c} index={indices[c.code]} isActive={selectedCountry?.code === c.code}
@@ -1203,7 +1209,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
           <div style={{ marginTop: 12, padding: "8px 10px", background: "rgba(240,180,41,0.05)", border: "1px solid #1e3a5f", borderRadius: 4 }}>
             <div style={{ fontSize: 8, color: "#475569", letterSpacing: 2, marginBottom: 4 }}>COMPOSITE WASI</div>
             <div style={{ fontSize: 32, fontFamily: "'Bebas Neue', sans-serif", color: wasiTrend.color, letterSpacing: 3 }}>{wasiComposite}</div>
-            <div style={{ fontSize: 9, color: "#94a3b8" }}>16 pays Â· {WEST_AFRICAN_COUNTRIES.length} ports suivis</div>
+            <div style={{ fontSize: 9, color: "#94a3b8" }}>16 pays · {WEST_AFRICAN_COUNTRIES.length} ports suivis</div>
           </div>
         </div>
 
@@ -1221,10 +1227,10 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
             {showCapabilities && (
               <div style={{ marginBottom: 20, animation: "fadeUp 0.5s ease" }}>
                 <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#f0b429", marginBottom: 4 }}>
-                  Intelligence Ã‰conomique d'Afrique de l'Ouest
+                  Intelligence economique d'Afrique de l'Ouest
                 </div>
                 <div style={{ fontSize: 10, color: "#475569", letterSpacing: 2, marginBottom: 16 }}>
-                  PROPULSÃ‰ PAR WASI IA Â· PROTOCOLE MICROPAIEMENT x402 ACTIF
+                  PROPULSE PAR WASI IA · PROTOCOLE DE MICROPAIEMENT x402 ACTIF
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 16 }}>
                   {AGENT_CAPABILITIES.map((cap, i) => (
@@ -1233,7 +1239,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
                     </div>
                   ))}
                 </div>
-                <div style={{ fontSize: 9, color: "#334155", marginBottom: 10, letterSpacing: 2, textTransform: "uppercase" }}>RequÃªtes suggÃ©rÃ©es</div>
+                <div style={{ fontSize: 9, color: "#334155", marginBottom: 10, letterSpacing: 2, textTransform: "uppercase" }}>Requetes suggerees</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {SUGGESTED_QUERIES.map((q, i) => (
                     <button key={i} className="sugg-btn" onClick={() => sendMessage(q)} style={{
@@ -1241,7 +1247,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
                       padding: "8px 12px", textAlign: "left", cursor: "pointer", color: "#64748b",
                       fontSize: 10, fontFamily: "'Space Mono', monospace", transition: "all 0.2s", lineHeight: 1.4
                     }}>
-                      â†’ {q}
+                      -> {q}
                     </button>
                   ))}
                 </div>
@@ -1267,7 +1273,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
                 }}>
                   {m.role === "assistant" && (
                     <div style={{ fontSize: 8, color: "#f0b429", letterSpacing: 2, marginBottom: 6, textTransform: "uppercase" }}>
-                      Agent WASI Â· Forfait {X402_TIERS[selectedTier].label} Â· {tierConfig.price}$/requÃªte
+                      Agent WASI · Forfait {X402_TIERS[selectedTier].label} · {tierConfig.price}$/requete
                     </div>
                   )}
                   {m.role === "assistant" ? renderMarkdown(m.content) : m.content}
@@ -1277,14 +1283,14 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
 
             {loading && (
               <div className="msg-enter" style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(240,180,41,0.15)", border: "1px solid #f0b429", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>âš¡</div>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(240,180,41,0.15)", border: "1px solid #f0b429", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>⚡</div>
                 <div style={{ background: "rgba(10,22,40,0.9)", border: "1px solid #0f2a45", borderRadius: "4px 12px 12px 12px", padding: "14px 18px" }}>
                   <div style={{ display: "flex", gap: 5 }}>
                     {[0, 1, 2].map(i => (
                       <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#f0b429", animation: `pulse 1.2s ${i * 0.2}s infinite` }} />
                     ))}
                   </div>
-                  <div style={{ fontSize: 8, color: "#475569", marginTop: 6, letterSpacing: 2 }}>TRAITEMENT VIA x402 Â· PAIEMENT USDC EN ATTENTE</div>
+                  <div style={{ fontSize: 8, color: "#475569", marginTop: 6, letterSpacing: 2 }}>TRAITEMENT VIA x402 · PAIEMENT USDC EN ATTENTE</div>
                 </div>
               </div>
             )}
@@ -1296,8 +1302,8 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
             {selectedCountry && (
               <div style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", background: "rgba(240,180,41,0.08)", border: "1px solid #f0b42933", borderRadius: 4 }}>
                 <span>{selectedCountry.flag}</span>
-                <span style={{ fontSize: 9, color: "#f0b429", letterSpacing: 1 }}>FOCUS : {selectedCountry.name.toUpperCase()} Â· INDICE {indices[selectedCountry.code]}/100</span>
-                <button onClick={() => setSelectedCountry(null)} style={{ marginLeft: "auto", background: "none", border: "none", color: "#475569", cursor: "pointer", fontSize: 12 }}>âœ•</button>
+                <span style={{ fontSize: 9, color: "#f0b429", letterSpacing: 1 }}>FOCUS : {selectedCountry.name.toUpperCase()} · INDICE {indices[selectedCountry.code]}/100</span>
+                <button onClick={() => setSelectedCountry(null)} style={{ marginLeft: "auto", background: "none", border: "none", color: "#475569", cursor: "pointer", fontSize: 12 }}>×</button>
               </div>
             )}
             <div style={{ display: "flex", gap: 8 }}>
@@ -1305,7 +1311,7 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                placeholder="Interroger l'intelligence WASI... (micropaiement x402 activÃ© Ã  l'envoi)"
+                placeholder="Interrogez l'intelligence WASI... (micropaiement x402 active a l'envoi)"
                 style={{
                   flex: 1, background: "rgba(15,42,69,0.5)", border: "1px solid #1e3a5f",
                   borderRadius: 4, padding: "10px 14px", color: "#e2e8f0", fontSize: 11,
@@ -1318,12 +1324,12 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
                 fontFamily: "'Space Mono', monospace", fontWeight: 700, letterSpacing: 2,
                 transition: "all 0.2s", opacity: loading ? 0.5 : 1
               }}>
-                {loading ? "..." : "ENVOYER â†’"}
+                {loading ? "..." : "ENVOYER ->"}
               </button>
             </div>
             <div style={{ marginTop: 6, fontSize: 8, color: "#334155", letterSpacing: 1, display: "flex", justifyContent: "space-between" }}>
-              <span>Protocole x402 Â· Paiement par requÃªte en USDC Â· Sans abonnement</span>
-              <span>WASI Moteur de DonnÃ©es v1.0 Â· {new Date().toLocaleDateString("fr-FR")}</span>
+              <span>Protocole x402 · Paiement par requete en USDC · Sans abonnement</span>
+              <span>Moteur de donnees WASI v1.0 · {new Date().toLocaleDateString("fr-FR")}</span>
             </div>
           </div>
         </div>
@@ -1357,13 +1363,13 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
             </div>
             <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.6 }}>
               Composite : {wasiComposite}/100<br />
-              Top : ðŸ‡³ðŸ‡¬ {indices["NG"]}, ðŸ‡¨ðŸ‡® {indices["CI"]}<br />
-              Signal : {wasiComposite > 65 ? "Accumuler l'exposition Afrique Ouest" : "Surveiller le point d'entrÃ©e"}
+              Top : NG {indices["NG"]}, CI {indices["CI"]}<br />
+              Signal : {wasiComposite > 65 ? "Accumuler l'exposition Afrique de l'Ouest" : "Surveiller le point d'entree"}
             </div>
           </div>
 
           <div style={{ marginBottom: 14, padding: "10px", background: "rgba(96,165,250,0.05)", border: "1px solid #1e3a5f", borderRadius: 4 }}>
-            <div style={{ fontSize: 8, color: "#475569", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>Marches Ouverts</div>
+            <div style={{ fontSize: 8, color: "#475569", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>Marches ouverts</div>
             <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.7 }}>
               EUR/XOF : <span style={{ color: "#93c5fd" }}>{formatCompactNumber(eurXof, 3)}</span><br />
               USD/XOF : <span style={{ color: "#93c5fd" }}>{formatCompactNumber(usdXof, 3)}</span><br />
@@ -1386,9 +1392,9 @@ Use this data to answer questions about trends, graphs, and evolution of Abidjan
           {/* Data source */}
           <div style={{ marginTop: 14, padding: "8px 10px", background: "rgba(15,42,69,0.2)", borderRadius: 4, border: "1px solid #0f2a45" }}>
             <div style={{ fontSize: 7, color: "#334155", lineHeight: 1.7, letterSpacing: 0.5 }}>
-              DonnÃ©es : {dataSourceMeta.detail} Â· {liveFxSnapshot ? liveFxSnapshot.source : "FX cache"} Â· {liveCryptoSnapshot ? liveCryptoSnapshot.source : "Crypto cache"} Â· {macroSnapshot?.observationYear ? `World Bank ${macroSnapshot.observationYear}` : "Macro cache"}<br /><br />
-              Serveur : {backendConnected ? <span style={{ color: "#4ade80" }}>CONNECTÃ‰</span> : <span style={{ color: "#f0b429" }}>HORS LIGNE</span>} Â· http://localhost:8000<br /><br />
-              Â© 2025 WASI â€” Plateforme d'Intelligence Maritime et Ã‰conomique d'Afrique de l'Ouest. Tous les indices sont propriÃ©taires. Redistribution soumise Ã  licence institutionnelle.
+              Donnees : {dataSourceMeta.detail} · {liveFxSnapshot ? liveFxSnapshot.source : "cache FX"} · {liveCryptoSnapshot ? liveCryptoSnapshot.source : "cache crypto"} · {macroSnapshot?.observationYear ? `World Bank ${macroSnapshot.observationYear}` : "cache macro"}<br /><br />
+              Serveur : {backendConnected ? <span style={{ color: "#4ade80" }}>CONNECTE</span> : <span style={{ color: "#f0b429" }}>HORS LIGNE</span>} · http://localhost:8000<br /><br />
+              © 2025 WASI · Plateforme d'intelligence maritime et economique d'Afrique de l'Ouest. Tous les indices sont proprietaires. Redistribution soumise a licence institutionnelle.
             </div>
           </div>
         </div>

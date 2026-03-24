@@ -446,6 +446,18 @@ const ensureComptaSchemaExtensions = () => {
 };
 
 ensureComptaSchemaExtensions();
+
+// ── 2FA / TOTP schema ────────────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS user_totp_secrets (
+    user_id TEXT PRIMARY KEY,
+    secret TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 0,
+    verified_at_utc TEXT,
+    created_at_utc TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES platform_users(id)
+  );
+`);
 db.exec(`
   CREATE INDEX IF NOT EXISTS idx_etf_tokens_category_active
   ON etf_tokens(category, is_active, symbol);
@@ -1302,11 +1314,52 @@ const recordAuthFailure = (req, username) => {
   const record = getAuthFailureRecord(key);
   record.count += 1;
   authFailureStore.set(key, record);
+  if (record.count >= 3 && typeof raiseAlert === "function") {
+    raiseAlert({
+      alertType: "FAILED_LOGIN_SPIKE",
+      severity: record.count >= 5 ? "CRITICAL" : "WARNING",
+      message: `${record.count} failed login attempts for "${username}" from ${getRequestIp(req)}`,
+      detail: { username, ip: getRequestIp(req), attempts: record.count },
+    });
+  }
   return record.count;
 };
 
 const clearAuthFailures = (req, username) => {
   authFailureStore.delete(getAuthFailureKey(req, username));
+};
+
+/* ── Banking rate limiter (per-user, in-memory) ── */
+const BANKING_RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const BANKING_RATE_LIMIT_MAX = 10;
+const bankingRateLimitStore = new Map();
+
+const bankingRateLimit = (req, _res, next) => {
+  try {
+    const userId = req.authUser?.sub;
+    if (!userId) return next();
+
+    const now = Date.now();
+    let record = bankingRateLimitStore.get(userId);
+
+    if (!record || now - record.windowStartedAt > BANKING_RATE_LIMIT_WINDOW_MS) {
+      record = { count: 0, windowStartedAt: now };
+      bankingRateLimitStore.set(userId, record);
+    }
+
+    record.count += 1;
+
+    if (record.count > BANKING_RATE_LIMIT_MAX) {
+      throw new ApiError(
+        429,
+        `Rate limit exceeded. Maximum ${BANKING_RATE_LIMIT_MAX} banking operations per 5 minutes.`
+      );
+    }
+
+    next();
+  } catch (err) {
+    next(err);
+  }
 };
 
 const isCorsOriginAllowed = (origin) => {
@@ -4119,6 +4172,180 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
   res.json(user);
 });
 
+app.post("/api/auth/refresh", requireAuth, (req, res, next) => {
+  try {
+    const currentUser = req.authUser;
+    const platformUser = db
+      .prepare("SELECT * FROM platform_users WHERE id = ?")
+      .get(currentUser.sub);
+
+    if (platformUser && !platformUser.is_active) {
+      throw new ApiError(401, "Account deactivated.");
+    }
+
+    const freshToken = signAccessToken({
+      id: currentUser.sub,
+      username: currentUser.username,
+      displayName: currentUser.displayName,
+      role: platformUser ? platformUser.role : currentUser.role,
+      accountIds: currentUser.accountIds ?? [],
+      tier: platformUser ? platformUser.tier : (currentUser.tier ?? "free"),
+      x402_balance: platformUser
+        ? platformUser.x402_balance
+        : (currentUser.x402_balance ?? 0),
+      email: platformUser ? platformUser.email : (currentUser.email ?? null),
+    });
+
+    res.json({ access_token: freshToken, token_type: "bearer" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── 2FA / TOTP Endpoints ──────────────────────────────────────────────────
+
+const generateTotpSecret = () => randomBytes(20).toString("hex");
+
+const computeTotp = (secret, timeStep = 30) => {
+  const epoch = Math.floor(Date.now() / 1000);
+  const counter = Math.floor(epoch / timeStep);
+  const counterBuffer = Buffer.alloc(8);
+  counterBuffer.writeUInt32BE(0, 0);
+  counterBuffer.writeUInt32BE(counter, 4);
+  const { createHmac } = require("node:crypto");
+  const hmac = createHmac("sha1", Buffer.from(secret, "hex")).update(counterBuffer).digest();
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const code = ((hmac[offset] & 0x7f) << 24 | hmac[offset + 1] << 16 | hmac[offset + 2] << 8 | hmac[offset + 3]) % 1000000;
+  return code.toString().padStart(6, "0");
+};
+
+const verifyTotp = (secret, code, windowSize = 1) => {
+  const epoch = Math.floor(Date.now() / 1000);
+  for (let i = -windowSize; i <= windowSize; i++) {
+    const counter = Math.floor(epoch / 30) + i;
+    const counterBuffer = Buffer.alloc(8);
+    counterBuffer.writeUInt32BE(0, 0);
+    counterBuffer.writeUInt32BE(counter, 4);
+    const hmac = createHash("sha1");
+    const { createHmac: cHmac } = require("node:crypto");
+    const h = cHmac("sha1", Buffer.from(secret, "hex")).update(counterBuffer).digest();
+    const offset = h[h.length - 1] & 0x0f;
+    const c = ((h[offset] & 0x7f) << 24 | h[offset + 1] << 16 | h[offset + 2] << 8 | h[offset + 3]) % 1000000;
+    if (c.toString().padStart(6, "0") === code) return true;
+  }
+  return false;
+};
+
+const base32Encode = (buffer) => {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const byte of buffer) bits += byte.toString(2).padStart(8, "0");
+  let result = "";
+  for (let i = 0; i < bits.length; i += 5) {
+    const chunk = bits.slice(i, i + 5).padEnd(5, "0");
+    result += alphabet[parseInt(chunk, 2)];
+  }
+  return result;
+};
+
+app.post("/api/auth/2fa/setup", requireAuth, (req, res, next) => {
+  try {
+    const userId = req.authUser.sub;
+    const existing = db.prepare("SELECT * FROM user_totp_secrets WHERE user_id = ?").get(userId);
+    if (existing?.enabled) {
+      throw new ApiError(400, "2FA is already enabled.");
+    }
+
+    const secret = generateTotpSecret();
+    const secretBase32 = base32Encode(Buffer.from(secret, "hex"));
+    const otpauthUrl = `otpauth://totp/WASI:${encodeURIComponent(req.authUser.username)}?secret=${secretBase32}&issuer=WASI&digits=6&period=30`;
+
+    if (existing) {
+      db.prepare("UPDATE user_totp_secrets SET secret = ?, enabled = 0, verified_at_utc = NULL, created_at_utc = ? WHERE user_id = ?")
+        .run(secret, new Date().toISOString(), userId);
+    } else {
+      db.prepare("INSERT INTO user_totp_secrets (user_id, secret, enabled, created_at_utc) VALUES (?, ?, 0, ?)")
+        .run(userId, secret, new Date().toISOString());
+    }
+
+    success(res, { otpauthUrl, secret: secretBase32 });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/auth/2fa/verify", requireAuth, (req, res, next) => {
+  try {
+    const userId = req.authUser.sub;
+    const code = String(req.body?.code || "").trim();
+    if (!/^\d{6}$/.test(code)) {
+      throw new ApiError(400, "Code must be 6 digits.");
+    }
+
+    const record = db.prepare("SELECT * FROM user_totp_secrets WHERE user_id = ?").get(userId);
+    if (!record) {
+      throw new ApiError(400, "Run /api/auth/2fa/setup first.");
+    }
+
+    if (!verifyTotp(record.secret, code)) {
+      throw new ApiError(401, "Invalid TOTP code.");
+    }
+
+    db.prepare("UPDATE user_totp_secrets SET enabled = 1, verified_at_utc = ? WHERE user_id = ?")
+      .run(new Date().toISOString(), userId);
+
+    writeAuditLog({
+      req,
+      action: "2FA_ENABLED",
+      resourceType: "AUTH",
+      resourceId: userId,
+      status: AUDIT_SUCCESS,
+    });
+
+    success(res, { enabled: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/auth/2fa/disable", requireAuth, (req, res, next) => {
+  try {
+    const userId = req.authUser.sub;
+    const code = String(req.body?.code || "").trim();
+    if (!/^\d{6}$/.test(code)) {
+      throw new ApiError(400, "Code must be 6 digits.");
+    }
+
+    const record = db.prepare("SELECT * FROM user_totp_secrets WHERE user_id = ?").get(userId);
+    if (!record?.enabled) {
+      throw new ApiError(400, "2FA is not enabled.");
+    }
+
+    if (!verifyTotp(record.secret, code)) {
+      throw new ApiError(401, "Invalid TOTP code.");
+    }
+
+    db.prepare("DELETE FROM user_totp_secrets WHERE user_id = ?").run(userId);
+
+    writeAuditLog({
+      req,
+      action: "2FA_DISABLED",
+      resourceType: "AUTH",
+      resourceId: userId,
+      status: AUDIT_SUCCESS,
+    });
+
+    success(res, { disabled: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/auth/2fa/status", requireAuth, (req, res) => {
+  const record = db.prepare("SELECT enabled, verified_at_utc FROM user_totp_secrets WHERE user_id = ?").get(req.authUser.sub);
+  res.json({ enabled: !!record?.enabled, verifiedAt: record?.verified_at_utc ?? null });
+});
+
 app.post("/api/chat", requireAuth, async (req, res, next) => {
   try {
     const messages = Array.isArray(req.body?.messages) ? req.body.messages : [];
@@ -4578,7 +4805,7 @@ app.get(
   }
 );
 
-app.post("/api/v1/banking/transfer", requireAuth, (req, res, next) => {
+app.post("/api/v1/banking/transfer", requireAuth, bankingRateLimit, (req, res, next) => {
   try {
     const { fromAccountId, toAccountId, amountCentimes, description } = req.body ?? {};
     const currentRole = req.authUser?.role;
@@ -4667,6 +4894,16 @@ app.post("/api/v1/banking/transfer", requireAuth, (req, res, next) => {
         replayed: result.replayed,
       },
     });
+
+    if (amount >= ALERT_THRESHOLDS.LARGE_TRANSFER_CENTIMES) {
+      raiseAlert({
+        alertType: "LARGE_TRANSFER",
+        severity: "WARNING",
+        message: `Large transfer of ${formatCentimeAmount(amount)} from ${fromAccountId} to ${toAccountId}`,
+        userId: req.authUser.sub,
+        detail: { fromAccountId, toAccountId, amountCentimes: amount.toString() },
+      });
+    }
 
     success(res, result.payload, result.statusCode);
   } catch (error) {
@@ -5264,7 +5501,7 @@ app.get("/api/v1/dex/portfolio", requireAuth, (req, res, next) => {
   }
 });
 
-app.post("/api/v1/dex/orders", requireAuth, (req, res, next) => {
+app.post("/api/v1/dex/orders", requireAuth, bankingRateLimit, (req, res, next) => {
   try {
     const rawSymbol = String(req.body?.symbol || "").trim().toUpperCase();
     const rawSide = String(req.body?.side || "").trim().toUpperCase();
@@ -5410,6 +5647,342 @@ app.post("/api/v1/dex/orders/:orderId/cancel", requireAuth, (req, res, next) => 
         reason: error.message,
       },
     });
+    next(error);
+  }
+});
+
+// ── Audit Dashboard API ─────────────────────────────────────────────────────
+
+app.get(
+  "/api/v1/admin/audit/summary",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (_req, res, next) => {
+    try {
+      const totalEntries = db
+        .prepare("SELECT COUNT(*) AS count FROM audit_log")
+        .get().count;
+      const failureCount = db
+        .prepare("SELECT COUNT(*) AS count FROM audit_log WHERE status = 'FAILURE'")
+        .get().count;
+      const last24h = db
+        .prepare(
+          "SELECT COUNT(*) AS count FROM audit_log WHERE created_at_utc > datetime('now', '-1 day')"
+        )
+        .get().count;
+      const topActions = db
+        .prepare(
+          `SELECT action, status, COUNT(*) AS count FROM audit_log
+           GROUP BY action, status ORDER BY count DESC LIMIT 20`
+        )
+        .all();
+      const recentFailures = db
+        .prepare(
+          `SELECT * FROM audit_log WHERE status = 'FAILURE'
+           ORDER BY created_at_utc DESC LIMIT 20`
+        )
+        .all()
+        .map(serializeAuditEntry);
+      success(res, {
+        totalEntries,
+        failureCount,
+        last24h,
+        topActions,
+        recentFailures,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.get(
+  "/api/v1/admin/audit/search",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const action = req.query.action ? String(req.query.action).trim().toUpperCase() : null;
+      const userId = req.query.user_id ? String(req.query.user_id).trim() : null;
+      const status = req.query.status ? String(req.query.status).trim().toUpperCase() : null;
+      const limit = Math.min(Math.max(Number(req.query.limit ?? 100), 1), 500);
+
+      let sql = "SELECT * FROM audit_log WHERE 1=1";
+      const params = [];
+      if (action) { sql += " AND action = ?"; params.push(action); }
+      if (userId) { sql += " AND actor_user_id = ?"; params.push(userId); }
+      if (status) { sql += " AND status = ?"; params.push(status); }
+      sql += " ORDER BY created_at_utc DESC LIMIT ?";
+      params.push(limit);
+
+      const entries = db.prepare(sql).all(...params).map(serializeAuditEntry);
+      success(res, { entries });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ── Transaction Export (CSV) ────────────────────────────────────────────────
+
+app.get("/api/v1/banking/transactions/export", requireAuth, (req, res, next) => {
+  try {
+    const format = String(req.query.format ?? "csv").toLowerCase();
+    const limit = Math.min(Math.max(Number(req.query.limit ?? 500), 1), 5000);
+    const userId = req.authUser.sub;
+
+    const accountIds = db
+      .prepare("SELECT id FROM accounts WHERE holder = ?")
+      .all(userId)
+      .map((row) => row.id);
+
+    if (accountIds.length === 0) {
+      throw new ApiError(404, "No accounts found.");
+    }
+
+    const placeholders = accountIds.map(() => "?").join(",");
+    const transactions = db
+      .prepare(
+        `SELECT t.*, a.holder, a.currency FROM transactions t
+         JOIN accounts a ON t.account_id = a.id
+         WHERE t.account_id IN (${placeholders})
+         ORDER BY t.created_at_utc DESC LIMIT ?`
+      )
+      .all(...accountIds, limit);
+
+    if (format === "csv") {
+      const header = "id,account_id,kind,amount_centimes,description,transfer_group_id,created_at_utc";
+      const rows = transactions.map(
+        (t) =>
+          `${t.id},${t.account_id},${t.kind},${t.amount_centimes},"${(t.description || "").replace(/"/g, '""')}",${t.transfer_group_id || ""},${t.created_at_utc}`
+      );
+      const csv = [header, ...rows].join("\n");
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="wasi_transactions_${new Date().toISOString().slice(0, 10)}.csv"`);
+      res.send(csv);
+    } else {
+      success(res, { transactions });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Admin: User Management (RBAC) ──────────────────────────────────────────
+
+app.get(
+  "/api/v1/admin/users",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const limit = Math.min(Math.max(Number(req.query.limit ?? 100), 1), 500);
+      const users = db
+        .prepare(
+          `SELECT id, username, email, role, tier, is_active, created_at_utc, updated_at_utc
+           FROM platform_users ORDER BY created_at_utc DESC LIMIT ?`
+        )
+        .all(limit);
+      success(res, { users });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.post(
+  "/api/v1/admin/users/:userId/role",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const targetUserId = String(req.params.userId).trim();
+      const newRole = String(req.body?.role || "").trim().toUpperCase();
+      if (![ROLE_CLIENT, ROLE_TELLER, ROLE_MANAGER].includes(newRole)) {
+        throw new ApiError(400, "Invalid role. Must be CLIENT, TELLER, or MANAGER.");
+      }
+      if (targetUserId === req.authUser.sub) {
+        throw new ApiError(400, "Cannot change your own role.");
+      }
+
+      const user = db
+        .prepare("SELECT id, username, role FROM platform_users WHERE id = ?")
+        .get(targetUserId);
+      if (!user) {
+        throw new ApiError(404, "User not found.");
+      }
+
+      const oldRole = user.role;
+      db.prepare(
+        "UPDATE platform_users SET role = ?, updated_at_utc = ? WHERE id = ?"
+      ).run(newRole, new Date().toISOString(), targetUserId);
+
+      writeAuditLog({
+        req,
+        action: "ADMIN_ROLE_CHANGE",
+        resourceType: "PLATFORM_USER",
+        resourceId: targetUserId,
+        status: AUDIT_SUCCESS,
+        detail: { username: user.username, oldRole, newRole },
+      });
+
+      success(res, { userId: targetUserId, username: user.username, oldRole, newRole });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.post(
+  "/api/v1/admin/users/:userId/status",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const targetUserId = String(req.params.userId).trim();
+      const isActive = req.body?.is_active === true || req.body?.is_active === 1 ? 1 : 0;
+
+      if (targetUserId === req.authUser.sub) {
+        throw new ApiError(400, "Cannot deactivate your own account.");
+      }
+
+      const user = db
+        .prepare("SELECT id, username FROM platform_users WHERE id = ?")
+        .get(targetUserId);
+      if (!user) {
+        throw new ApiError(404, "User not found.");
+      }
+
+      db.prepare(
+        "UPDATE platform_users SET is_active = ?, updated_at_utc = ? WHERE id = ?"
+      ).run(isActive, new Date().toISOString(), targetUserId);
+
+      writeAuditLog({
+        req,
+        action: isActive ? "ADMIN_USER_ACTIVATE" : "ADMIN_USER_DEACTIVATE",
+        resourceType: "PLATFORM_USER",
+        resourceId: targetUserId,
+        status: AUDIT_SUCCESS,
+        detail: { username: user.username, is_active: isActive },
+      });
+
+      success(res, { userId: targetUserId, username: user.username, is_active: isActive });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ── Notifications: Security Alerts ──────────────────────────────────────────
+
+const ALERT_THRESHOLDS = {
+  LARGE_TRANSFER_CENTIMES: BigInt(process.env.ALERT_LARGE_TRANSFER_CENTIMES ?? "10000000"),
+  FAILED_LOGIN_SPIKE: Number(process.env.ALERT_FAILED_LOGIN_SPIKE ?? 3),
+};
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS security_alerts (
+    id TEXT PRIMARY KEY,
+    alert_type TEXT NOT NULL,
+    severity TEXT NOT NULL CHECK (severity IN ('INFO','WARNING','CRITICAL')),
+    message TEXT NOT NULL,
+    user_id TEXT,
+    detail_json TEXT,
+    acknowledged INTEGER NOT NULL DEFAULT 0,
+    created_at_utc TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_security_alerts_created
+  ON security_alerts(created_at_utc DESC);
+`);
+
+const insertAlert = db.prepare(`
+  INSERT INTO security_alerts (id, alert_type, severity, message, user_id, detail_json, created_at_utc)
+  VALUES (@id, @alertType, @severity, @message, @userId, @detailJson, @createdAtUtc)
+`);
+
+const raiseAlert = ({ alertType, severity, message, userId = null, detail = null }) => {
+  try {
+    insertAlert.run({
+      id: randomUUID(),
+      alertType,
+      severity,
+      message,
+      userId,
+      detailJson: detail ? JSON.stringify(detail) : null,
+      createdAtUtc: new Date().toISOString(),
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("alert_write_failed", error.message);
+  }
+};
+
+app.get(
+  "/api/v1/admin/alerts",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const limit = Math.min(Math.max(Number(req.query.limit ?? 50), 1), 200);
+      const unacknowledgedOnly = req.query.unread === "true";
+      const sql = unacknowledgedOnly
+        ? "SELECT * FROM security_alerts WHERE acknowledged = 0 ORDER BY created_at_utc DESC LIMIT ?"
+        : "SELECT * FROM security_alerts ORDER BY created_at_utc DESC LIMIT ?";
+      const alerts = db.prepare(sql).all(limit);
+      success(res, { alerts });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.post(
+  "/api/v1/admin/alerts/:alertId/acknowledge",
+  requireAuth,
+  requireRoles([ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const alertId = String(req.params.alertId).trim();
+      const result = db
+        .prepare("UPDATE security_alerts SET acknowledged = 1 WHERE id = ?")
+        .run(alertId);
+      if (result.changes === 0) {
+        throw new ApiError(404, "Alert not found.");
+      }
+      success(res, { acknowledged: true });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ── Health / Status Dashboard ───────────────────────────────────────────────
+
+app.get("/api/v1/platform/health", (_req, res, next) => {
+  try {
+    const userCount = db
+      .prepare("SELECT COUNT(*) AS count FROM platform_users")
+      .get().count;
+    const accountCount = db
+      .prepare("SELECT COUNT(*) AS count FROM accounts")
+      .get().count;
+    const transactionCount = db
+      .prepare("SELECT COUNT(*) AS count FROM transactions")
+      .get().count;
+    const alertCount = db
+      .prepare("SELECT COUNT(*) AS count FROM security_alerts WHERE acknowledged = 0")
+      .get().count;
+    const uptime = process.uptime();
+
+    success(res, {
+      status: "healthy",
+      uptime: Math.floor(uptime),
+      database: "connected",
+      counts: { users: userCount, accounts: accountCount, transactions: transactionCount },
+      unacknowledgedAlerts: alertCount,
+      version: "1.0.0",
+    });
+  } catch (error) {
     next(error);
   }
 });

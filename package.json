@@ -5,6 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:wasi": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode wasi --port 3000 --strictPort",
+    "dev:banking": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode banking --port 3001 --strictPort",
+    "dev:compta": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode compta --port 3003 --strictPort",
+    "dev:afritax": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode afritax --port 3005 --strictPort",
+    "dev:dex": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode dex --port 3006 --strictPort",
+    "dev:finance": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode finance --port 3007 --strictPort",
     "server": "node server/index.mjs",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
     "diagnose:all": "powershell -ExecutionPolicy Bypass -File .\\ops\\diagnose_all.ps1",
@@ -26,6 +32,7 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "cross-env": "^7.0.3",
     "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.2.1",

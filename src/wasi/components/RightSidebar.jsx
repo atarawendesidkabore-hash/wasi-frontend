@@ -44,10 +44,10 @@ export function RightSidebar({
   backendConnected,
 }) {
   const coverageMetrics = [
-    { label: "Pays couverts", value: "16 CEDEAO", trend: "up", deltaText: "Full scope" },
-    { label: "Ports suivis", value: "Abidjan/Lagos/Tema/Dakar", trend: "up", deltaText: "Core lanes" },
-    { label: "Macro + Markets", value: "FMI + BRVM + WB", trend: "flat", deltaText: "Multi-source" },
-    { label: "Frequence", value: "Temps reel + 6h", trend: "up", deltaText: "Hot refresh" },
+    { label: "Pays couverts", value: "16 CEDEAO", trend: "up", deltaText: "Perimetre complet" },
+    { label: "Ports suivis", value: "Abidjan/Lagos/Tema/Dakar", trend: "up", deltaText: "Couloirs principaux" },
+    { label: "Macro + marches", value: "FMI + BRVM + WB", trend: "flat", deltaText: "Sources multiples" },
+    { label: "Frequence", value: "Temps reel + 6h", trend: "up", deltaText: "Rafraichissement rapide" },
   ];
 
   const topMovers = [...countries]
@@ -95,7 +95,7 @@ export function RightSidebar({
               label="Signal"
               value={`${wasiSignalLabel} (${wasiComposite}/100)`}
               trend={wasiComposite >= 50 ? "up" : "down"}
-              deltaText={wasiComposite >= 65 ? "Momentum fort" : "Surveillance active"}
+              deltaText={wasiComposite >= 65 ? "Elan fort" : "Surveillance active"}
             />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
               <RiskIndicator level={wasiRiskLevel} />
@@ -180,7 +180,7 @@ export function RightSidebar({
                     />
                     <div style={{ marginTop: 6, fontSize: 12, color: "#64748b", display: "flex", justifyContent: "space-between" }}>
                       <span>Cap. {(m.market_cap_usd / 1e9).toFixed(1)} Md USD</span>
-                      <span>Ouvrir detail</span>
+                      <span>Ouvrir le detail</span>
                     </div>
                   </button>
                 );
@@ -242,16 +242,16 @@ export function RightSidebar({
       <div style={{ marginTop: 14 }}>
         <WASICard title="Matieres Premieres" subtitle="Flux multi-source" accentColor="#C9A84C">
           {commodityPrices.length === 0 ? (
-            <DemoLabel text="Chargement Commodity Feed..." />
+            <DemoLabel text="Chargement du flux matieres premieres..." />
           ) : (
             <div style={{ display: "grid", gap: 6 }}>
               <div style={{ fontSize: 12, color: "#64748b" }}>
-                {commodityPrices.length} commodities chargees
+                {commodityPrices.length} matieres chargees
               </div>
               <div style={{ display: "grid", gap: 6, maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
               {[...commodityPrices].sort((a, b) => String(a.code).localeCompare(String(b.code))).map((p, i) => {
                 const trend = p.mom_pct === null ? "flat" : p.mom_pct > 0 ? "up" : "down";
-                const deltaText = p.mom_pct === null ? "MoM n/a" : `${p.mom_pct > 0 ? "+" : ""}${p.mom_pct.toFixed(1)}% MoM`;
+                const deltaText = p.mom_pct === null ? "Variation mensuelle indisponible" : `${p.mom_pct > 0 ? "+" : ""}${p.mom_pct.toFixed(1)}% sur un mois`;
                 return (
                   <button
                     type="button"
@@ -275,7 +275,7 @@ export function RightSidebar({
                     />
                     <div style={{ marginTop: 4, fontSize: 12, color: "#64748b", display: "flex", justifyContent: "space-between" }}>
                       <span>{p.unit} | {p.period}</span>
-                      <span>Ouvrir detail</span>
+                      <span>Ouvrir le detail</span>
                     </div>
                     <div style={{ marginTop: 2, fontSize: 11, color: "#94a3b8" }}>
                       Code: {p.code}
@@ -285,7 +285,7 @@ export function RightSidebar({
               })}
               </div>
               <div style={{ fontSize: 11, color: "#64748b", textAlign: "right" }}>
-                Source: WASI Commodity Feed (Stooq + WB fallback)
+                Source : flux matieres WASI (Stooq + secours World Bank)
               </div>
             </div>
           )}
@@ -293,7 +293,7 @@ export function RightSidebar({
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <WASICard title="Data Source" subtitle="Etat des flux et connectivite" accentColor="#0D2B1A">
+        <WASICard title="Source de donnees" subtitle="Etat des flux et de la connectivite" accentColor="#0D2B1A">
           {dataSource !== "live" ? <DemoLabel text="DONNEES SIMULEES - NON REELLES" /> : null}
           <div style={{ marginTop: 8, fontSize: 12, color: "#475569", lineHeight: 1.7 }}>
             Donnees : {backendConnected

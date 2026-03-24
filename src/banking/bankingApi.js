@@ -51,15 +51,23 @@ const request = async (path, init = {}) => {
     ? { "Idempotency-Key": idempotencyKey }
     : {};
 
-  const response = await fetch(`${resolveApiBaseUrl()}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders,
-      ...idempotencyHeaders,
-      ...(init.headers || {}),
-    },
-    ...fetchInit,
-  });
+  let response;
+
+  try {
+    response = await fetch(`${resolveApiBaseUrl()}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders,
+        ...idempotencyHeaders,
+        ...(init.headers || {}),
+      },
+      ...fetchInit,
+    });
+  } catch {
+    throw new Error(
+      "API bancaire indisponible. Verifiez le backend local ou utilisez le mode demonstration."
+    );
+  }
 
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload?.success) {
