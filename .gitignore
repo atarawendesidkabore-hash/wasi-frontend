@@ -52,6 +52,7 @@ __pycache__/
 *.docx
 *.md
 !WASI_Audit_Interne_Controle_Interne_2026.md
+!DEPLOYMENT_CHECKLIST.md
 
 # Claude
 .claude/

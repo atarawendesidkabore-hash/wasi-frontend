@@ -13,6 +13,7 @@ const OhadaComptaApp = lazy(() => import("./compta/OhadaComptaApp").then((m) => 
 const FinanceWorkbenchApp = lazy(() => import("./finance/FinanceWorkbenchApp").then((m) => ({ default: m.FinanceWorkbenchApp })));
 const WorkspaceHomeApp = lazy(() => import("./platform/WorkspaceHomeApp").then((m) => ({ default: m.WorkspaceHomeApp })));
 const CommercialDemoKitApp = lazy(() => import("./platform/CommercialDemoKitApp").then((m) => ({ default: m.CommercialDemoKitApp })));
+const AdminDashboardApp = lazy(() => import("./admin/AdminDashboardApp").then((m) => ({ default: m.AdminDashboardApp })));
 
 const AppLoader = () => (
   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0a0a", color: "#00ff88", fontFamily: "monospace" }}>
@@ -36,6 +37,7 @@ const APP_TITLES = {
   compta: "WASI - OHADA Compta",
   finance: "WASI - Finance Lab",
   dex: "WASI - ETF DEX",
+  admin: "WASI - Admin Console",
 };
 
 if (typeof document !== "undefined") {
@@ -82,6 +84,10 @@ const AppRoute = () => {
   if (selectedApp === "dex") {
     if (!isFeatureEnabled("dex")) return <FallbackApp />;
     return <DexApp />;
+  }
+
+  if (selectedApp === "admin") {
+    return <AdminDashboardApp />;
   }
 
   return <WasiApp />;
