@@ -1,32 +1,5 @@
 services:
   - type: web
-    name: wasi-web
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
-    plan: starter
-    healthCheckPath: /
-    headers:
-      - path: /*
-        name: Strict-Transport-Security
-        value: max-age=31536000; includeSubDomains
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: Referrer-Policy
-        value: strict-origin-when-cross-origin
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: VITE_WASI_BANKING_API_URL
-        sync: false
-    autoDeploy: true
-
-  - type: web
     name: wasi-web-api
     runtime: docker
     dockerfilePath: ./Dockerfile.api
@@ -46,19 +19,19 @@ services:
       - key: PORT
         value: "8010"
       - key: BANKING_JWT_SECRET
-        sync: false
+        generateValue: true
       - key: BANKING_JWT_EXPIRES_IN
         value: 12h
       - key: CORS_ALLOWED_ORIGINS
         value: https://atarawendesidkabore-hash.github.io,http://localhost:3000,http://127.0.0.1:3000
       - key: BANKING_PASSWORD_PEPPER
-        sync: false
+        generateValue: true
       - key: WASI_ALLOW_DEMO_USERS
         value: "true"
       - key: WASI_DEMO_CLIENT_PASSWORD
-        sync: false
+        value: WasiClient2026!
       - key: WASI_DEMO_TELLER_PASSWORD
-        sync: false
+        value: WasiTeller2026!
       - key: WASI_DEMO_MANAGER_PASSWORD
-        sync: false
+        value: WasiManager2026!
     autoDeploy: true
