@@ -1,0 +1,17 @@
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+FROM node:20-alpine AS runtime
+RUN addgroup -S wasi && adduser -S wasi -G wasi
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=8010
+COPY --from=deps /app/node_modules ./node_modules
+COPY package*.json ./
+COPY server ./server
+RUN mkdir -p /app/server/data && chown -R wasi:wasi /app
+USER wasi
+EXPOSE 8010
+CMD ["npm", "run", "server"]

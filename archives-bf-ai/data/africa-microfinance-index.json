@@ -1,0 +1,1639 @@
+{
+  "title": "Africa Microfinance AI",
+  "sourceLabel": "Official African country, Burkina Faso finance, and BCEAO microfinance sources",
+  "siteUrl": "https://au.int/en/member_states/countryprofiles2",
+  "ingestedAt": "2026-04-04T10:18:05.386Z",
+  "countryCount": 55,
+  "documentCount": 10,
+  "countries": [
+    {
+      "id": "country-burundi",
+      "shortName": "Burundi",
+      "officialName": "Republic of Burundi",
+      "region": "Central Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Burundi",
+        "Republic of Burundi"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-cameroon",
+      "shortName": "Cameroon",
+      "officialName": "Republic of Cameroon",
+      "region": "Central Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Cameroon",
+        "Republic of Cameroon"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-central-african-republic",
+      "shortName": "Central African Republic",
+      "officialName": "Central African Republic",
+      "region": "Central Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Central African Republic"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-chad",
+      "shortName": "Chad",
+      "officialName": "Republic of Chad",
+      "region": "Central Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Chad",
+        "Republic of Chad"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-congo-republic",
+      "shortName": "Congo Republic",
+      "officialName": "Republic of the Congo",
+      "region": "Central Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Congo Republic",
+        "Republic of the Congo",
+        "Congo-Brazzaville"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-dr-congo",
+      "shortName": "DR Congo",
+      "officialName": "Democratic Republic of Congo",
+      "region": "Central Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "DR Congo",
+        "Democratic Republic of Congo",
+        "Democratic Republic of the Congo",
+        "DRC",
+        "RDC",
+        "Congo-Kinshasa"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-equatorial-guinea",
+      "shortName": "Equatorial Guinea",
+      "officialName": "Republic of Equatorial Guinea",
+      "region": "Central Africa",
+      "auJoinDateLabel": "12 October 1968",
+      "auJoinDate": "1968-10-12",
+      "aliases": [
+        "Equatorial Guinea",
+        "Republic of Equatorial Guinea"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-gabon",
+      "shortName": "Gabon",
+      "officialName": "Gabonese Republic",
+      "region": "Central Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Gabon",
+        "Gabonese Republic"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-sao-tome-and-principe",
+      "shortName": "São Tomé and Príncipe",
+      "officialName": "Democratic Republic of São Tomé and Príncipe",
+      "region": "Central Africa",
+      "auJoinDateLabel": "18 July 1975",
+      "auJoinDate": "1975-07-18",
+      "aliases": [
+        "São Tomé and Príncipe",
+        "Democratic Republic of São Tomé and Príncipe",
+        "Sao Tome and Principe"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-comoros",
+      "shortName": "Comoros",
+      "officialName": "Union of the Comoros",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "18 July 1975",
+      "auJoinDate": "1975-07-18",
+      "aliases": [
+        "Comoros",
+        "Union of the Comoros"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-djibouti",
+      "shortName": "Djibouti",
+      "officialName": "Republic of Djibouti",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "27 June 1977",
+      "auJoinDate": "1977-06-27",
+      "aliases": [
+        "Djibouti",
+        "Republic of Djibouti"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-eritrea",
+      "shortName": "Eritrea",
+      "officialName": "State of Eritrea",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "24 May 1993",
+      "auJoinDate": "1993-05-24",
+      "aliases": [
+        "Eritrea",
+        "State of Eritrea"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-ethiopia",
+      "shortName": "Ethiopia",
+      "officialName": "Federal Democratic Republic of Ethiopia",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Ethiopia",
+        "Federal Democratic Republic of Ethiopia"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-kenya",
+      "shortName": "Kenya",
+      "officialName": "Republic of Kenya",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Kenya",
+        "Republic of Kenya"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-madagascar",
+      "shortName": "Madagascar",
+      "officialName": "Republic of Madagascar",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Madagascar",
+        "Republic of Madagascar"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-mauritius",
+      "shortName": "Mauritius",
+      "officialName": "Republic of Mauritius",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "August 1968",
+      "auJoinDate": "1968-08-01",
+      "aliases": [
+        "Mauritius",
+        "Republic of Mauritius"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-rwanda",
+      "shortName": "Rwanda",
+      "officialName": "Republic of Rwanda",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Rwanda",
+        "Republic of Rwanda"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-seychelles",
+      "shortName": "Seychelles",
+      "officialName": "Republic of Seychelles",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "29 June 1976",
+      "auJoinDate": "1976-06-29",
+      "aliases": [
+        "Seychelles",
+        "Republic of Seychelles"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-somalia",
+      "shortName": "Somalia",
+      "officialName": "Federal Republic of Somalia",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Somalia",
+        "Federal Republic of Somalia"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-south-sudan",
+      "shortName": "South Sudan",
+      "officialName": "Republic of South Sudan",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "27 July 2011",
+      "auJoinDate": "2011-07-27",
+      "aliases": [
+        "South Sudan",
+        "Republic of South Sudan"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-sudan",
+      "shortName": "Sudan",
+      "officialName": "Republic of the Sudan",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Sudan",
+        "Republic of the Sudan"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-tanzania",
+      "shortName": "Tanzania",
+      "officialName": "United Republic of Tanzania",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Tanzania",
+        "United Republic of Tanzania"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-uganda",
+      "shortName": "Uganda",
+      "officialName": "Republic of Uganda",
+      "region": "Eastern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Uganda",
+        "Republic of Uganda"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-algeria",
+      "shortName": "Algeria",
+      "officialName": "People’s Democratic Republic of Algeria",
+      "region": "Northern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Algeria",
+        "People’s Democratic Republic of Algeria",
+        "People's Democratic Republic of Algeria",
+        "People s Democratic Republic of Algeria"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-egypt",
+      "shortName": "Egypt",
+      "officialName": "Arab Republic of Egypt",
+      "region": "Northern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Egypt",
+        "Arab Republic of Egypt"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-libya",
+      "shortName": "Libya",
+      "officialName": "Libya",
+      "region": "Northern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Libya"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-mauritania",
+      "shortName": "Mauritania",
+      "officialName": "Islamic Republic of Mauritania",
+      "region": "Northern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Mauritania",
+        "Islamic Republic of Mauritania"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-morocco",
+      "shortName": "Morocco",
+      "officialName": "Kingdom of Morocco",
+      "region": "Northern Africa",
+      "auJoinDateLabel": "1963/31 January 2017",
+      "auJoinDate": "1963-01-31",
+      "aliases": [
+        "Morocco",
+        "Kingdom of Morocco"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-sahrawi-republic",
+      "shortName": "Sahrawi Republic",
+      "officialName": "Sahrawi Arab Democratic Republic",
+      "region": "Northern Africa",
+      "auJoinDateLabel": "22 February 1982",
+      "auJoinDate": "1982-02-22",
+      "aliases": [
+        "Sahrawi Republic",
+        "Sahrawi Arab Democratic Republic"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-tunisia",
+      "shortName": "Tunisia",
+      "officialName": "Republic of Tunisia",
+      "region": "Northern Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Tunisia",
+        "Republic of Tunisia"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-angola",
+      "shortName": "Angola",
+      "officialName": "Republic of Angola",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "11 February 1975",
+      "auJoinDate": "1975-02-11",
+      "aliases": [
+        "Angola",
+        "Republic of Angola"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-botswana",
+      "shortName": "Botswana",
+      "officialName": "Republic of Botswana",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "31 October 1966",
+      "auJoinDate": "1966-10-31",
+      "aliases": [
+        "Botswana",
+        "Republic of Botswana"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-eswatini",
+      "shortName": "Eswatini",
+      "officialName": "Kingdom of Eswatini",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "24 September 1968",
+      "auJoinDate": "1968-09-24",
+      "aliases": [
+        "Eswatini",
+        "Kingdom of Eswatini",
+        "Swaziland"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-lesotho",
+      "shortName": "Lesotho",
+      "officialName": "Kingdom of Lesotho",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "31 October 1966",
+      "auJoinDate": "1966-10-31",
+      "aliases": [
+        "Lesotho",
+        "Kingdom of Lesotho"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-malawi",
+      "shortName": "Malawi",
+      "officialName": "Republic of Malawi",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "13 July 1964",
+      "auJoinDate": "1964-07-13",
+      "aliases": [
+        "Malawi",
+        "Republic of Malawi"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-mozambique",
+      "shortName": "Mozambique",
+      "officialName": "Republic of Mozambique",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "18 July 1975",
+      "auJoinDate": "1975-07-18",
+      "aliases": [
+        "Mozambique",
+        "Republic of Mozambique"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-namibia",
+      "shortName": "Namibia",
+      "officialName": "Republic of Namibia",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "June 1990",
+      "auJoinDate": "1990-06-01",
+      "aliases": [
+        "Namibia",
+        "Republic of Namibia"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-south-africa",
+      "shortName": "South Africa",
+      "officialName": "Republic of South Africa",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "6 June 1994",
+      "auJoinDate": "1994-06-06",
+      "aliases": [
+        "South Africa",
+        "Republic of South Africa"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-zambia",
+      "shortName": "Zambia",
+      "officialName": "Republic of Zambia",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "16 December 1964",
+      "auJoinDate": "1964-12-16",
+      "aliases": [
+        "Zambia",
+        "Republic of Zambia"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-zimbabwe",
+      "shortName": "Zimbabwe",
+      "officialName": "Republic of Zimbabwe",
+      "region": "Southern Africa",
+      "auJoinDateLabel": "18 June 1980",
+      "auJoinDate": "1980-06-18",
+      "aliases": [
+        "Zimbabwe",
+        "Republic of Zimbabwe"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-benin",
+      "shortName": "Benin",
+      "officialName": "Republic of Benin",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Benin",
+        "Republic of Benin"
+      ],
+      "isUmoaMember": true,
+      "isUemoaMember": true,
+      "bceaoFrameworkApplies": true,
+      "coverageLevel": "regional",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2",
+        "https://www.bceao.int/fr/etats-membres/",
+        "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+        "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf"
+      ],
+      "coverageNote": "Regional coverage: AU country profile plus BCEAO/UMOA/UEMOA microfinance texts."
+    },
+    {
+      "id": "country-burkina-faso",
+      "shortName": "Burkina Faso",
+      "officialName": "Burkina Faso",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Burkina Faso",
+        "Burkina"
+      ],
+      "isUmoaMember": true,
+      "isUemoaMember": true,
+      "bceaoFrameworkApplies": true,
+      "coverageLevel": "deep",
+      "financeAuthority": {
+        "name": "Ministère des finances du Burkina Faso",
+        "url": "https://www.finances.gov.bf/accueil"
+      },
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2",
+        "https://www.bceao.int/fr/etats-membres/",
+        "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+        "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf",
+        "https://www.finances.gov.bf/accueil",
+        "https://www.finances.gov.bf/fileadmin/user_upload/1_Rapport_2021_sur_l_inclusion_financiere_au_Burkina_Faso.pdf",
+        "https://www.finances.gov.bf/fileadmin/user_upload/storage/fichiers/Bulletin_T2_2025_DSC-SFD_VF_dim_graphiques_044744.pdf"
+      ],
+      "coverageNote": "Deep coverage: AU country profile, Burkina Faso finance ministry sources, and BCEAO/UMOA/UEMOA microfinance texts."
+    },
+    {
+      "id": "country-cabo-verde",
+      "shortName": "Cabo Verde",
+      "officialName": "Republic of Cabo Verde",
+      "region": "Western Africa",
+      "auJoinDateLabel": "18 July 1975",
+      "auJoinDate": "1975-07-18",
+      "aliases": [
+        "Cabo Verde",
+        "Republic of Cabo Verde",
+        "Cape Verde"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-cote-d-ivoire",
+      "shortName": "Côte d’Ivoire",
+      "officialName": "Republic of Côte d’Ivoire",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Côte d’Ivoire",
+        "Republic of Côte d’Ivoire",
+        "Côte d'Ivoire",
+        "Côte d Ivoire",
+        "Republic of Côte d'Ivoire",
+        "Republic of Côte d Ivoire",
+        "Cote d'Ivoire",
+        "Cote d Ivoire",
+        "Ivory Coast"
+      ],
+      "isUmoaMember": true,
+      "isUemoaMember": true,
+      "bceaoFrameworkApplies": true,
+      "coverageLevel": "regional",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2",
+        "https://www.bceao.int/fr/etats-membres/",
+        "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+        "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf"
+      ],
+      "coverageNote": "Regional coverage: AU country profile plus BCEAO/UMOA/UEMOA microfinance texts."
+    },
+    {
+      "id": "country-gambia",
+      "shortName": "Gambia",
+      "officialName": "Republic of the Gambia",
+      "region": "Western Africa",
+      "auJoinDateLabel": "9 March 1965",
+      "auJoinDate": "1965-03-09",
+      "aliases": [
+        "Gambia",
+        "Republic of the Gambia",
+        "The Gambia"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-ghana",
+      "shortName": "Ghana",
+      "officialName": "Republic of Ghana",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Ghana",
+        "Republic of Ghana"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-guinea",
+      "shortName": "Guinea",
+      "officialName": "Republic of Guinea",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Guinea",
+        "Republic of Guinea"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-guinea-bissau",
+      "shortName": "Guinea-Bissau",
+      "officialName": "Republic of Guinea-Bissau",
+      "region": "Western Africa",
+      "auJoinDateLabel": "19 November 1973",
+      "auJoinDate": "1973-11-19",
+      "aliases": [
+        "Guinea-Bissau",
+        "Republic of Guinea-Bissau"
+      ],
+      "isUmoaMember": true,
+      "isUemoaMember": true,
+      "bceaoFrameworkApplies": true,
+      "coverageLevel": "regional",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2",
+        "https://www.bceao.int/fr/etats-membres/",
+        "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+        "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf"
+      ],
+      "coverageNote": "Regional coverage: AU country profile plus BCEAO/UMOA/UEMOA microfinance texts."
+    },
+    {
+      "id": "country-liberia",
+      "shortName": "Liberia",
+      "officialName": "Republic of Liberia",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Liberia",
+        "Republic of Liberia"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-mali",
+      "shortName": "Mali",
+      "officialName": "Republic of Mali",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Mali",
+        "Republic of Mali"
+      ],
+      "isUmoaMember": true,
+      "isUemoaMember": true,
+      "bceaoFrameworkApplies": true,
+      "coverageLevel": "regional",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2",
+        "https://www.bceao.int/fr/etats-membres/",
+        "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+        "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf"
+      ],
+      "coverageNote": "Regional coverage: AU country profile plus BCEAO/UMOA/UEMOA microfinance texts."
+    },
+    {
+      "id": "country-niger",
+      "shortName": "Niger",
+      "officialName": "Republic of Niger",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Niger",
+        "Republic of Niger"
+      ],
+      "isUmoaMember": true,
+      "isUemoaMember": true,
+      "bceaoFrameworkApplies": true,
+      "coverageLevel": "regional",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2",
+        "https://www.bceao.int/fr/etats-membres/",
+        "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+        "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf"
+      ],
+      "coverageNote": "Regional coverage: AU country profile plus BCEAO/UMOA/UEMOA microfinance texts."
+    },
+    {
+      "id": "country-nigeria",
+      "shortName": "Nigeria",
+      "officialName": "Federal Republic of Nigeria",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Nigeria",
+        "Federal Republic of Nigeria"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-senegal",
+      "shortName": "Senegal",
+      "officialName": "Republic of Senegal",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Senegal",
+        "Republic of Senegal"
+      ],
+      "isUmoaMember": true,
+      "isUemoaMember": true,
+      "bceaoFrameworkApplies": true,
+      "coverageLevel": "regional",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2",
+        "https://www.bceao.int/fr/etats-membres/",
+        "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+        "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf"
+      ],
+      "coverageNote": "Regional coverage: AU country profile plus BCEAO/UMOA/UEMOA microfinance texts."
+    },
+    {
+      "id": "country-sierra-leone",
+      "shortName": "Sierra Leone",
+      "officialName": "Republic of Sierra Leone",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Sierra Leone",
+        "Republic of Sierra Leone"
+      ],
+      "isUmoaMember": false,
+      "isUemoaMember": false,
+      "bceaoFrameworkApplies": false,
+      "coverageLevel": "directory",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2"
+      ],
+      "coverageNote": "Country-directory coverage only: the AU country profile is indexed, but no country-specific microfinance legislation is indexed yet."
+    },
+    {
+      "id": "country-togo",
+      "shortName": "Togo",
+      "officialName": "Togolese Republic",
+      "region": "Western Africa",
+      "auJoinDateLabel": "25 May 1963",
+      "auJoinDate": "1963-05-25",
+      "aliases": [
+        "Togo",
+        "Togolese Republic"
+      ],
+      "isUmoaMember": true,
+      "isUemoaMember": true,
+      "bceaoFrameworkApplies": true,
+      "coverageLevel": "regional",
+      "financeAuthority": null,
+      "sourceUrls": [
+        "https://au.int/en/member_states/countryprofiles2",
+        "https://www.bceao.int/fr/etats-membres/",
+        "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+        "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf"
+      ],
+      "coverageNote": "Regional coverage: AU country profile plus BCEAO/UMOA/UEMOA microfinance texts."
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-au-member-states",
+      "title": "African Union member states directory",
+      "authority": "African Union",
+      "documentType": "html",
+      "sourceUrl": "https://au.int/en/member_states/countryprofiles2",
+      "countries": [
+        "Burundi",
+        "Cameroon",
+        "Central African Republic",
+        "Chad",
+        "Congo Republic",
+        "DR Congo",
+        "Equatorial Guinea",
+        "Gabon",
+        "São Tomé and Príncipe",
+        "Comoros",
+        "Djibouti",
+        "Eritrea",
+        "Ethiopia",
+        "Kenya",
+        "Madagascar",
+        "Mauritius",
+        "Rwanda",
+        "Seychelles",
+        "Somalia",
+        "South Sudan",
+        "Sudan",
+        "Tanzania",
+        "Uganda",
+        "Algeria",
+        "Egypt",
+        "Libya",
+        "Mauritania",
+        "Morocco",
+        "Sahrawi Republic",
+        "Tunisia",
+        "Angola",
+        "Botswana",
+        "Eswatini",
+        "Lesotho",
+        "Malawi",
+        "Mozambique",
+        "Namibia",
+        "South Africa",
+        "Zambia",
+        "Zimbabwe",
+        "Benin",
+        "Burkina Faso",
+        "Cabo Verde",
+        "Côte d’Ivoire",
+        "Gambia",
+        "Ghana",
+        "Guinea",
+        "Guinea-Bissau",
+        "Liberia",
+        "Mali",
+        "Niger",
+        "Nigeria",
+        "Senegal",
+        "Sierra Leone",
+        "Togo"
+      ],
+      "summary": "Official AU directory of member states, grouped by Central, Eastern, Northern, Southern, and Western Africa.",
+      "tags": [
+        "Africa",
+        "African Union",
+        "member states",
+        "countries",
+        "regions"
+      ],
+      "inlineChunks": [
+        {
+          "id": "doc-au-member-states-africa-overview",
+          "documentId": "doc-au-member-states",
+          "title": "African Union country directory",
+          "section": "Africa overview",
+          "text": "Indexed African Union countries: 55\nRegions indexed: Central Africa, Eastern Africa, Northern Africa, Southern Africa, Western Africa\nThis directory is the country layer of the assistant. It does not by itself provide national microfinance legislation.",
+          "citation": "African Union country directory / Africa overview",
+          "sourceUrl": "https://au.int/en/member_states/countryprofiles2",
+          "kind": "html_excerpt",
+          "searchText": "Burundi Cameroon Central African Republic Chad Congo Republic DR Congo Equatorial Guinea Gabon São Tomé and Príncipe Comoros Djibouti Eritrea Ethiopia Kenya Madagascar Mauritius Rwanda Seychelles Somalia South Sudan Sudan Tanzania Uganda Algeria Egypt Libya Mauritania Morocco Sahrawi Republic Tunisia Angola Botswana Eswatini Lesotho Malawi Mozambique Namibia South Africa Zambia Zimbabwe Benin Burkina Faso Cabo Verde Côte d’Ivoire Gambia Ghana Guinea Guinea-Bissau Liberia Mali Niger Nigeria Senegal Sierra Leone Togo"
+        },
+        {
+          "id": "doc-au-member-states-central-africa",
+          "documentId": "doc-au-member-states",
+          "title": "African Union country directory",
+          "section": "Central Africa",
+          "text": "Region: Central Africa\nCountries: Burundi, Cameroon, Central African Republic, Chad, Congo Republic, DR Congo, Equatorial Guinea, Gabon, São Tomé and Príncipe",
+          "citation": "African Union country directory / Central Africa",
+          "sourceUrl": "https://au.int/en/member_states/countryprofiles2",
+          "kind": "html_excerpt",
+          "searchText": "Central Africa Burundi Cameroon Central African Republic Chad Congo Republic DR Congo Equatorial Guinea Gabon São Tomé and Príncipe"
+        },
+        {
+          "id": "doc-au-member-states-eastern-africa",
+          "documentId": "doc-au-member-states",
+          "title": "African Union country directory",
+          "section": "Eastern Africa",
+          "text": "Region: Eastern Africa\nCountries: Comoros, Djibouti, Eritrea, Ethiopia, Kenya, Madagascar, Mauritius, Rwanda, Seychelles, Somalia, South Sudan, Sudan, Tanzania, Uganda",
+          "citation": "African Union country directory / Eastern Africa",
+          "sourceUrl": "https://au.int/en/member_states/countryprofiles2",
+          "kind": "html_excerpt",
+          "searchText": "Eastern Africa Comoros Djibouti Eritrea Ethiopia Kenya Madagascar Mauritius Rwanda Seychelles Somalia South Sudan Sudan Tanzania Uganda"
+        },
+        {
+          "id": "doc-au-member-states-northern-africa",
+          "documentId": "doc-au-member-states",
+          "title": "African Union country directory",
+          "section": "Northern Africa",
+          "text": "Region: Northern Africa\nCountries: Algeria, Egypt, Libya, Mauritania, Morocco, Sahrawi Republic, Tunisia",
+          "citation": "African Union country directory / Northern Africa",
+          "sourceUrl": "https://au.int/en/member_states/countryprofiles2",
+          "kind": "html_excerpt",
+          "searchText": "Northern Africa Algeria Egypt Libya Mauritania Morocco Sahrawi Republic Tunisia"
+        },
+        {
+          "id": "doc-au-member-states-southern-africa",
+          "documentId": "doc-au-member-states",
+          "title": "African Union country directory",
+          "section": "Southern Africa",
+          "text": "Region: Southern Africa\nCountries: Angola, Botswana, Eswatini, Lesotho, Malawi, Mozambique, Namibia, South Africa, Zambia, Zimbabwe",
+          "citation": "African Union country directory / Southern Africa",
+          "sourceUrl": "https://au.int/en/member_states/countryprofiles2",
+          "kind": "html_excerpt",
+          "searchText": "Southern Africa Angola Botswana Eswatini Lesotho Malawi Mozambique Namibia South Africa Zambia Zimbabwe"
+        },
+        {
+          "id": "doc-au-member-states-western-africa",
+          "documentId": "doc-au-member-states",
+          "title": "African Union country directory",
+          "section": "Western Africa",
+          "text": "Region: Western Africa\nCountries: Benin, Burkina Faso, Cabo Verde, Côte d’Ivoire, Gambia, Ghana, Guinea, Guinea-Bissau, Liberia, Mali, Niger, Nigeria, Senegal, Sierra Leone, Togo",
+          "citation": "African Union country directory / Western Africa",
+          "sourceUrl": "https://au.int/en/member_states/countryprofiles2",
+          "kind": "html_excerpt",
+          "searchText": "Western Africa Benin Burkina Faso Cabo Verde Côte d’Ivoire Gambia Ghana Guinea Guinea-Bissau Liberia Mali Niger Nigeria Senegal Sierra Leone Togo"
+        }
+      ]
+    },
+    {
+      "id": "doc-bf-finance-home",
+      "title": "Ministère des finances du Burkina Faso",
+      "authority": "Ministère des finances du Burkina Faso",
+      "documentType": "html",
+      "sourceUrl": "https://www.finances.gov.bf/accueil",
+      "countries": [
+        "Burkina Faso"
+      ],
+      "summary": "Official Burkina Faso finance ministry homepage used for institutional context and the currently displayed ministerial reference.",
+      "tags": [
+        "Burkina Faso",
+        "finance ministry",
+        "minister",
+        "institution"
+      ],
+      "inlineChunks": [
+        {
+          "id": "doc-bf-finance-home-institution",
+          "documentId": "doc-bf-finance-home",
+          "title": "Ministère des finances du Burkina Faso",
+          "section": "Institution",
+          "text": "Page officielle: Accueil - Ministère des finances\nInstitution indexée: Ministère des finances du Burkina Faso\nMention relevée sur la page: Le ministre de l’Economie et des Finances, Dr Aboubakar NACANABO (extrême droite), a pris part ce vendredi 03 avril 2026, à l’inauguration du siège… En savoir plus",
+          "citation": "Ministère des finances du Burkina Faso / Institution",
+          "sourceUrl": "https://www.finances.gov.bf/accueil",
+          "kind": "html_excerpt",
+          "searchText": "Burkina Faso ministère des finances Le ministre de l’Economie et des Finances, Dr Aboubakar NACANABO (extrême droite), a pris part ce vendredi 03 avril 2026, à l’inauguration du siège… En savoir plus"
+        }
+      ]
+    },
+    {
+      "id": "doc-bceao-member-states",
+      "title": "États membres de l'UMOA",
+      "authority": "BCEAO",
+      "documentType": "html",
+      "sourceUrl": "https://www.bceao.int/fr/etats-membres/",
+      "countries": [
+        "Benin",
+        "Burkina Faso",
+        "Côte d’Ivoire",
+        "Guinea-Bissau",
+        "Mali",
+        "Niger",
+        "Senegal",
+        "Togo"
+      ],
+      "summary": "Official BCEAO institutional page used to ground the UMOA/BCEAO scope that applies to Benin, Burkina Faso, Côte d’Ivoire, Guinea-Bissau, Mali, Niger, Senegal, and Togo.",
+      "tags": [
+        "BCEAO",
+        "UMOA",
+        "member states",
+        "central bank"
+      ],
+      "inlineChunks": [
+        {
+          "id": "doc-bceao-member-states-umoa-scope",
+          "documentId": "doc-bceao-member-states",
+          "title": "BCEAO and UMOA member states",
+          "section": "UMOA scope",
+          "text": "L’Union Monétaire Ouest Africaine (UMOA) se caractérise par la reconnaissance d’une même unité monétaire, le Franc de la Communauté Financière Africaine (F.CFA)...\nUMOA member states covered in this knowledge base: Benin, Burkina Faso, Côte d’Ivoire, Guinea-Bissau, Mali, Niger, Senegal, Togo",
+          "citation": "BCEAO and UMOA member states / UMOA scope",
+          "sourceUrl": "https://www.bceao.int/fr/etats-membres/",
+          "kind": "html_excerpt",
+          "searchText": "BCEAO UMOA Benin Burkina Faso Côte d’Ivoire Guinea-Bissau Mali Niger Senegal Togo"
+        }
+      ]
+    },
+    {
+      "id": "doc-bceao-sfd-regulation",
+      "title": "Réglementation des Systèmes Financiers Décentralisés",
+      "authority": "BCEAO",
+      "documentType": "html",
+      "sourceUrl": "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+      "countries": [
+        "Benin",
+        "Burkina Faso",
+        "Côte d’Ivoire",
+        "Guinea-Bissau",
+        "Mali",
+        "Niger",
+        "Senegal",
+        "Togo"
+      ],
+      "summary": "Official BCEAO landing page for microfinance and decentralized financial systems regulation, including the UMOA law and related instructions.",
+      "tags": [
+        "BCEAO",
+        "UMOA",
+        "UEMOA",
+        "microfinance",
+        "SFD",
+        "réglementation",
+        "instruction"
+      ],
+      "inlineChunks": [
+        {
+          "id": "doc-bceao-sfd-regulation-regulatory-index",
+          "documentId": "doc-bceao-sfd-regulation",
+          "title": "BCEAO SFD regulation page",
+          "section": "Regulatory index",
+          "text": "The official BCEAO regulation page links to the UMOA law on decentralized financial systems and related SFD instructions.\n- Réglementation des Systèmes Financiers Décentralisés\n- Instruction\n- Instruction Instruction N° 003 - 07- 2019 relative à la reconnaissance des organismes externes d'évaluation du crédit à des fins prudentielles 27 Août 2019\n- Instruction Instruction n°007-05-2018 du 16 mai 2018 fixant les modalités d'application des sanctions pécuniaires prononcées par la Commission Bancaire de l… 16 mai 2018\n- Instruction Instruction n°001-01-2017 relative aux demandes d’autorisation préalable pour la modification de la forme juridique, de la dénomination sociale, du… 17 janvier 2017\n- Instruction Instruction n°002-01-2017 relative aux modalités de traitement de la demande de dérogation individuelle à la condition de nationalité 17 janvier 2017\n- Réglement Loi portant réglementation des Systèmes Financiers Décentralisés de l’UMOA 29 décembre 2010\n- Réglement Recueil des textes législatifs et réglementaires applicables aux SFD dans l’Union 31 Juillet 2006",
+          "citation": "BCEAO SFD regulation page / Regulatory index",
+          "sourceUrl": "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises",
+          "kind": "html_excerpt",
+          "searchText": "BCEAO UMOA UEMOA microfinance SFD loi instruction Benin Burkina Faso Côte d’Ivoire Guinea-Bissau Mali Niger Senegal Togo"
+        }
+      ]
+    },
+    {
+      "id": "doc-bceao-microfinance-situation-page",
+      "title": "Situation du secteur de la microfinance à fin mars 2025 | BCEAO",
+      "authority": "BCEAO",
+      "documentType": "html",
+      "sourceUrl": "https://www.bceao.int/fr/publications/situation-du-secteur-de-la-microfinance-fin-mars-2025",
+      "countries": [
+        "Benin",
+        "Burkina Faso",
+        "Côte d’Ivoire",
+        "Guinea-Bissau",
+        "Mali",
+        "Niger",
+        "Senegal",
+        "Togo"
+      ],
+      "summary": "Official BCEAO publication page for the microfinance sector situation at end-March 2025, with a linked PDF report.",
+      "tags": [
+        "BCEAO",
+        "microfinance",
+        "UMOA",
+        "situation",
+        "2025",
+        "indicators"
+      ],
+      "inlineChunks": [
+        {
+          "id": "doc-bceao-microfinance-situation-page-publication-page",
+          "documentId": "doc-bceao-microfinance-situation-page",
+          "title": "BCEAO microfinance situation page",
+          "section": "Publication page",
+          "text": "L’Union Monétaire Ouest Africaine (UMOA) se caractérise par la reconnaissance d’une même unité monétaire, le Franc de la Communauté Financière Africaine (F.CFA)...\nLinked PDF: https://www.bceao.int/sites/default/files/2025-08/Situation%20de%20la%20microfinance%20%C3%A0%20fin%20mars%202025.pdf",
+          "citation": "BCEAO microfinance situation page / Publication page",
+          "sourceUrl": "https://www.bceao.int/fr/publications/situation-du-secteur-de-la-microfinance-fin-mars-2025",
+          "kind": "html_excerpt",
+          "searchText": "BCEAO microfinance situation 2025 Benin Burkina Faso Côte d’Ivoire Guinea-Bissau Mali Niger Senegal Togo"
+        }
+      ]
+    },
+    {
+      "id": "doc-bf-inclusion-report-2021",
+      "title": "Rapport 2021 sur l'inclusion financière au Burkina Faso",
+      "authority": "Ministère des finances du Burkina Faso",
+      "documentType": "pdf",
+      "sourceUrl": "https://www.finances.gov.bf/fileadmin/user_upload/1_Rapport_2021_sur_l_inclusion_financiere_au_Burkina_Faso.pdf",
+      "countries": [
+        "Burkina Faso"
+      ],
+      "summary": "Official Burkina Faso report covering financial inclusion and useful background on microfinance access, supervision, and sector context.",
+      "tags": [
+        "Burkina Faso",
+        "microfinance",
+        "inclusion financière",
+        "rapport",
+        "2021"
+      ],
+      "inlineChunks": []
+    },
+    {
+      "id": "doc-bf-bulletin-t2-2025",
+      "title": "Bulletin T2 2025 sur les SFD au Burkina Faso",
+      "authority": "Ministère des finances du Burkina Faso",
+      "documentType": "pdf",
+      "sourceUrl": "https://www.finances.gov.bf/fileadmin/user_upload/storage/fichiers/Bulletin_T2_2025_DSC-SFD_VF_dim_graphiques_044744.pdf",
+      "countries": [
+        "Burkina Faso"
+      ],
+      "summary": "Official Burkina Faso bulletin with recent SFD and microfinance indicators for 2025.",
+      "tags": [
+        "Burkina Faso",
+        "microfinance",
+        "SFD",
+        "bulletin",
+        "2025"
+      ],
+      "inlineChunks": []
+    },
+    {
+      "id": "doc-bceao-sfd-recueil-2010",
+      "title": "Recueil des textes légaux et réglementaires régissant les SFD de l'UMOA",
+      "authority": "BCEAO",
+      "documentType": "pdf",
+      "sourceUrl": "https://www.bceao.int/sites/default/files/2017-11/-recueil-des-textes-legaux-et-reglementaires-regissant-les-sfd-de-lumoa.pdf",
+      "countries": [
+        "Benin",
+        "Burkina Faso",
+        "Côte d’Ivoire",
+        "Guinea-Bissau",
+        "Mali",
+        "Niger",
+        "Senegal",
+        "Togo"
+      ],
+      "summary": "Official BCEAO collection containing the UMOA law and regulatory texts governing decentralized financial systems and microfinance.",
+      "tags": [
+        "BCEAO",
+        "UMOA",
+        "UEMOA",
+        "microfinance",
+        "SFD",
+        "loi",
+        "réglementation",
+        "2010"
+      ],
+      "inlineChunks": []
+    },
+    {
+      "id": "doc-bceao-sfd-recueil-2006",
+      "title": "Recueil des textes législatifs et réglementaires applicables aux SFD dans l'Union",
+      "authority": "BCEAO",
+      "documentType": "pdf",
+      "sourceUrl": "https://www.bceao.int/sites/default/files/2017-11/recueil_texte_sfd.pdf",
+      "countries": [
+        "Benin",
+        "Burkina Faso",
+        "Côte d’Ivoire",
+        "Guinea-Bissau",
+        "Mali",
+        "Niger",
+        "Senegal",
+        "Togo"
+      ],
+      "summary": "Earlier BCEAO collection of legislative and regulatory texts applicable to decentralized financial systems in the Union.",
+      "tags": [
+        "BCEAO",
+        "UMOA",
+        "UEMOA",
+        "microfinance",
+        "SFD",
+        "recueil",
+        "2006"
+      ],
+      "inlineChunks": []
+    },
+    {
+      "id": "doc-bceao-microfinance-situation-pdf",
+      "title": "Situation de la microfinance à fin mars 2025",
+      "authority": "BCEAO",
+      "documentType": "pdf",
+      "sourceUrl": "https://www.bceao.int/sites/default/files/2025-08/Situation%20de%20la%20microfinance%20%C3%A0%20fin%20mars%202025.pdf",
+      "countries": [
+        "Benin",
+        "Burkina Faso",
+        "Côte d’Ivoire",
+        "Guinea-Bissau",
+        "Mali",
+        "Niger",
+        "Senegal",
+        "Togo"
+      ],
+      "summary": "Official BCEAO PDF report on the state of the microfinance sector at end-March 2025.",
+      "tags": [
+        "BCEAO",
+        "microfinance",
+        "UMOA",
+        "situation",
+        "2025",
+        "rapport"
+      ],
+      "inlineChunks": []
+    }
+  ],
+  "keySources": [
+    {
+      "label": "African Union member states",
+      "url": "https://au.int/en/member_states/countryprofiles2"
+    },
+    {
+      "label": "Burkina Faso Ministry of Finance",
+      "url": "https://www.finances.gov.bf/accueil"
+    },
+    {
+      "label": "BCEAO UMOA member states",
+      "url": "https://www.bceao.int/fr/etats-membres/"
+    },
+    {
+      "label": "BCEAO SFD regulation",
+      "url": "https://www.bceao.int/fr/reglementations/reglementation-des-systemes-financiers-decentralises"
+    }
+  ]
+}

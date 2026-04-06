@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#081728">
+  <title>Console Noyau WASI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./wasi-core-console.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Noyau WASI</div>
+        <h1>Console Produit</h1>
+        <p class="lead">Base unifiée, rôles, audit log, modules et résumé marché WASI.</p>
+      </div>
+      <div class="top-actions">
+        <a class="ghost-btn" href="./index.html">Plateforme WASI</a>
+        <a class="ghost-btn" href="./index.html">Accueil WASI</a>
+      </div>
+    </header>
+
+    <section class="hero-card">
+      <div class="hero-topline">
+        <span class="status-chip" id="db-status">Base active</span>
+        <span class="status-chip" id="source-status">Sources en attente</span>
+      </div>
+      <h2>Noyau produit WASI</h2>
+      <p>
+        Cette console relie le backend unifié WASI à une base SQLite locale, des rôles, des sessions,
+        un journal d'audit et des données de marché versionnées.
+      </p>
+      <div class="hero-actions">
+        <button class="primary-btn" id="refresh-source-btn" type="button">Rafraîchir les sources</button>
+        <button class="ghost-btn" id="logout-btn" type="button">Fermer la session</button>
+      </div>
+    </section>
+
+    <main class="grid-shell">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="eyebrow">Session</div>
+            <h3>Connexion rapide</h3>
+          </div>
+        </div>
+        <div id="session-card" class="stack"></div>
+        <div id="demo-access" class="chip-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="eyebrow">Résumé</div>
+            <h3>Indicateurs cœur</h3>
+          </div>
+        </div>
+        <div id="summary-metrics" class="metric-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="eyebrow">Marché</div>
+            <h3>AFEX versionné</h3>
+          </div>
+        </div>
+        <div id="market-card" class="stack"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="eyebrow">Modules</div>
+            <h3>Architecture WASI</h3>
+          </div>
+        </div>
+        <div id="modules-list" class="stack"></div>
+      </section>
+
+      <section class="panel wide">
+        <div class="panel-header">
+          <div>
+            <div class="eyebrow">Audit</div>
+            <h3>Journal des événements</h3>
+          </div>
+          <button class="ghost-btn small-btn" id="reload-audit-btn" type="button">Recharger</button>
+        </div>
+        <div id="audit-list" class="stack"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./wasi-core-console.js"></script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+.wasi-ai-status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(200, 146, 42, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.wasi-ai-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+
+.wasi-ai-status.ready {
+  border-color: rgba(0, 230, 118, 0.25);
+  color: #baf4d1;
+}
+
+.wasi-ai-status.ready::before {
+  background: var(--green);
+}
+
+.wasi-ai-status.loading {
+  border-color: rgba(0, 229, 255, 0.25);
+  color: #bcefff;
+}
+
+.wasi-ai-status.loading::before {
+  background: var(--cyan);
+}
+
+.wasi-ai-status.warn {
+  border-color: rgba(255, 145, 0, 0.28);
+  color: #ffd5a1;
+}
+
+.wasi-ai-status.warn::before {
+  background: var(--orange);
+}
+
+.wasi-ai-status.error {
+  border-color: rgba(255, 82, 82, 0.28);
+  color: #ffb2b2;
+}
+
+.wasi-ai-status.error::before {
+  background: var(--red);
+}
+
+.wasi-ai-refresh {
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.wasi-ai-refresh:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.wasi-ai-refresh:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.wasi-ai-comp-card,
+.wasi-ai-country-card {
+  margin-top: 14px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(200, 146, 42, 0.09), rgba(3, 11, 21, 0.12));
+  border: 1px solid rgba(200, 146, 42, 0.18);
+  border-radius: var(--radius-lg);
+}
+
+.wasi-ai-country-card {
+  margin-bottom: 14px;
+}
+
+.wasi-ai-card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.wasi-ai-score-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wasi-ai-score-box {
+  padding: 10px;
+  border-radius: var(--radius);
+  background: rgba(3, 11, 21, 0.45);
+  border: 1px solid var(--border);
+}
+
+.wasi-ai-score-box .label {
+  font-size: 0.66rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.wasi-ai-score-box .value {
+  margin-top: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wasi-ai-score-box .value.positive {
+  color: var(--green);
+}
+
+.wasi-ai-score-box .value.negative {
+  color: var(--red);
+}
+
+.wasi-ai-summary {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.wasi-ai-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.wasi-ai-tag {
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}
+
+.wasi-ai-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wasi-ai-source-link {
+  font-size: 0.76rem;
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.wasi-ai-source-link:hover {
+  color: var(--gold);
+}
+
+.wasi-ai-chat-meta {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wasi-ai-citations {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wasi-ai-citation {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.7rem;
+}
+
+.wasi-ai-citation:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.wasi-ai-comp-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.wasi-ai-comp-row strong {
+  color: var(--text-primary);
+}
+
+.wasi-ai-connector-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wasi-ai-connector-head {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.wasi-ai-connector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.wasi-ai-connector-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(3, 11, 21, 0.45);
+  color: inherit;
+  text-decoration: none;
+}
+
+.wasi-ai-connector-card:hover {
+  border-color: rgba(200, 146, 42, 0.35);
+  transform: translateY(-1px);
+}
+
+.wasi-ai-connector-card.is-static {
+  cursor: default;
+}
+
+.wasi-ai-connector-card.is-static:hover {
+  border-color: var(--border);
+  transform: none;
+}
+
+.wasi-ai-connector-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.wasi-ai-connector-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wasi-ai-connector-copy {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.wasi-ai-connector-chip {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.wasi-ai-connector-chip.active {
+  border-color: rgba(0, 230, 118, 0.28);
+  color: #baf4d1;
+}
+
+.wasi-ai-connector-chip.seeded,
+.wasi-ai-connector-chip.design-ready {
+  border-color: rgba(255, 145, 0, 0.28);
+  color: #ffd5a1;
+}
+
+@media (max-width: 960px) {
+  .wasi-ai-score-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wasi-ai-connector-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wasi-ai-status {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .wasi-ai-refresh {
+    display: none;
+  }
+
+  .wasi-ai-score-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "wasi-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:wasi": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode wasi --port 3000 --strictPort",
+    "dev:banking": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode banking --port 3001 --strictPort",
+    "dev:compta": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode compta --port 3003 --strictPort",
+    "dev:afritax": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode afritax --port 3005 --strictPort",
+    "dev:dex": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode dex --port 3006 --strictPort",
+    "dev:finance": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite --mode finance --port 3007 --strictPort",
+    "server": "node server/index.mjs",
+    "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
+    "diagnose:all": "powershell -ExecutionPolicy Bypass -File .\\ops\\diagnose_all.ps1",
+    "release:gate": "node .\\ops\\release_gate.mjs",
+    "verify:ollama": "node .\\ops\\verify_wasi_with_ollama.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "cors": "^2.8.5",
+    "decimal.js": "^10.6.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.577.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "cross-env": "^7.0.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.1",
+    "jest": "^30.2.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.4.4",
+    "typescript": "^5.9.2",
+    "vite": "^6.4.1"
+  }
+}

@@ -1,0 +1,1022 @@
+﻿openapi: 3.0.3
+info:
+  title: AfriCredit REST API
+  version: 1.0.0
+  description: |
+    Specification OpenAPI 3.0 pour le module AfriCredit (microfinance).
+    Tous les montants monetaires sont exprimes en centimes XOF (integer int64).
+servers:
+  - url: https://api.wasi.local
+    description: Serveur principal
+
+tags:
+  - name: Clients
+    description: Gestion des clients microfinance
+  - name: LoanApplications
+    description: Gestion des demandes de credit
+  - name: Loans
+    description: Gestion des prets et decaissements
+  - name: Repayments
+    description: Gestion des remboursements
+  - name: Portfolio
+    description: KPIs portefeuille et risque
+  - name: Demo
+    description: Endpoints de demonstration ([DEMO])
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/v1/africredit/clients:
+    get:
+      tags: [Clients]
+      operationId: listClients
+      summary: Lister les clients
+      description: Retourne la liste paginee des clients.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, BLOCKED]
+      responses:
+        '200':
+          description: Liste des clients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseClientList'
+              examples:
+                ok:
+                  value:
+                    success: true
+                    data:
+                      items:
+                        - clientId: 9f7ed525-b751-4f8a-b8d4-3925c58b8b06
+                          externalCode: CLI-0001
+                          firstName: Awa
+                          lastName: Ouedraogo
+                          phoneE164: '+22670000000'
+                          countryCode: BF
+                          preferredLanguage: fr
+                          status: ACTIVE
+                          createdAt: '2026-03-06T09:12:00Z'
+                      page: 1
+                      pageSize: 20
+                      totalItems: 1
+                    timestamp: '2026-03-06T10:00:00Z'
+    post:
+      tags: [Clients]
+      operationId: createClient
+      summary: Creer un client
+      description: Cree un nouveau dossier client KYC.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+            examples:
+              createClient:
+                value:
+                  externalCode: CLI-0002
+                  firstName: Mariam
+                  lastName: Kone
+                  phoneE164: '+22671000000'
+                  countryCode: BF
+                  preferredLanguage: fr
+                  businessDescription: Vente de produits alimentaires
+      responses:
+        '201':
+          description: Client cree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseClient'
+
+  /api/v1/africredit/clients/{clientId}:
+    parameters:
+      - $ref: '#/components/parameters/ClientIdParam'
+    get:
+      tags: [Clients]
+      operationId: getClientById
+      summary: Obtenir un client
+      responses:
+        '200':
+          description: Detail client
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseClient'
+    patch:
+      tags: [Clients]
+      operationId: updateClient
+      summary: Mettre a jour un client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientUpdateRequest'
+      responses:
+        '200':
+          description: Client mis a jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseClient'
+    delete:
+      tags: [Clients]
+      operationId: deleteClient
+      summary: Supprimer un client
+      description: Suppression logique du client (soft delete).
+      responses:
+        '200':
+          description: Client supprime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDelete'
+
+  /api/v1/africredit/loan-applications:
+    get:
+      tags: [LoanApplications]
+      operationId: listLoanApplications
+      summary: Lister les demandes de credit
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED, NEEDS_INFO]
+      responses:
+        '200':
+          description: Liste des demandes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoanApplicationList'
+    post:
+      tags: [LoanApplications]
+      operationId: createLoanApplication
+      summary: Creer une demande de credit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanApplicationCreateRequest'
+            examples:
+              createApplication:
+                value:
+                  clientId: 9f7ed525-b751-4f8a-b8d4-3925c58b8b06
+                  productType: MICRO_LOAN
+                  amountCentimesXof: 250000000
+                  tenorMonths: 12
+                  repaymentMethod: DECLINING_BALANCE
+                  businessPurpose: Achat de stock pour commerce detail
+      responses:
+        '201':
+          description: Demande creee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoanApplication'
+
+  /api/v1/africredit/loan-applications/{applicationId}:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationIdParam'
+    get:
+      tags: [LoanApplications]
+      operationId: getLoanApplicationById
+      summary: Obtenir une demande de credit
+      responses:
+        '200':
+          description: Detail de la demande
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoanApplication'
+    patch:
+      tags: [LoanApplications]
+      operationId: updateLoanApplication
+      summary: Mettre a jour une demande de credit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanApplicationUpdateRequest'
+      responses:
+        '200':
+          description: Demande mise a jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoanApplication'
+    delete:
+      tags: [LoanApplications]
+      operationId: deleteLoanApplication
+      summary: Supprimer une demande de credit
+      responses:
+        '200':
+          description: Demande supprimee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDelete'
+
+  /api/v1/africredit/loans:
+    get:
+      tags: [Loans]
+      operationId: listLoans
+      summary: Lister les prets
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, DEFAULTED, REPAID, WRITTEN_OFF]
+      responses:
+        '200':
+          description: Liste des prets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoanList'
+    post:
+      tags: [Loans]
+      operationId: createLoan
+      summary: Creer un pret (decaissement)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanCreateRequest'
+            examples:
+              createLoan:
+                value:
+                  applicationId: d58d3904-cfd8-44ad-9f64-a42cf73f4f4a
+                  disbursedAmountCentimesXof: 250000000
+                  annualInterestRateBps: 1800
+                  repaymentMethod: DECLINING_BALANCE
+                  firstDueDateUtc: '2026-04-05T00:00:00Z'
+      responses:
+        '201':
+          description: Pret cree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoan'
+
+  /api/v1/africredit/loans/{loanId}:
+    parameters:
+      - $ref: '#/components/parameters/LoanIdParam'
+    get:
+      tags: [Loans]
+      operationId: getLoanById
+      summary: Obtenir un pret
+      responses:
+        '200':
+          description: Detail pret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoan'
+    patch:
+      tags: [Loans]
+      operationId: updateLoan
+      summary: Mettre a jour un pret
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanUpdateRequest'
+      responses:
+        '200':
+          description: Pret mis a jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoan'
+    delete:
+      tags: [Loans]
+      operationId: deleteLoan
+      summary: Supprimer un pret
+      description: Suppression logique du pret.
+      responses:
+        '200':
+          description: Pret supprime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDelete'
+
+  /api/v1/africredit/repayments:
+    get:
+      tags: [Repayments]
+      operationId: listRepayments
+      summary: Lister les remboursements
+      parameters:
+        - name: loanId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Liste des remboursements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseRepaymentList'
+    post:
+      tags: [Repayments]
+      operationId: createRepayment
+      summary: Enregistrer un remboursement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepaymentCreateRequest'
+      responses:
+        '201':
+          description: Remboursement enregistre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseRepayment'
+
+  /api/v1/africredit/repayments/{repaymentId}:
+    parameters:
+      - $ref: '#/components/parameters/RepaymentIdParam'
+    get:
+      tags: [Repayments]
+      operationId: getRepaymentById
+      summary: Obtenir un remboursement
+      responses:
+        '200':
+          description: Detail remboursement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseRepayment'
+    patch:
+      tags: [Repayments]
+      operationId: updateRepayment
+      summary: Mettre a jour un remboursement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepaymentUpdateRequest'
+      responses:
+        '200':
+          description: Remboursement mis a jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseRepayment'
+    delete:
+      tags: [Repayments]
+      operationId: deleteRepayment
+      summary: Supprimer un remboursement
+      responses:
+        '200':
+          description: Remboursement supprime
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseDelete'
+
+  /api/v1/africredit/metrics/portfolio:
+    get:
+      tags: [Portfolio]
+      operationId: getPortfolioMetrics
+      summary: Obtenir les indicateurs portefeuille
+      responses:
+        '200':
+          description: KPIs portefeuille
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePortfolioMetrics'
+
+  /api/v1/africredit/demo/credit-score:
+    post:
+      tags: [Demo]
+      operationId: demoCreditScore
+      summary: Simuler un score credit (demo)
+      description: Endpoint mock pour demonstration produit uniquement.
+      x-demo: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditScoreDemoRequest'
+      responses:
+        '200':
+          description: Score simule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseCreditScoreDemo'
+
+  /api/v1/africredit/demo/portfolio-snapshot:
+    get:
+      tags: [Demo]
+      operationId: demoPortfolioSnapshot
+      summary: Snapshot portefeuille (demo)
+      description: Donnees simulees pour presentation investisseur.
+      x-demo: true
+      responses:
+        '200':
+          description: Snapshot simule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePortfolioMetrics'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ClientIdParam:
+      name: clientId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ApplicationIdParam:
+      name: applicationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    LoanIdParam:
+      name: loanId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RepaymentIdParam:
+      name: repaymentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ApiResponseBase:
+      type: object
+      required: [success, timestamp]
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+
+    DeletePayload:
+      type: object
+      required: [deleted]
+      properties:
+        deleted:
+          type: boolean
+        id:
+          type: string
+          format: uuid
+
+    ApiResponseDelete:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/DeletePayload'
+
+    Client:
+      type: object
+      required:
+        [clientId, externalCode, firstName, lastName, phoneE164, countryCode, preferredLanguage, status, createdAt]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+          description: Identifiant public UUID du client
+        externalCode:
+          type: string
+          description: Code client lisible par les equipes terrain
+        firstName:
+          type: string
+          description: Prenom du client
+        lastName:
+          type: string
+          description: Nom du client
+        phoneE164:
+          type: string
+          description: Numero mobile au format E.164
+        countryCode:
+          type: string
+          enum: [BJ, BF, CV, CI, GM, GH, GN, GW, LR, ML, MR, NE, NG, SN, SL, TG]
+          description: Code pays CEDEAO
+        preferredLanguage:
+          type: string
+          enum: [fr, en, di]
+          description: Langue preferee de communication
+        businessDescription:
+          type: string
+          nullable: true
+          description: Description simple de l activite economique
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, BLOCKED]
+        createdAt:
+          type: string
+          format: date-time
+
+    ClientCreateRequest:
+      type: object
+      required: [externalCode, firstName, lastName, phoneE164, countryCode, preferredLanguage]
+      properties:
+        externalCode:
+          type: string
+          description: Code client terrain
+        firstName:
+          type: string
+          description: Prenom
+        lastName:
+          type: string
+          description: Nom
+        phoneE164:
+          type: string
+          description: Numero telephone principal
+        countryCode:
+          type: string
+          enum: [BJ, BF, CV, CI, GM, GH, GN, GW, LR, ML, MR, NE, NG, SN, SL, TG]
+        preferredLanguage:
+          type: string
+          enum: [fr, en, di]
+        businessDescription:
+          type: string
+          description: Activite du client
+
+    ClientUpdateRequest:
+      type: object
+      properties:
+        phoneE164:
+          type: string
+        preferredLanguage:
+          type: string
+          enum: [fr, en, di]
+        businessDescription:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, BLOCKED]
+
+    ClientListPayload:
+      type: object
+      required: [items, page, pageSize, totalItems]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalItems:
+          type: integer
+
+    LoanApplication:
+      type: object
+      required:
+        [applicationId, clientId, productType, amountCentimesXof, tenorMonths, repaymentMethod, status, createdAt]
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+        productType:
+          type: string
+          enum: [MICRO_LOAN, SME_LOAN, AGRI_LOAN, GROUP_LOAN]
+          description: Type de produit de credit
+        amountCentimesXof:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Montant demande en centimes XOF
+        tenorMonths:
+          type: integer
+          minimum: 1
+          maximum: 120
+          description: Duree du pret en mois
+        repaymentMethod:
+          type: string
+          enum: [FLAT_RATE, DECLINING_BALANCE]
+          description: Methode de calcul de remboursement
+        businessPurpose:
+          type: string
+          description: Objet economique du financement
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, NEEDS_INFO]
+        createdAt:
+          type: string
+          format: date-time
+
+    LoanApplicationCreateRequest:
+      type: object
+      required: [clientId, productType, amountCentimesXof, tenorMonths, repaymentMethod]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        productType:
+          type: string
+          enum: [MICRO_LOAN, SME_LOAN, AGRI_LOAN, GROUP_LOAN]
+        amountCentimesXof:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9007199254740991
+          description: Montant demande en centimes XOF
+        tenorMonths:
+          type: integer
+          minimum: 1
+          maximum: 120
+        repaymentMethod:
+          type: string
+          enum: [FLAT_RATE, DECLINING_BALANCE]
+        businessPurpose:
+          type: string
+
+    LoanApplicationUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, NEEDS_INFO]
+        businessPurpose:
+          type: string
+
+    LoanApplicationListPayload:
+      type: object
+      required: [items, totalItems]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoanApplication'
+        totalItems:
+          type: integer
+
+    Loan:
+      type: object
+      required:
+        [loanId, applicationId, disbursedAmountCentimesXof, outstandingBalanceCentimesXof, annualInterestRateBps, status, createdAt]
+      properties:
+        loanId:
+          type: string
+          format: uuid
+        applicationId:
+          type: string
+          format: uuid
+        disbursedAmountCentimesXof:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Montant decaisse en centimes XOF
+        outstandingBalanceCentimesXof:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Solde restant du pret en centimes XOF
+        annualInterestRateBps:
+          type: integer
+          minimum: 0
+          description: Taux annuel en basis points (1% = 100 bps)
+        repaymentMethod:
+          type: string
+          enum: [FLAT_RATE, DECLINING_BALANCE]
+        status:
+          type: string
+          enum: [ACTIVE, DEFAULTED, REPAID, WRITTEN_OFF]
+        firstDueDateUtc:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    LoanCreateRequest:
+      type: object
+      required: [applicationId, disbursedAmountCentimesXof, annualInterestRateBps, repaymentMethod, firstDueDateUtc]
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        disbursedAmountCentimesXof:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9007199254740991
+          description: Montant decaisse en centimes XOF
+        annualInterestRateBps:
+          type: integer
+          minimum: 0
+        repaymentMethod:
+          type: string
+          enum: [FLAT_RATE, DECLINING_BALANCE]
+        firstDueDateUtc:
+          type: string
+          format: date-time
+
+    LoanUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, DEFAULTED, REPAID, WRITTEN_OFF]
+        outstandingBalanceCentimesXof:
+          type: integer
+          format: int64
+          minimum: 0
+
+    LoanListPayload:
+      type: object
+      required: [items, totalItems]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Loan'
+        totalItems:
+          type: integer
+
+    Repayment:
+      type: object
+      required: [repaymentId, loanId, amountCentimesXof, channel, paidAtUtc, createdAt]
+      properties:
+        repaymentId:
+          type: string
+          format: uuid
+        loanId:
+          type: string
+          format: uuid
+        amountCentimesXof:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Montant rembourse en centimes XOF
+        channel:
+          type: string
+          enum: [MOBILE_MONEY, BANK_TRANSFER, CASH]
+          description: Canal de paiement
+        paidAtUtc:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    RepaymentCreateRequest:
+      type: object
+      required: [loanId, amountCentimesXof, channel, paidAtUtc]
+      properties:
+        loanId:
+          type: string
+          format: uuid
+        amountCentimesXof:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9007199254740991
+          description: Montant rembourse en centimes XOF
+        channel:
+          type: string
+          enum: [MOBILE_MONEY, BANK_TRANSFER, CASH]
+        paidAtUtc:
+          type: string
+          format: date-time
+
+    RepaymentUpdateRequest:
+      type: object
+      properties:
+        amountCentimesXof:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9007199254740991
+        channel:
+          type: string
+          enum: [MOBILE_MONEY, BANK_TRANSFER, CASH]
+        paidAtUtc:
+          type: string
+          format: date-time
+
+    RepaymentListPayload:
+      type: object
+      required: [items, totalItems]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Repayment'
+        totalItems:
+          type: integer
+
+    PortfolioMetrics:
+      type: object
+      required: [par30, par60, par90, totalOutstandingCentimesXof, totalLoans]
+      properties:
+        par30:
+          type: number
+          format: double
+          description: Portfolio at Risk 30 jours en pourcentage
+        par60:
+          type: number
+          format: double
+          description: Portfolio at Risk 60 jours en pourcentage
+        par90:
+          type: number
+          format: double
+          description: Portfolio at Risk 90 jours en pourcentage
+        totalOutstandingCentimesXof:
+          type: integer
+          format: int64
+          description: Encours total en centimes XOF
+        totalLoans:
+          type: integer
+
+    CreditScoreDemoRequest:
+      type: object
+      required: [paymentHistory, debtRatio, sectorRisk, governanceScore, collateralValueXof, cashFlowStability, countryRisk]
+      properties:
+        paymentHistory:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Historique de paiement (0 a 100)
+        debtRatio:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Ratio d endettement (0 a 100)
+        sectorRisk:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        governanceScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        collateralValueXof:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Valeur de collateral en XOF
+        cashFlowStability:
+          type: string
+          enum: [STABLE, VARIABLE, VOLATILE]
+        countryRisk:
+          type: string
+          enum: [BJ, BF, CV, CI, GM, GH, GN, GW, LR, ML, MR, NE, NG, SN, SL, TG]
+
+    CreditScoreDemoResult:
+      type: object
+      required: [score, grade, status]
+      properties:
+        score:
+          type: number
+        grade:
+          type: string
+        status:
+          type: string
+          enum: [APPROVED, VETOED]
+        vetoReason:
+          type: string
+          nullable: true
+
+    ApiResponseClient:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/Client'
+
+    ApiResponseClientList:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/ClientListPayload'
+
+    ApiResponseLoanApplication:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/LoanApplication'
+
+    ApiResponseLoanApplicationList:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/LoanApplicationListPayload'
+
+    ApiResponseLoan:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/Loan'
+
+    ApiResponseLoanList:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/LoanListPayload'
+
+    ApiResponseRepayment:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/Repayment'
+
+    ApiResponseRepaymentList:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/RepaymentListPayload'
+
+    ApiResponsePortfolioMetrics:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/PortfolioMetrics'
+
+    ApiResponseCreditScoreDemo:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              $ref: '#/components/schemas/CreditScoreDemoResult'

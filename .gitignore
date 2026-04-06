@@ -1,4 +1,4 @@
-# OS
+﻿# OS
 .DS_Store
 Thumbs.db
 
@@ -6,9 +6,65 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Build artifacts
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+*.env
+!.env.example
+
+# Tokens and secrets
+_stress_token.txt
+*.pem
+*.key
+
+# Database files at root
+*.db
+*.db-wal
+*.db-shm
+
+# Stress test artifacts
+stress_results_*.csv
+stress_report.html
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Local banking persistence
+server/data/*.sqlite
+server/data/*.sqlite-wal
+server/data/*.sqlite-shm
+server/data/*.db
+server/data/*.db-wal
+server/data/*.db-shm
+
+# Python caches
+__pycache__/
+*.pyc
+
 # Documents (not needed for deployment)
 *.docx
 *.md
+!WASI_Audit_Interne_Controle_Interne_2026.md
+!DEPLOYMENT_CHECKLIST.md
 
 # Claude
 .claude/
+
+# WASI Intelligence
+wasi-intelligence/node_modules/
+wasi-intelligence/data/wasi-core.db
+wasi-intelligence/data/wasi-core.db-shm
+wasi-intelligence/data/wasi-core.db-wal
+wasi-intelligence/*.log
+wasi-intelligence/*.err.log
+# Archives
+archives-bf-ai/node_modules/
+archives-bf-ai/data/document-cache/
+archives-bf-ai/data/law-cache/

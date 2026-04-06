@@ -1,0 +1,108 @@
+{
+  "summary": "WASI project audit reveals critical build failure and high-priority frontend typo. Core routing and DEX functionality are operational, but production build is broken and order form has a critical typo preventing ETF selection.",
+  "score": 72,
+  "critical": [
+    {
+      "issue": "npm build command fails with exit code -1",
+      "why": "Production build is completely broken, preventing deployment",
+      "files": [
+        "package.json",
+        "build configuration files"
+      ],
+      "fix": "Investigate build logs, fix missing dependencies or configuration errors in build process"
+    }
+  ],
+  "high": [
+    {
+      "issue": "Critical typo in DEX order form ETF selection",
+      "why": "Users cannot select ETFs due to undefined variable 'orderFor' instead of 'orderForm'",
+      "files": [
+        "src/dex/DexApp.jsx"
+      ],
+      "fix": "Change 'orderFor' to 'orderForm' in the ETF select element's value and onChange handlers"
+    },
+    {
+      "issue": "API URL storage key inconsistency between DEX and banking",
+      "why": "DEX uses 'WASI_DEX_API_URL' while banking uses 'WASI_BANKING_API_URL', causing confusion and potential connection issues",
+      "files": [
+        "src/dex/dexApi.js",
+        "src/wasi/services/wasiApi.js"
+      ],
+      "fix": "Standardize on single storage key 'WASI_API_URL' across all API clients"
+    }
+  ],
+  "medium": [
+    {
+      "issue": "Stale localStorage URL handling has edge cases",
+      "why": "index.html logic may not handle all scenarios of stale or invalid API URLs, potentially leaving users with broken connections",
+      "files": [
+        "index.html"
+      ],
+      "fix": "Add more robust validation and fallback logic for stored API URLs"
+    },
+    {
+      "issue": "Missing error boundaries in React components",
+      "why": "Frontend errors could crash entire app without graceful degradation",
+      "files": [
+        "src/main.jsx",
+        "src/dex/DexApp.jsx"
+      ],
+      "fix": "Add error boundaries at app and component levels"
+    }
+  ],
+  "low": [
+    {
+      "issue": "Inconsistent API base URL resolution patterns",
+      "why": "Multiple different patterns for resolving API URLs across files creates maintenance overhead",
+      "files": [
+        "src/dex/dexApi.js",
+        "src/wasi/services/wasiApi.js",
+        "index.html"
+      ],
+      "fix": "Create shared utility for API URL resolution"
+    }
+  ],
+  "missing_features": [
+    {
+      "feature": "Production build system",
+      "expected": "Working npm run build command",
+      "current": "Build fails with exit code -1",
+      "files": [
+        "package.json",
+        "build configuration"
+      ]
+    },
+    {
+      "feature": "Runtime DEX count verification",
+      "expected": "Computed runtimeDexCount should match seeded count",
+      "current": "runtimeDexCount is null",
+      "files": [
+        "audit verification logic"
+      ]
+    }
+  ],
+  "regressions": [
+    {
+      "regression": "Order form functionality broken",
+      "evidence": "Typo 'orderFor' instead of 'orderForm' in DexApp.jsx line ~447",
+      "files": [
+        "src/dex/DexApp.jsx"
+      ]
+    },
+    {
+      "regression": "Build process broken",
+      "evidence": "npm run build exit code -1",
+      "files": [
+        "package.json",
+        "build configuration"
+      ]
+    }
+  ],
+  "next_actions": [
+    "Fix critical typo in src/dex/DexApp.jsx (orderFor → orderForm)",
+    "Investigate and fix npm build failure",
+    "Standardize API URL storage keys across all clients",
+    "Add error boundaries to React components",
+    "Test production build process end-to-end"
+  ]
+}

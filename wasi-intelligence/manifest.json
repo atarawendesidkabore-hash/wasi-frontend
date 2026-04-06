@@ -1,0 +1,8 @@
+{
+  "name": "WASI Platform",
+  "short_name": "WASI",
+  "start_url": "./wasi-platform-index.html",
+  "display": "standalone",
+  "background_color": "#030B15",
+  "theme_color": "#C8922A"
+}
