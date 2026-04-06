@@ -56,3 +56,15 @@ __pycache__/
 
 # Claude
 .claude/
+
+# WASI Intelligence
+wasi-intelligence/node_modules/
+wasi-intelligence/data/wasi-core.db
+wasi-intelligence/data/wasi-core.db-shm
+wasi-intelligence/data/wasi-core.db-wal
+wasi-intelligence/*.log
+wasi-intelligence/*.err.log
+# Archives
+archives-bf-ai/node_modules/
+archives-bf-ai/data/document-cache/
+archives-bf-ai/data/law-cache/

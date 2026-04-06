@@ -35,3 +35,21 @@ services:
       - key: WASI_DEMO_MANAGER_PASSWORD
         value: WasiManager2026!
     autoDeploy: true
+
+  - type: web
+    name: wasi-intelligence-core
+    env: docker
+    plan: starter
+    autoDeploy: true
+    dockerfilePath: ./wasi-intelligence/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "3200"
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-4-6
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: WASI_CORE_DB_PATH
+        value: /tmp/wasi-core.db

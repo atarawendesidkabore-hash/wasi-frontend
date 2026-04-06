@@ -1,0 +1,21 @@
+{
+  "name": "wasi-intelligence-ai",
+  "version": "1.0.0",
+  "description": "WASI Intelligence with integrated Africa microfinance AI signals and chat.",
+  "main": "server.mjs",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.mjs",
+    "start": "node server.mjs",
+    "ingest:commerce-code": "node ./scripts/ingest-commerce-code.mjs",
+    "ingest:legal-codes": "node ./scripts/ingest-legal-codes.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.62.0",
+    "cheerio": "^1.2.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "pdf-parse": "^2.4.5"
+  }
+}
