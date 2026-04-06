@@ -1,7 +1,7 @@
 const API_BASE =
   window.WASI_CORE_API_BASE ||
   (/github\.io$/i.test(window.location.hostname) || /onrender\.com$/i.test(window.location.hostname)
-    ? "https://wasi-backend-api.onrender.com"
+    ? "https://wasi-intelligence-core.onrender.com"
     : "");
 const TOKEN_KEY = "wasi_core_token";
 
