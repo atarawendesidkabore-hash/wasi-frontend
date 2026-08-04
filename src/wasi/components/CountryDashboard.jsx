@@ -102,6 +102,87 @@ function parsePartner(partnerLabel) {
 }
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ Transport Mode Panel Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── Sector Analysis Panel ────────────────────────────────────────────────────
+const SIGNAL_CONFIG = {
+  haussier: { color: "#00ff84", bg: "rgba(0,255,132,0.08)",  border: "#00ff8444", label: "HAUSSIER", arrow: "↑" },
+  stable:   { color: "#f0b429", bg: "rgba(240,180,41,0.08)", border: "#f0b42944", label: "STABLE",   arrow: "→" },
+  baissier: { color: "#ff5c7a", bg: "rgba(255,92,122,0.08)", border: "#ff5c7a44", label: "BAISSIER", arrow: "↓" },
+  risque:   { color: "#ff9100", bg: "rgba(255,145,0,0.08)",  border: "#ff910044", label: "RISQUE",   arrow: "⚠" },
+};
+
+function SectorAnalysisPanel({ sectors, countryName }) {
+  const [expanded, setExpanded] = useState(null);
+  if (!sectors || sectors.length === 0) return null;
+  const maxGdp = Math.max(...sectors.map((s) => s.gdp_share));
+  return (
+    <div style={{ marginTop: 10, background: "rgba(10,22,40,0.6)", border: "1px solid #1a2845", borderRadius: 6, overflow: "hidden" }}>
+      <div style={{ padding: "12px 18px", borderBottom: "1px solid #1a2845", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ fontSize: 13, color: "#00d4ff", letterSpacing: 3 }}>📊 ANALYSE SECTORIELLE — {countryName.toUpperCase()}</div>
+        <div style={{ fontSize: 11, color: "#4a5a73" }}>Cliquer pour les détails</div>
+      </div>
+      <div style={{ padding: "8px 0" }}>
+        {sectors.map((sector, i) => {
+          const sig = SIGNAL_CONFIG[sector.signal] || SIGNAL_CONFIG.stable;
+          const isOpen = expanded === i;
+          const gdpBarWidth = Math.round((sector.gdp_share / maxGdp) * 100);
+          return (
+            <div key={i}>
+              <div
+                onClick={() => setExpanded(isOpen ? null : i)}
+                style={{ padding: "10px 18px", cursor: "pointer", background: isOpen ? sig.bg : "transparent", borderLeft: isOpen ? `3px solid ${sig.color}` : "3px solid transparent", transition: "background .15s, border-color .15s" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{sector.icon}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, color: "#e2e8f0", fontWeight: 600 }}>{sector.name}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, color: sig.color, background: sig.bg, border: `1px solid ${sig.border}`, borderRadius: 3, padding: "1px 6px", flexShrink: 0 }}>
+                        {sig.arrow} {sig.label}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ flex: 1, height: 4, background: "#0a1020", borderRadius: 2 }}>
+                        <div style={{ height: "100%", width: `${gdpBarWidth}%`, background: sig.color, borderRadius: 2, transition: "width .6s ease" }} />
+                      </div>
+                      <span style={{ fontSize: 11, color: "#7f8fa6", flexShrink: 0 }}>{sector.gdp_share}% PIB</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0, minWidth: 52 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: sector.growth >= 0 ? "#00ff84" : "#ff5c7a", fontFamily: "monospace" }}>
+                      {sector.growth >= 0 ? "+" : ""}{sector.growth.toFixed(1)}%
+                    </div>
+                    <div style={{ fontSize: 10, color: "#4a5a73" }}>croissance</div>
+                  </div>
+                  <span style={{ color: "#4a5a73", fontSize: 11, marginLeft: 2, display: "inline-block", transition: "transform .2s", transform: isOpen ? "rotate(180deg)" : "none" }}>▼</span>
+                </div>
+              </div>
+              {isOpen && (
+                <div style={{ padding: "12px 18px 16px 52px", background: sig.bg, borderLeft: `3px solid ${sig.color}`, borderTop: `1px solid ${sig.border}` }}>
+                  <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.7, marginBottom: 10 }}>{sector.note}</div>
+                  {sector.key_players && sector.key_players.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11, color: "#4a5a73", letterSpacing: 2, marginBottom: 6 }}>ACTEURS CLÉS</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {sector.key_players.map((p, pi) => (
+                          <span key={pi} style={{ fontSize: 12, color: sig.color, background: "rgba(10,22,40,0.8)", border: `1px solid ${sig.border}`, borderRadius: 3, padding: "3px 8px" }}>{p}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ padding: "8px 18px", borderTop: "1px solid #1a2845", fontSize: 11, color: "#4a5a73" }}>
+        Source : WASI Data Engine · Analyses CEDEAO · FMI/BM/Banques centrales · 2025–2026
+      </div>
+    </div>
+  );
+}
+
+// ── Transport Mode Panel ─────────────────────────────────────────────────────
 function TransportModePanel({ transportData }) {
   const [activeMode, setActiveMode] = useState("composite");
   const hasNumber = (value) => Number.isFinite(Number(value));
@@ -1132,6 +1213,9 @@ export function CountryDashboard({ country, indexValue, onClose, bankContext, tr
           ))}
         </div>
       </div>
+
+      {/* Analyse Sectorielle */}
+      {td.sectors && <SectorAnalysisPanel sectors={td.sectors} countryName={country.name} />}
 
       {/* Module Transport Multi-Modal */}
       <TransportModePanel transportData={transportData} />

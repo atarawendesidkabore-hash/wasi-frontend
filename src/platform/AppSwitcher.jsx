@@ -130,6 +130,8 @@ export const normalizeAppId = (value) => {
   ) {
     return "finance";
   }
+  if (["ussd", "afritrader-ussd", "ussd-banking", "mobile-money", "mm"].includes(normalized))
+    return "ussd";
   if (["dex", "exchange", "etf-dex"].includes(normalized)) return "dex";
   if (["intelligence", "research", "markets", "market-intel"].includes(normalized))
     return "wasi";

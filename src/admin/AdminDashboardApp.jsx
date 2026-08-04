@@ -21,6 +21,7 @@ import {
   searchAuditLogs,
   exportTransactionsCsv,
 } from "./adminApi";
+import { resolvePlatformApiBaseUrl, persistPlatformApiBaseUrl } from "../platform/apiResolver";
 
 const TABS = ["overview", "users", "audit", "alerts"];
 
@@ -42,12 +43,42 @@ const Badge = ({ text, color }) => (
 const LoginScreen = ({ onLogin }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [serverUrl, setServerUrl] = useState(() => resolvePlatformApiBaseUrl());
+  const [showServer, setShowServer] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [serverStatus, setServerStatus] = useState(null);
+
+  const testServer = async (url) => {
+    try {
+      const res = await fetch(`${url}/api/health`, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      return data?.success ? "ok" : "error";
+    } catch {
+      return "error";
+    }
+  };
+
+  const handleServerSave = async () => {
+    const url = serverUrl.trim().replace(/\/+$/, "");
+    if (!url) return;
+    setServerStatus("testing");
+    const status = await testServer(url);
+    setServerStatus(status);
+    if (status === "ok") {
+      persistPlatformApiBaseUrl(url);
+      setError("");
+    } else {
+      setError("Serveur inaccessible. Verifiez l'URL et que le serveur tourne.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (serverUrl.trim()) {
+      persistPlatformApiBaseUrl(serverUrl.trim().replace(/\/+$/, ""));
+    }
     setLoading(true);
     try {
       const user = await loginAdmin(username, password);
@@ -64,11 +95,59 @@ const LoginScreen = ({ onLogin }) => {
     }
   };
 
+  const statusDot = serverStatus === "ok" ? WASI_THEME.success : serverStatus === "error" ? WASI_THEME.danger : WASI_THEME.textMuted;
+
   return (
     <main style={{ ...getAppShellStyle(), display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <form onSubmit={handleSubmit} style={{ ...getPanelStyle(), width: 380, display: "grid", gap: 14 }}>
+      <form onSubmit={handleSubmit} style={{ ...getPanelStyle(), width: 420, display: "grid", gap: 14 }}>
         <h2 style={{ color: WASI_THEME.accent, margin: 0 }}>Admin Console</h2>
         <p style={{ color: WASI_THEME.textMuted, fontSize: 13, margin: 0 }}>Connexion manager requise</p>
+
+        {/* Server URL toggle */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowServer(!showServer)}
+            style={{ background: "none", border: "none", color: WASI_THEME.info, cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline" }}
+          >
+            {showServer ? "Masquer" : "Configurer"} le serveur API
+          </button>
+        </div>
+
+        {showServer && (
+          <div style={{ display: "grid", gap: 8 }}>
+            <label style={{ color: WASI_THEME.textMuted, fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>
+              URL du serveur API
+            </label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                style={{ ...sharedInputStyle, flex: 1 }}
+                placeholder="https://votre-serveur.com"
+                value={serverUrl}
+                onChange={(e) => { setServerUrl(e.target.value); setServerStatus(null); }}
+              />
+              <button
+                type="button"
+                onClick={handleServerSave}
+                style={{
+                  ...sharedSecondaryButtonStyle,
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  minWidth: 70,
+                }}
+              >
+                {serverStatus === "testing" ? "..." : "Tester"}
+              </button>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: statusDot, display: "inline-block" }} />
+              <span style={{ color: WASI_THEME.textMuted }}>
+                {serverStatus === "ok" ? "Serveur connecte" : serverStatus === "error" ? "Serveur inaccessible" : serverStatus === "testing" ? "Test en cours..." : `Actuel: ${serverUrl}`}
+              </span>
+            </div>
+          </div>
+        )}
+
         <input style={sharedInputStyle} placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <input style={sharedInputStyle} placeholder="Mot de passe" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         {error && <div style={{ color: WASI_THEME.danger, fontSize: 13 }}>{error}</div>}

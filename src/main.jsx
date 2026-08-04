@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+﻿import React, { Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 import { AppSwitcher, getStoredAppId, normalizeAppId, persistAppId, navigateToApp } from "./platform/AppSwitcher";
@@ -14,6 +14,8 @@ const FinanceWorkbenchApp = lazy(() => import("./finance/FinanceWorkbenchApp").t
 const WorkspaceHomeApp = lazy(() => import("./platform/WorkspaceHomeApp").then((m) => ({ default: m.WorkspaceHomeApp })));
 const CommercialDemoKitApp = lazy(() => import("./platform/CommercialDemoKitApp").then((m) => ({ default: m.CommercialDemoKitApp })));
 const AdminDashboardApp = lazy(() => import("./admin/AdminDashboardApp").then((m) => ({ default: m.AdminDashboardApp })));
+const UssdApp = lazy(() => import("./ussd/UssdApp").then((m) => ({ default: m.UssdApp })));
+const CbdcApp = lazy(() => import("./cbdc/CbdcApp").then((m) => ({ default: m.CbdcApp })));
 
 const AppLoader = () => (
   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0a0a", color: "#00ff88", fontFamily: "monospace" }}>
@@ -38,6 +40,8 @@ const APP_TITLES = {
   finance: "WASI - Finance Lab",
   dex: "WASI - ETF DEX",
   admin: "WASI - Admin Console",
+  ussd: "WASI - AfriTrader USSD",
+  cbdc: "WASI - CBDC Monitor",
 };
 
 if (typeof document !== "undefined") {
@@ -86,8 +90,16 @@ const AppRoute = () => {
     return <DexApp />;
   }
 
+  if (selectedApp === "ussd") {
+    return isFeatureEnabled("ussd") ? <UssdApp /> : <FallbackApp />;
+  }
+
   if (selectedApp === "admin") {
     return <AdminDashboardApp />;
+  }
+
+  if (selectedApp === "cbdc") {
+    return isFeatureEnabled("cbdc") ? <CbdcApp /> : <FallbackApp />;
   }
 
   return <WasiApp />;

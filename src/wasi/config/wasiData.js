@@ -482,6 +482,13 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Transformation locale cacao", "Hub logistique CEDEAO", "Zone franche Abidjan"],
     risks: ["Volatilité prix cacao", "Dépendance marché UE", "Infrastructures routières limitées"],
     gdpGrowth: 6.8, currency: "XOF",
+    sectors: [
+      { name: "Cacao & Agro-industrie", icon: "🍫", gdp_share: 18, growth: 4.2, signal: "haussier", key_players: ["Barry Callebaut", "Nestlé CI", "SIFCA", "OLAM"], note: "1er producteur mondial. Objectif 50% transformation locale d'ici 2030." },
+      { name: "Commerce & Logistique", icon: "🚢", gdp_share: 15, growth: 5.4, signal: "haussier", key_players: ["Port d'Abidjan", "Bolloré Africa Logistics", "SITARAIL"], note: "Hub de transit CEDEAO. Zone franche d'Abidjan en expansion." },
+      { name: "BTP & Infrastructure", icon: "🏗️", gdp_share: 10, growth: 7.1, signal: "haussier", key_players: ["Bouygues CI", "SNEDAI", "BNETD"], note: "Programme gouvernemental PND 2021–2025 : +5 000 km routes." },
+      { name: "Pétrole & Gaz", icon: "⛽", gdp_share: 8, growth: 1.8, signal: "stable", key_players: ["Eni", "Total Energies CI", "PETROCI"], note: "Production ~35 000 b/j. Exploration offshore blocs CI-100/101." },
+      { name: "Services Financiers", icon: "🏦", gdp_share: 7, growth: 8.3, signal: "haussier", key_players: ["Ecobank CI", "SGBCI", "MTN MoMo", "Orange Money"], note: "1ère place financière UEMOA. Taux bancarisation mobile >60%." },
+    ],
   },
   NG: {
     president: "Bola Ahmed Tinubu", presidentSince: "2023",
@@ -503,6 +510,13 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Raffinage pétrolier local", "Agriculture mécanisée", "Tech & fintech Lagos"],
     risks: ["Dépendance pétrole >75%", "Instabilité naira", "Conflits Delta du Niger"],
     gdpGrowth: 3.3, currency: "NGN",
+    sectors: [
+      { name: "Pétrole & Gaz", icon: "⛽", gdp_share: 35, growth: -2.1, signal: "baissier", key_players: ["NNPC", "Shell Nigeria", "TotalEnergies NG", "Chevron"], note: "Production tombée à ~1,3Mb/j (vol + dégradation). Dangote Refinery en service 2024." },
+      { name: "Agriculture & Agro-alim.", icon: "🌾", gdp_share: 22, growth: 3.2, signal: "stable", key_players: ["Dangote Agro", "Olam Nigeria", "UAC Foods"], note: "Diversification post-pétrole. Riz, manioc, soja prioritaires. Mécanisation insuffisante." },
+      { name: "Services & Fintech", icon: "📱", gdp_share: 20, growth: 12.4, signal: "haussier", key_players: ["Flutterwave", "Paystack (Stripe)", "MTN Nigeria", "Access Bank"], note: "Écosystème fintech le + dynamique d'Afrique. Lagos tech hub." },
+      { name: "Commerce & Distribution", icon: "🛒", gdp_share: 12, growth: 4.8, signal: "stable", key_players: ["Dangote Group", "Shoprite NG", "Jumia"], note: "Marché intérieur de 220M habitants. Distribution fragmentée." },
+      { name: "BTP & Industrie", icon: "🏗️", gdp_share: 6, growth: 3.5, signal: "stable", key_players: ["Julius Berger", "Dangote Cement", "Lafarge Holcim"], note: "Déficit logement estimé à 28M d'unités. Fort potentiel." },
+    ],
   },
   GH: {
     president: "John Dramani Mahama", presidentSince: "janv. 2025 (3e mandat)",
@@ -524,6 +538,13 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Raffinage or local", "Agro-industrie cacao", "Corridor Tema-Burkina"],
     risks: ["Volatilité cours de l'or", "Dette publique élevée", "Dépréciation cédi"],
     gdpGrowth: 3.8, currency: "GHS",
+    sectors: [
+      { name: "Or & Mines", icon: "🥇", gdp_share: 15, growth: 3.1, signal: "stable", key_players: ["Gold Fields", "AngloGold Ashanti", "Newmont Ghana", "Perseus Mining"], note: "2e producteur africain. Royalty minière 5%. Pression écologique sur mines artisanales." },
+      { name: "Agriculture & Cacao", icon: "🌱", gdp_share: 20, growth: 3.9, signal: "stable", key_players: ["COCOBOD", "Olam GH", "Niche Cocoa"], note: "2e producteur cacao mondial. Objectif transformation locale 30%." },
+      { name: "Services & Fintech", icon: "📱", gdp_share: 14, growth: 9.2, signal: "haussier", key_players: ["MTN Ghana", "Zeepay", "ADB Ghana", "Fido"], note: "Mobile money mature. Taux inclusion financière 68%." },
+      { name: "Pétrole & Gaz", icon: "⛽", gdp_share: 10, growth: -5.3, signal: "baissier", key_players: ["TotalEnergies GH", "ENI GH", "GNPC"], note: "Production en déclin (champ Jubilee). Nouvelles explorations offshore." },
+      { name: "Commerce & Transit", icon: "🚢", gdp_share: 18, growth: 4.6, signal: "stable", key_players: ["Port de Tema", "Meridian Port Services", "DHL GH"], note: "Corridor Tema–Burkina–Niger. Concurrence port de Lomé." },
+    ],
   },
   SN: {
     president: "Bassirou Diomaye Faye", presidentSince: "avril 2024",
@@ -545,6 +566,13 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Hydrocarbures offshore (Sangomar)", "Hub financier UEMOA", "Pêche industrielle durable"],
     risks: ["Déficit commercial structurel", "Dépendance réexportations", "Sécheresse sahélienne"],
     gdpGrowth: 8.3, currency: "XOF",
+    sectors: [
+      { name: "Pétrole & Gaz offshore", icon: "⛽", gdp_share: 8, growth: 85.0, signal: "haussier", key_players: ["Woodside (Sangomar)", "BP/Kosmos (GTA)", "Petrosen"], note: "Sangomar en production depuis 2024. GTA gaz — 1ère livraison GNL prévue 2025." },
+      { name: "Services & Administration", icon: "🏛️", gdp_share: 25, growth: 7.1, signal: "haussier", key_players: ["Ecobank SN", "CBAO Attijari", "Orange SN", "Wave"], note: "Hub institutionnel UEMOA/CEDEAO. Forte croissance fintech (Wave dépasse BCEAO)." },
+      { name: "Agriculture & Pêche", icon: "🐟", gdp_share: 15, growth: 3.8, signal: "stable", key_players: ["SUNEOR (Advens)", "GROS PLAN", "GDS pêche"], note: "Arachides en déclin. Pêche sous pression. Horticulture export en croissance." },
+      { name: "Commerce & Transport", icon: "🚢", gdp_share: 18, growth: 6.2, signal: "haussier", key_players: ["Port Autonome de Dakar", "DHL SN", "Bolloré"], note: "Dakar = porte d'entrée Mali/Guinée. Nouveau port de Ndayane en construction." },
+      { name: "Phosphates & Mines", icon: "⚗️", gdp_share: 7, growth: 2.9, signal: "stable", key_players: ["ICS (Indorama)", "GCO Zircon", "Tronox"], note: "ICS = 1er exportateur phosphates Afrique subsaharienne." },
+    ],
   },
   BF: {
     president: "Ibrahim Traoré (Capitaine)", presidentSince: "sept. 2022 (MPSR II)",
@@ -566,6 +594,13 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Corridor Abidjan-Ouaga", "Transformation coton", "Énergie solaire Sahel"],
     risks: ["Enclavement géographique total", "Instabilité sécuritaire", "Concentration export sur l'or"],
     gdpGrowth: 5.9, currency: "XOF",
+    sectors: [
+      { name: "Or & Mines", icon: "🥇", gdp_share: 22, growth: 4.8, signal: "risque", key_players: ["IAMGOLD", "Endeavour Mining", "Trevali", "Nantou Mining"], note: "75% des recettes export. Attaques jihadistes sur sites miniers en 2024–2025." },
+      { name: "Agriculture & Coton", icon: "🌾", gdp_share: 28, growth: 1.9, signal: "risque", key_players: ["SOFITEX", "Faso Coton", "Olam BF"], note: "2e producteur africain coton. Filière fragilisée par insécurité rurale." },
+      { name: "BTP & Infrastructures", icon: "🏗️", gdp_share: 12, growth: 4.2, signal: "stable", key_players: ["Groupe Fadoul", "EBOMAF", "China State Const."], note: "Investissements publics maintenus malgré la crise. Routes et barrages prioritaires." },
+      { name: "Énergie Solaire", icon: "☀️", gdp_share: 2, growth: 22.0, signal: "haussier", key_players: ["Yeelen Kura", "SONABEL", "Zina Solar"], note: "Potentiel solaire parmi les plus élevés d'Afrique. Programme 200 MW en cours." },
+      { name: "Commerce & Services", icon: "🛒", gdp_share: 15, growth: -2.8, signal: "baissier", key_players: ["CORIS Bank", "Ecobank BF", "Orange BF"], note: "Contraction du commerce du fait des restrictions CEDEAO et de l'insécurité." },
+    ],
   },
   ML: {
     president: "Assimi Goïta (Colonel)", presidentSince: "2021 (mandat renouvelé 2025–2030)",
@@ -587,6 +622,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Transformation or locale", "Agro-industrie coton", "Élevage bovin export"],
     risks: ["Enclavement total", "Instabilité politique persistante", "Tensions avec CEDEAO"],
     gdpGrowth: 3.1, currency: "XOF",
+    sectors: [
+      { name: "Or & Mines", icon: "🥇", gdp_share: 20, growth: 2.4, signal: "risque", key_players: ["Barrick Gold ML", "B2Gold Fekola", "Endeavour Mining"], note: "3e producteur africain. Nationalisation rampante — Fekola renégocié en 2024." },
+      { name: "Agriculture & Élevage", icon: "🐄", gdp_share: 32, growth: 3.1, signal: "stable", key_players: ["CMDT coton", "OHVN", "filière bétail"], note: "Élevage : 2e rang en valeur. Corridor bétail vers Côte d'Ivoire/Sénégal." },
+      { name: "Commerce & Services", icon: "🛒", gdp_share: 15, growth: -1.8, signal: "risque", key_players: ["BDM-SA", "Ecobank ML", "Orange ML"], note: "Contraction liée aux sanctions CEDEAO levées en 2024. Reprise fragile." },
+      { name: "BTP & Infrastructure", icon: "🏗️", gdp_share: 10, growth: 3.4, signal: "stable", key_players: ["BCEOM", "CCC Mali", "China Road & Bridge"], note: "Réhabilitation des axes routiers avec financement Russie/Chine." },
+    ],
   },
   GN: {
     president: "Mamady Doumbouya (Colonel)", presidentSince: "janv. 2026 (élu 86,7%)",
@@ -608,6 +649,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Aluminium Simandou (>20Mrd$)", "Hydro-électricité export", "Agriculture tropicale"],
     risks: ["Hyper-dépendance bauxite-Chine", "Transition politique", "Infrastructures minières insuffisantes"],
     gdpGrowth: 5.6, currency: "GNF",
+    sectors: [
+      { name: "Bauxite & Aluminium", icon: "⛏️", gdp_share: 35, growth: 8.2, signal: "haussier", key_players: ["CBG (Alcoa/Rio Tinto)", "SMB (Winning Consortium)", "GAC"], note: "2e réserves mondiales. +50% de la production mondiale dépend de Guinée. Simandou fer en chantier." },
+      { name: "Agriculture tropicale", icon: "🌴", gdp_share: 22, growth: 3.5, signal: "stable", key_players: ["SOGUIPAH caoutchouc", "FRIGUIA", "coopératives café/cacao"], note: "Café, cacao, banane, ananas. Fort potentiel de transformation locale non exploité." },
+      { name: "BTP & Simandou", icon: "🏗️", gdp_share: 8, growth: 24.0, signal: "haussier", key_players: ["Rio Tinto-Chinalco", "CFCO railway", "Bouygues GN"], note: "Projet ferroviaire 670 km + port Matakong — investissement >20 Mrd$." },
+      { name: "Énergie Hydraulique", icon: "💧", gdp_share: 4, growth: 10.5, signal: "haussier", key_players: ["EDG", "Garafiri", "Souapiti Dam (China)"], note: "Souapiti 450 MW livré 2024. Exportations vers Sénégal/Sierra Leone prévues." },
+    ],
   },
   BJ: {
     president: "Patrice Talon", presidentSince: "2016 (réélu 2021)",
@@ -629,6 +676,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Port de Cotonou hub régional", "Transit Nigeria-Niger-Mali", "Agro-industrie coton"],
     risks: ["Déficit commercial chronique", "Concurrence port de Lomé", "Dépendance réexport Nigeria"],
     gdpGrowth: 5.7, currency: "XOF",
+    sectors: [
+      { name: "Commerce & Transit", icon: "🚢", gdp_share: 30, growth: 7.6, signal: "haussier", key_players: ["Port de Cotonou", "Bénin Terminal (MSC)", "Bolloré BJ"], note: "Hub régional vers Niger, BF, Mali. Corridor Cotonou-Niamey stratégique post-sanctions." },
+      { name: "Agriculture & Coton", icon: "🌾", gdp_share: 22, growth: 4.1, signal: "stable", key_players: ["SODECO", "AIC Bénin", "SONAPRA coton"], note: "1er producteur coton UEMOA. Agropoles en développement (Parakou, Kandi)." },
+      { name: "BTP & Infrastructure", icon: "🏗️", gdp_share: 12, growth: 6.3, signal: "haussier", key_players: ["EBOMAF", "SOGEA-SATOM", "Bénin Build"], note: "Programme PAG accéléré : routes, énergie, zone industrielle de Glo-Djigbé." },
+      { name: "Industrie & ZES", icon: "🏭", gdp_share: 8, growth: 15.0, signal: "haussier", key_players: ["GDIZ (Glo-Djigbé)", "Arise IIP", "Abt Associates"], note: "Zone Industrielle Spéciale de Glo-Djigbé : transformation coton, cajou, ananas." },
+    ],
   },
   TG: {
     president: "Faure Gnassingbé", presidentSince: "2005 (réélu 2020)",
@@ -650,6 +703,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Hub port de Lomé (eau profonde)", "Phosphates valeur ajoutée", "Zone franche Lomé"],
     risks: ["Déficit commercial structurel", "Dépendance activité de transit", "Fragilité cours phosphates"],
     gdpGrowth: 5.5, currency: "XOF",
+    sectors: [
+      { name: "Commerce & Transit", icon: "🚢", gdp_share: 28, growth: 6.1, signal: "haussier", key_players: ["Port de Lomé (LCT)", "Bolloré TG", "GETMA Togo"], note: "Seul port en eau profonde du Golfe de Guinée. Corridor vers BF, Mali, Niger." },
+      { name: "Phosphates & Mines", icon: "⚗️", gdp_share: 10, growth: -1.8, signal: "baissier", key_players: ["OCP (Maroc) partenaire", "IFG Togo", "GCT"], note: "4e réserves mondiales. Sous-exploitation. Valeur ajoutée locale très faible." },
+      { name: "Agriculture", icon: "🌾", gdp_share: 25, growth: 3.2, signal: "stable", key_players: ["NSCT coton", "ITRA", "coopératives café/cacao"], note: "Coton, café, cacao, maïs. Filière coton restructurée. Productivité à améliorer." },
+      { name: "Services Financiers", icon: "🏦", gdp_share: 8, growth: 7.3, signal: "haussier", key_players: ["Ecobank TG", "Orabank", "NSIA Banque"], note: "Siège Ecobank Group à Lomé. Zone franche attire flux capitaux régionaux." },
+    ],
   },
   NE: {
     president: "Abdourahamane Tchiani (Général)", presidentSince: "mars 2025 (mandat 5 ans)",
@@ -671,6 +730,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Uranium (énergie nucléaire mondiale)", "Pipeline pétrole-Cotonou", "Agriculture irriguée Niger"],
     risks: ["Double enclavement géographique", "Instabilité sécuritaire Sahel", "Volatilité cours uranium"],
     gdpGrowth: 7.0, currency: "XOF",
+    sectors: [
+      { name: "Uranium", icon: "☢️", gdp_share: 12, growth: 4.6, signal: "risque", key_players: ["Orano (ex-AREVA)", "GoviEx Uranium", "SOPAMIN"], note: "4e producteur mondial. Renégociation contrats avec France suite au coup. Demande nucléaire mondiale en hausse." },
+      { name: "Pétrole (Agadem)", icon: "⛽", gdp_share: 8, growth: 18.0, signal: "haussier", key_players: ["CNPC China", "WAPCO pipeline", "SONIDEP"], note: "Pipeline Niger-Bénin 2000 km opérationnel depuis 2024. Export via Cotonou." },
+      { name: "Agriculture", icon: "🌾", gdp_share: 42, growth: 1.8, signal: "risque", key_players: ["RECA Niger", "OPVN", "coopératives oignons"], note: "42% du PIB mais très vulnérable aux sécheresses et aux attaques jihadistes." },
+      { name: "Or & Minerais", icon: "🥇", gdp_share: 5, growth: 3.2, signal: "stable", key_players: ["Semafo Niger", "Agbaou Gold", "SOPAMIN"], note: "Or en hausse. Minerais (étain, fer) peu exploités faute d'infrastructures." },
+    ],
   },
   MR: {
     president: "Mohamed Ould Ghazouani", presidentSince: "2019 (réélu juil. 2024)",
@@ -692,6 +757,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Gaz offshore Grand Tortue Ahmeyim", "Pêche durable certifiée MSC", "Énergie éolienne côtière"],
     risks: ["Désertification avancée", "Concentration export fer-or", "Faible diversification industrielle"],
     gdpGrowth: 5.4, currency: "MRU",
+    sectors: [
+      { name: "Minerai de fer", icon: "⛏️", gdp_share: 25, growth: 3.8, signal: "stable", key_players: ["SNIM (État)", "Qatar Steel partenaire", "Arcelor ex-SIMFER"], note: "SNIM = pilier de l'économie. Minerai haute teneur 65%+. Ligne ferroviaire 700 km." },
+      { name: "Gaz offshore (GTA)", icon: "⛽", gdp_share: 3, growth: 120.0, signal: "haussier", key_players: ["BP", "Kosmos Energy", "SMHPM"], note: "Greater Tortue Ahmeyim — 1ères livraisons GNL flottant 2025. Partage avec Sénégal." },
+      { name: "Pêche", icon: "🐟", gdp_share: 12, growth: 2.9, signal: "stable", key_players: ["IMROP", "SMCP", "accords UE/Chine"], note: "Eaux parmi les plus poissonneuses d'Afrique. Accords de pêche UE controversés." },
+      { name: "Élevage & Agriculture", icon: "🐄", gdp_share: 15, growth: 2.1, signal: "stable", key_players: ["éleveurs nomades", "SONIMEX", "projets irrigués Fleuve Sénégal"], note: "Élevage camelin/bovin. Agriculture limitée par désertification. Fleuve Sénégal irrigué." },
+    ],
   },
   GW: {
     president: "Transition militaire en cours", presidentSince: "Élections prévues déc. 2026",
@@ -711,6 +782,11 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Diversification du cajou (transformation locale)", "Pêche industrielle certifiée", "Tourisme balnéaire"],
     risks: ["Mono-dépendance noix de cajou (>80%)", "Instabilité politique chronique", "Absence d'infrastructures"],
     gdpGrowth: 4.2, currency: "XOF",
+    sectors: [
+      { name: "Noix de cajou", icon: "🥜", gdp_share: 45, growth: 2.8, signal: "risque", key_players: ["FUNDEI", "Olam GW", "acheteurs indiens"], note: "93% des exports. Quasi aucune transformation locale. Dépendance totale des prix indiens." },
+      { name: "Pêche", icon: "🐟", gdp_share: 10, growth: 2.2, signal: "stable", key_players: ["FISCAP", "accords UE"], note: "Eaux poissonneuses sous-exploitées. Accords de pêche UE peu profitables localement." },
+      { name: "Agriculture vivrière", icon: "🌾", gdp_share: 30, growth: 1.9, signal: "stable", key_players: ["petits exploitants", "FAO/IFAD projets"], note: "Riz, manioc, mil. Très peu mécanisé. Insécurité alimentaire récurrente." },
+    ],
   },
   SL: {
     president: "Julius Maada Bio", presidentSince: "2018 (réélu 2023)",
@@ -732,6 +808,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Minéraux stratégiques VE (rutile)", "Port de Freetown modernisé", "Cacao premium niche"],
     risks: ["Déficit commercial persistant", "Dépendance aide internationale", "Fragilité institutionnelle"],
     gdpGrowth: 4.8, currency: "SLL",
+    sectors: [
+      { name: "Rutile & Mines", icon: "💎", gdp_share: 22, growth: 6.1, signal: "haussier", key_players: ["Sierra Rutile (Iluka)", "Koidu Holdings (diamants)", "SL Mining (fer)"], note: "1er producteur mondial rutile naturel. Minerai stratégique pour pigments et VE." },
+      { name: "Agriculture", icon: "🌱", gdp_share: 45, growth: 2.9, signal: "stable", key_players: ["SLARI", "SL Cocoa Board", "coopératives"], note: "Cacao & café de niche (premium). Riz importé massivement malgré fort potentiel local." },
+      { name: "Commerce & Services", icon: "🛒", gdp_share: 12, growth: 4.2, signal: "stable", key_players: ["Rokel Commercial Bank", "Sierra Leone Commercial Bank"], note: "Secteur informel dominant. Faible bancarisation (23%)." },
+      { name: "Pêche", icon: "🐟", gdp_share: 6, growth: 3.1, signal: "stable", key_players: ["MFMR", "accords pêche UE/Chine"], note: "Potentiel immense sous-exploité. Pêche illicite étrangère importante." },
+    ],
   },
   LR: {
     president: "Joseph Nyuma Boakai", presidentSince: "janv. 2024",
@@ -753,6 +835,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Caoutchouc valeur ajoutée (Firestone)", "Registre maritime (2ème mondial)", "Fer ArcelorMittal"],
     risks: ["Déficit commercial chronique", "Fragilité post-conflit", "Dépendance caoutchouc/fer"],
     gdpGrowth: 4.5, currency: "LRD",
+    sectors: [
+      { name: "Caoutchouc naturel", icon: "🌿", gdp_share: 15, growth: 2.9, signal: "stable", key_players: ["Firestone Liberia (Bridgestone)", "Cavalla Rubber", "Salala Rubber"], note: "Firestone = plus grande plantation caoutchouc au monde (depuis 1926). Peu de transformation locale." },
+      { name: "Mines (fer, or, diamants)", icon: "⛏️", gdp_share: 12, growth: 5.3, signal: "stable", key_players: ["ArcelorMittal Liberia", "Bea Mountain Mining (or)", "Hummingbird Resources"], note: "Fer de haute qualité (65%+ Fe). ArcelorMittal relance après restructuration 2023." },
+      { name: "Registre Maritime", icon: "⚓", gdp_share: 10, growth: 2.1, signal: "stable", key_players: ["LISCR (Liberia Int. Ship & Corp. Registry)", "lien administré depuis Virginie, USA"], note: "2e plus grand registre mondial (>4 000 navires). Revenus stables mais peu d'effets locaux." },
+      { name: "Agriculture", icon: "🌾", gdp_share: 35, growth: 3.2, signal: "stable", key_players: ["petits exploitants", "WFP projets", "Green Climate Fund"], note: "Riz, manioc, cacao. Fort potentiel non valorisé. Dépendance aide alimentaire." },
+    ],
   },
   GM: {
     president: "Adama Barrow", presidentSince: "2017 (réélu 2021)",
@@ -773,6 +861,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Tourisme (côte Atlantique)", "Pêche durable certifiée", "Hub logistique sous-régional"],
     risks: ["Déficit commercial structurel", "Enclavement dans le Sénégal", "Faible industrialisation"],
     gdpGrowth: 5.0, currency: "GMD",
+    sectors: [
+      { name: "Tourisme", icon: "🏖️", gdp_share: 12, growth: 8.4, signal: "haussier", key_players: ["Kombo Beach Hotel", "Coco Ocean Resort", "TUI Gambia"], note: "Tourisme balnéaire européen en reprise. 300 000 visiteurs/an. Saisonnalité forte." },
+      { name: "Agriculture & Arachides", icon: "🥜", gdp_share: 20, growth: 1.8, signal: "baissier", key_players: ["GGC (Gambia Groundnut Corp)", "coopératives"], note: "Arachides en déclin structurel. Soja et sésame en substitution progressive." },
+      { name: "Commerce & Réexport", icon: "🛒", gdp_share: 15, growth: 4.2, signal: "stable", key_players: ["GCCI", "Banjul port", "marchands sénégalais"], note: "Réexport vers Sénégal et Guinée. Port de Banjul = point d'accès concurrentiel." },
+      { name: "Pêche", icon: "🐟", gdp_share: 10, growth: 2.8, signal: "stable", key_players: ["DOSA", "coopératives artisanales", "accords UE"], note: "Pêche artisanale et industrielle. Potentiel de certification MSC sous-exploité." },
+    ],
   },
   CV: {
     president: "José Maria Pereira Neves", presidentSince: "2021",
@@ -793,6 +887,12 @@ export const COUNTRY_TRADE_DATA = {
     opportunities: ["Tourisme haut de gamme insulaire", "Énergie renouvelable (solaire/éolien)", "Hub maritime Atlantique"],
     risks: ["Déficit commercial très élevé (>78%)", "Dépendance import alimentaire totale", "Isolement insulaire structurel"],
     gdpGrowth: 4.6, currency: "CVE",
+    sectors: [
+      { name: "Tourisme", icon: "🏖️", gdp_share: 25, growth: 10.2, signal: "haussier", key_players: ["Meliá Hotels CV", "TUI/TUI Blue", "Leme Bedje"], note: "1M+ touristes/an. Sal et Boa Vista = hubs balnéaires. Montée en gamme en cours." },
+      { name: "Services & Commerce", icon: "🛒", gdp_share: 20, growth: 4.1, signal: "stable", key_players: ["BCA Groupe", "CV Telecom", "Banco Comercial Atlântico"], note: "Économie de services dominante. Diaspora = 15–20% du PIB (transferts)." },
+      { name: "Énergies Renouvelables", icon: "☀️", gdp_share: 5, growth: 15.8, signal: "haussier", key_players: ["ELECTRA", "InfraCo Africa", "CECV (éolien)"], note: "Objectif 100% ENR 2030. Vent excellent sur Sal/São Vicente. Projets de dessalement solaire." },
+      { name: "Pêche", icon: "🐟", gdp_share: 8, growth: 2.6, signal: "stable", key_players: ["INDP", "INTERBASE", "accord UE pêche thon"], note: "Thon et espadon. Pêche artisanale + accords UE. Potentiel transformation sous-exploité." },
+    ],
   },
 };
 // ─────────────────────────────────────────────────────────────────────────────

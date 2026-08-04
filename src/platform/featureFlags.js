@@ -1,4 +1,4 @@
-const toBool = (value, fallback) => {
+﻿const toBool = (value, fallback) => {
   if (value === undefined || value === null || value === "") return fallback;
   const normalized = String(value).trim().toLowerCase();
   if (["1", "true", "yes", "on"].includes(normalized)) return true;
@@ -14,6 +14,8 @@ export const PLATFORM_FEATURE_FLAGS = {
   finance: toBool(import.meta.env.VITE_FEATURE_FINANCE, true),
   afritax: toBool(import.meta.env.VITE_FEATURE_AFRITAX, true),
   dex: toBool(import.meta.env.VITE_FEATURE_DEX, true),
+  ussd: toBool(import.meta.env.VITE_FEATURE_USSD, true),
+  cbdc: toBool(import.meta.env.VITE_FEATURE_CBDC, true),
 };
 
 export const isFeatureEnabled = (featureName) =>

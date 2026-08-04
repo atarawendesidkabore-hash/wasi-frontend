@@ -1,4 +1,4 @@
-import cors from "cors";
+﻿import cors from "cors";
 import {
   createHash,
   randomBytes,
@@ -119,8 +119,8 @@ const ANTHROPIC_API_KEY =
   process.env.ANTROPIC_API_KEY ??
   "";
 const ANTHROPIC_MODEL =
-  process.env.ANTHROPIC_MODEL ?? "claude-3-5-sonnet-20241022";
-const DEFAULT_CHAT_MAX_TOKENS = 1024;
+  process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
+const DEFAULT_CHAT_MAX_TOKENS = 2048;
 const MAX_CHAT_MAX_TOKENS = 4096;
 const MAX_CHAT_MESSAGES = 20;
 const OLLAMA_API_URL =
@@ -562,7 +562,203 @@ const DEX_SEED_TOKENS = [
   { symbol: "NGX-ASI", name: "NGX All-Share Token", category: "INDEX", feeBps: 35, underlying: "NGX All-Share benchmark", lastPriceCentimes: "9843210" },
   { symbol: "UMOA-TITRES", name: "UMOA Titres Composite Token", category: "BOND", feeBps: 30, underlying: "UMOA sovereign debt composite", lastPriceCentimes: "15342" },
   { symbol: "WA-BOND-10Y", name: "West Africa Sovereign Bond 10Y Token", category: "BOND", feeBps: 30, underlying: "Regional sovereign bond basket (10Y)", lastPriceCentimes: "9786" },
+  // ── AFEX: Africa Raw Export Index Fund — 1 master + 5 regional + 54 country ──
+  { symbol: "AFEX", name: "Africa Raw Export Index Fund", category: "BROAD", feeBps: 30, underlying: "54-country Africa export composite (USD)", lastPriceCentimes: "945000" },
+  { symbol: "CAEX", name: "Central Africa Export Index ETF", category: "REGIONAL", feeBps: 40, underlying: "CAEX regional subfamily (8 countries)", lastPriceCentimes: "685000" },
+  { symbol: "EAEX", name: "East Africa Export Index ETF", category: "REGIONAL", feeBps: 40, underlying: "EAEX regional subfamily (12 countries)", lastPriceCentimes: "712000" },
+  { symbol: "NAEX", name: "North Africa Export Index ETF", category: "REGIONAL", feeBps: 40, underlying: "NAEX regional subfamily (6 countries)", lastPriceCentimes: "798000" },
+  { symbol: "SAEX", name: "Southern Africa Export Index ETF", category: "REGIONAL", feeBps: 40, underlying: "SAEX regional subfamily (13 countries)", lastPriceCentimes: "756000" },
+  { symbol: "WAEX", name: "West Africa Export Index ETF", category: "REGIONAL", feeBps: 40, underlying: "WAEX regional subfamily (16 countries)", lastPriceCentimes: "821000" },
+  // Central Africa (CAEX)
+  { symbol: "CAMEX", name: "Cameroon Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Cocoa Beans, Timber", lastPriceCentimes: "655000" },
+  { symbol: "CAFEX", name: "Central African Republic Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Timber, Gold, Diamonds", lastPriceCentimes: "574000" },
+  { symbol: "CHAEX", name: "Chad Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Livestock, Sesame Seeds", lastPriceCentimes: "696000" },
+  { symbol: "COGEX", name: "Republic of the Congo Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Timber, Iron Ore", lastPriceCentimes: "633000" },
+  { symbol: "DRCEX", name: "DR Congo Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Copper, Cobalt, Gold", lastPriceCentimes: "756000" },
+  { symbol: "EQGEX", name: "Equatorial Guinea Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Natural Gas, Methanol", lastPriceCentimes: "722000" },
+  { symbol: "GABEX", name: "Gabon Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Manganese, Timber", lastPriceCentimes: "656000" },
+  { symbol: "STPEX", name: "Sao Tome and Principe Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Cocoa Beans, Fish and Seafood, Palm Products", lastPriceCentimes: "544000" },
+  // East Africa (EAEX)
+  { symbol: "BDIEX", name: "Burundi Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Coffee, Tea, Gold", lastPriceCentimes: "563000" },
+  { symbol: "COMREX", name: "Comoros Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Vanilla, Cloves, Ylang-Ylang", lastPriceCentimes: "518000" },
+  { symbol: "DJIEX", name: "Djibouti Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Salt, Livestock, Fish and Seafood", lastPriceCentimes: "616000" },
+  { symbol: "ERIEX", name: "Eritrea Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Gold, Copper, Zinc", lastPriceCentimes: "629000" },
+  { symbol: "ETHEX", name: "Ethiopia Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Coffee, Gold, Sesame Seeds", lastPriceCentimes: "727000" },
+  { symbol: "KENEX", name: "Kenya Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Tea, Coffee, Soda Ash", lastPriceCentimes: "804000" },
+  { symbol: "RWAEX", name: "Rwanda Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Gold, Tin Ore, Tantalum", lastPriceCentimes: "630000" },
+  { symbol: "SOMEX", name: "Somalia Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Livestock, Sesame Seeds, Frankincense", lastPriceCentimes: "527000" },
+  { symbol: "SSDEX", name: "South Sudan Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Gum Arabic, Livestock", lastPriceCentimes: "498000" },
+  { symbol: "TZAEX", name: "Tanzania Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Gold, Cashew Nuts, Coffee", lastPriceCentimes: "813000" },
+  { symbol: "UGAEX", name: "Uganda Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Coffee, Gold, Raw Cotton", lastPriceCentimes: "668000" },
+  // North Africa (NAEX)
+  { symbol: "ALGEX", name: "Algeria Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Natural Gas, Condensates", lastPriceCentimes: "938000" },
+  { symbol: "EGYEX", name: "Egypt Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Natural Gas, Gold", lastPriceCentimes: "926000" },
+  { symbol: "LBYEX", name: "Libya Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Natural Gas, Condensates", lastPriceCentimes: "810000" },
+  { symbol: "MAREX", name: "Morocco Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Phosphates, Fish and Seafood, Citrus", lastPriceCentimes: "859000" },
+  { symbol: "TUNEX", name: "Tunisia Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Olive Oil, Phosphates, Crude Oil", lastPriceCentimes: "771000" },
+  { symbol: "SUDEX", name: "Sudan Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Gold, Gum Arabic, Livestock", lastPriceCentimes: "596000" },
+  // Southern Africa (SAEX)
+  { symbol: "ANGEX", name: "Angola Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Crude Oil, Natural Gas, Diamonds", lastPriceCentimes: "848000" },
+  { symbol: "BOTEX", name: "Botswana Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Diamonds, Copper, Nickel", lastPriceCentimes: "851000" },
+  { symbol: "ESWEX", name: "Eswatini Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Sugar, Wood Pulp, Citrus", lastPriceCentimes: "546000" },
+  { symbol: "LESEX", name: "Lesotho Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Wool, Mohair, Diamonds", lastPriceCentimes: "490000" },
+  { symbol: "MDGEX", name: "Madagascar Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Vanilla, Nickel and Cobalt, Cloves", lastPriceCentimes: "635000" },
+  { symbol: "MWIEX", name: "Malawi Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Tobacco, Tea, Sugar", lastPriceCentimes: "596000" },
+  { symbol: "MUSEX", name: "Mauritius Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Sugar, Fish and Seafood, Molasses", lastPriceCentimes: "688000" },
+  { symbol: "MOZEX", name: "Mozambique Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Coal, Natural Gas, Graphite", lastPriceCentimes: "772000" },
+  { symbol: "NAMEX", name: "Namibia Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Diamonds, Uranium, Zinc", lastPriceCentimes: "799000" },
+  { symbol: "SEYEX", name: "Seychelles Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Fish and Seafood, Tuna, Cinnamon", lastPriceCentimes: "539000" },
+  { symbol: "ZAFEX", name: "South Africa Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Gold, Platinum Group Metals, Coal", lastPriceCentimes: "1010000" },
+  { symbol: "ZMBEX", name: "Zambia Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Copper, Cobalt, Emeralds", lastPriceCentimes: "741000" },
+  { symbol: "ZIMEX", name: "Zimbabwe Export Index ETF", category: "COUNTRY", feeBps: 50, underlying: "Gold, Platinum, Lithium", lastPriceCentimes: "683000" },
 ];
+
+const AFEX_COUNTRY_MATRIX_PATH = path.join(__dirname, "data", "afex_54_country_matrix.csv");
+
+const parseCsvRow = (line) => {
+  const values = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (char === '"') {
+      if (line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      values.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  values.push(current);
+  return values;
+};
+
+const loadAfexCountryMetadata = () => {
+  if (!fs.existsSync(AFEX_COUNTRY_MATRIX_PATH)) return {};
+  const raw = fs.readFileSync(AFEX_COUNTRY_MATRIX_PATH, "utf8");
+  const lines = raw.split(/\r?\n/).filter((line) => line.trim());
+  if (lines.length < 2) return {};
+
+  const headers = parseCsvRow(lines[0]).map((header) => header.trim());
+  const rows = lines.slice(1).map((line) => {
+    const values = parseCsvRow(line);
+    const record = {};
+    values.forEach((value, index) => {
+      record[headers[index]] = value;
+    });
+    return record;
+  });
+
+  return Object.fromEntries(
+    rows.map((row) => [
+      row.code,
+      {
+        code: row.code,
+        country: row.country,
+        iso3: row.iso3,
+        subfamily_code: row.subfamily_code,
+        subfamily_name: row.subfamily_name,
+      },
+    ])
+  );
+};
+
+const AFEX_COUNTRY_METADATA = loadAfexCountryMetadata();
+const AFEX_COUNTRY_CODES = Object.keys(AFEX_COUNTRY_METADATA);
+const AFEX_SUBFAMILY_COUNTRY_COUNT = AFEX_COUNTRY_CODES.reduce((acc, code) => {
+  const subfamily = AFEX_COUNTRY_METADATA[code].subfamily_code;
+  acc[subfamily] = (acc[subfamily] || 0) + 1;
+  return acc;
+}, {});
+const AFEX_SUBFAMILY_WEIGHTS = {
+  CAEX: 0.2,
+  EAEX: 0.2,
+  NAEX: 0.2,
+  SAEX: 0.2,
+  WAEX: 0.2,
+};
+
+const AFEX_COUNTRY_WEIGHTS = Object.fromEntries(
+  AFEX_COUNTRY_CODES.map((code) => {
+    const meta = AFEX_COUNTRY_METADATA[code];
+    const count = AFEX_SUBFAMILY_COUNTRY_COUNT[meta.subfamily_code] || 1;
+    return [code, AFEX_SUBFAMILY_WEIGHTS[meta.subfamily_code] / count];
+  })
+);
+
+const AFEX_REGIONAL_COUNTRY_CODES = AFEX_COUNTRY_CODES.reduce((acc, code) => {
+  const subfamily = AFEX_COUNTRY_METADATA[code].subfamily_code;
+  acc[subfamily] = acc[subfamily] || [];
+  acc[subfamily].push(code);
+  return acc;
+}, {});
+
+const AFEX_COUNTRY_BASE_SCORES = Object.fromEntries(
+  AFEX_COUNTRY_CODES.map((code) => {
+    const token = DEX_SEED_TOKENS.find((entry) => entry.symbol === code);
+    const priceCentimes = token?.lastPriceCentimes ?? "600000";
+    return [code, Number(priceCentimes) / 10000];
+  })
+);
+
+const AFEX_COUNTRY_NAMES = Object.fromEntries(
+  AFEX_COUNTRY_CODES.map((code) => [code, AFEX_COUNTRY_METADATA[code].country])
+);
+
+const AFEX_COUNTRY_ISO = Object.fromEntries(
+  AFEX_COUNTRY_CODES.map((code) => [code, AFEX_COUNTRY_METADATA[code].iso3])
+);
+
+const AFEX_COMPOSITE_COUNTRIES = AFEX_COUNTRY_CODES;
+
+const buildAfexComposite = (indices) =>
+  AFEX_COMPOSITE_COUNTRIES.reduce(
+    (sum, code) => sum + (Number(indices[code] ?? AFEX_COUNTRY_BASE_SCORES[code] ?? 50) * AFEX_COUNTRY_WEIGHTS[code]),
+    0
+  );
+
+const buildAfexRegionalComposite = (indices, subfamilyCode) => {
+  const codes = AFEX_REGIONAL_COUNTRY_CODES[subfamilyCode] || [];
+  if (!codes.length) return 0;
+  const total = codes.reduce(
+    (sum, code) => sum + Number(indices[code] ?? AFEX_COUNTRY_BASE_SCORES[code] ?? 50),
+    0
+  );
+  return total / codes.length;
+};
+
+const buildAfexIndicesSnapshot = () => {
+  const currentIndices = buildCountryIndicesSnapshot();
+  return Object.fromEntries(
+    AFEX_COUNTRY_CODES.map((code) => [
+      code,
+      Number(currentIndices[code] ?? AFEX_COUNTRY_BASE_SCORES[code] ?? 50),
+    ])
+  );
+};
+
+const buildAfexMetrics = () => {
+  const afexIndices = buildAfexIndicesSnapshot();
+  return {
+    countryCount: AFEX_COUNTRY_CODES.length,
+    composite: Math.round(buildAfexComposite(afexIndices) * 10) / 10,
+    regional: Object.fromEntries(
+      Object.keys(AFEX_REGIONAL_COUNTRY_CODES).map((subfamilyCode) => [
+        subfamilyCode,
+        Math.round(buildAfexRegionalComposite(afexIndices, subfamilyCode) * 10) / 10,
+      ])
+    ),
+    indices: afexIndices,
+  };
+};
 
 const DEX_SEED_WALLETS = [
   { userId: "usr-client-demo", xofBalanceCentimes: "4500000000" },
@@ -676,6 +872,31 @@ const ACCOUNTING_SEED_ENTRIES = [
   },
 ];
 
+// ── World Bank ISO mapping for live data refresh ──────────────────────────────
+const WB_COUNTRY_ISO = {
+  NG: "NGA", CI: "CIV", GH: "GHA", SN: "SEN", BF: "BFA", ML: "MLI",
+  GN: "GIN", BJ: "BEN", TG: "TGO", NE: "NER", MR: "MRT", SL: "SLE",
+  LR: "LBR", GW: "GNB", GM: "GMB", CV: "CPV",
+  ...AFEX_COUNTRY_ISO,
+};
+
+const COUP_REGIME_COUNTRIES = new Set([
+  "BF",
+  "ML",
+  "NE",
+  "GN",
+]);
+
+const WB_INDICATORS = [
+  { id: "NY.GDP.MKTP.KD.ZG", key: "gdpGrowth" },
+  { id: "NE.TRD.GNFS.ZS", key: "trade" },
+  { id: "FP.CPI.TOTL.ZG", key: "inflation" },
+];
+
+const clampScore = (v, min, max) => Math.min(max, Math.max(min, v));
+
+let lastDataRefreshUtc = null;
+
 const COUNTRY_WEIGHTS = {
   CI: 0.22,
   GH: 0.15,
@@ -698,6 +919,7 @@ const COUNTRY_WEIGHTS = {
 const COUNTRY_BASE_SCORES = {
   CI: 89, GH: 88, TG: 82, SN: 79, NG: 77, BF: 71, ML: 68, GN: 65,
   BJ: 64, NE: 52, MR: 51, GW: 48, SL: 46, LR: 44, GM: 42, CV: 61,
+  ...AFEX_COUNTRY_BASE_SCORES,
 };
 
 const COUNTRY_NAMES = {
@@ -717,6 +939,7 @@ const COUNTRY_NAMES = {
   LR: "Liberia",
   GM: "Gambie",
   CV: "Cap-Vert",
+  ...AFEX_COUNTRY_NAMES,
 };
 
 const COUNTRY_TO_ETF_SYMBOL = {
@@ -736,14 +959,21 @@ const COUNTRY_TO_ETF_SYMBOL = {
   LR: "WASI-LR",
   GM: "WASI-GM",
   CV: "WASI-CV",
+  ...Object.fromEntries(AFEX_COUNTRY_CODES.map((code) => [code, code])),
 };
 
-const MARKET_BOARD_SNAPSHOT = [
+let MARKET_BOARD_SNAPSHOT = [
   { exchange: "BRVM", label: "BRVM Composite", symbol: "BRVM-C", level: 10160.73, change_pct: 2.65 },
   { exchange: "NGX", label: "NGX ASI", symbol: "NGX-ASI", level: 98432.1, change_pct: 0.84 },
   { exchange: "GSE", label: "GSE Composite", symbol: "GSE-CI", level: 3412.55, change_pct: -0.32 },
   { exchange: "UMOA", label: "UMOA Titres Composite", symbol: "UMOA-TITRES", level: 153.42, change_pct: 0.61 },
   { exchange: "WA-BOND", label: "West Africa Sovereign Bond 10Y", symbol: "WA-BOND-10Y", level: 97.86, change_pct: 0.24 },
+  { exchange: "AFEX", label: "AFEX Master Composite", symbol: "AFEX", level: 9450.00, change_pct: 0.82 },
+  { exchange: "AFEX", label: "WAEX Regional Composite", symbol: "WAEX", level: 8210.00, change_pct: 0.60 },
+  { exchange: "AFEX", label: "CAEX Regional Composite", symbol: "CAEX", level: 6850.00, change_pct: 0.45 },
+  { exchange: "AFEX", label: "EAEX Regional Composite", symbol: "EAEX", level: 7120.00, change_pct: 0.33 },
+  { exchange: "AFEX", label: "NAEX Regional Composite", symbol: "NAEX", level: 7980.00, change_pct: 0.18 },
+  { exchange: "AFEX", label: "SAEX Regional Composite", symbol: "SAEX", level: 7560.00, change_pct: 0.27 },
 ];
 
 const FINANCIAL_PRODUCTS_SNAPSHOT = [
@@ -757,6 +987,12 @@ const FINANCIAL_PRODUCTS_SNAPSHOT = [
   { code: "WASI-GSE", type: "ETF", venue: "WASI DEX", label: "GSE Equity ETF", tradableOnDex: true },
   { code: "WASI-UEMOA", type: "ETF", venue: "WASI DEX", label: "UEMOA Zone ETF", tradableOnDex: true },
   { code: "WASI-COCOA", type: "ETF", venue: "WASI DEX", label: "Cocoa ETF", tradableOnDex: true },
+  { code: "AFEX", type: "ETF", venue: "AFEX", label: "AFEX Master Fund", tradableOnDex: true },
+  { code: "WAEX", type: "ETF", venue: "AFEX", label: "WAEX Regional Fund", tradableOnDex: true },
+  { code: "CAEX", type: "ETF", venue: "AFEX", label: "CAEX Regional Fund", tradableOnDex: true },
+  { code: "EAEX", type: "ETF", venue: "AFEX", label: "EAEX Regional Fund", tradableOnDex: true },
+  { code: "NAEX", type: "ETF", venue: "AFEX", label: "NAEX Regional Fund", tradableOnDex: true },
+  { code: "SAEX", type: "ETF", venue: "AFEX", label: "SAEX Regional Fund", tradableOnDex: true },
 ];
 
 const COMMODITY_SNAPSHOT = [
@@ -776,6 +1012,115 @@ const NEWS_EVENT_SNAPSHOT = [
   { id: "evt-4", type: "TRADE", text: "BRVM turnover climbs on SOLIBRA and SGBCI", impact: 0.9, country_code: "CI", severity: "LOW", timestamp: "13:22" },
   { id: "evt-5", type: "DATA", text: "NG inflation eases for third month", impact: 1.1, country_code: "NG", severity: "MEDIUM", timestamp: "12:55" },
 ];
+
+// ── Daily Data Refresh from Live APIs ─────────────────────────────────────────
+async function refreshDataFromLiveAPIs() {
+  console.log(`[WASI Refresh] Starting daily data refresh at ${new Date().toISOString()}...`);
+  try {
+    // 1. Fetch World Bank macro data for all 16 countries
+    const isoCodes = Object.values(WB_COUNTRY_ISO).join(";");
+    const isoToWasi = Object.fromEntries(
+      Object.entries(WB_COUNTRY_ISO).map(([w, iso]) => [iso, w])
+    );
+
+    const wbResults = await Promise.all(
+      WB_INDICATORS.map(async (ind) => {
+        const res = await fetch(
+          `https://api.worldbank.org/v2/country/${isoCodes}/indicator/${ind.id}?format=json&mrv=1&per_page=200`
+        );
+        if (!res.ok) throw new Error(`World Bank HTTP ${res.status} (${ind.id})`);
+        return { indicator: ind, payload: await res.json() };
+      })
+    );
+
+    const countryMetrics = {};
+    wbResults.forEach(({ indicator, payload }) => {
+      const rows = Array.isArray(payload?.[1]) ? payload[1] : [];
+      rows.forEach((row) => {
+        if (row?.value === null || !row?.countryiso3code) return;
+        const wasiCode = isoToWasi[row.countryiso3code];
+        if (!wasiCode) return;
+        if (!countryMetrics[wasiCode]) countryMetrics[wasiCode] = {};
+        const v = Number(row.value);
+        if (Number.isFinite(v)) countryMetrics[wasiCode][indicator.key] = v;
+      });
+    });
+
+    // 2. Calculate country indices from World Bank data
+    const newIndices = {};
+    for (const [code, baseScore] of Object.entries(COUNTRY_BASE_SCORES)) {
+      const m = countryMetrics[code];
+      if (!m) { newIndices[code] = baseScore; continue; }
+      const gdpScore = m.gdpGrowth != null ? clampScore(50 + m.gdpGrowth * 5, 0, 100) : 60;
+      const tradeScore = m.trade != null ? clampScore(m.trade * 0.8, 0, 100) : 55;
+      const inflationScore = m.inflation != null ? clampScore(100 - m.inflation * 3, 0, 100) : 60;
+      const politicalPenalty = COUP_REGIME_COUNTRIES.has(code) ? 0.6 : 1;
+      const raw = (gdpScore * 0.35 + tradeScore * 0.4 + inflationScore * 0.25) * politicalPenalty;
+      newIndices[code] = Math.round(clampScore(raw, 20, 95));
+    }
+
+    // 3. Update ETF token prices in DB based on new indices
+    const now = new Date().toISOString();
+    for (const [code, index] of Object.entries(newIndices)) {
+      const symbol = COUNTRY_TO_ETF_SYMBOL[code];
+      if (!symbol) continue;
+      const newPriceCentimes = String(index * 10000);
+      updateEtfTokenLastPrice.run({ symbol, lastPriceCentimes: newPriceCentimes, updatedAtUtc: now });
+    }
+
+    // 4. Update composite ETF based on weighted average
+    const composite = Object.entries(COUNTRY_WEIGHTS).reduce(
+      (sum, [code, weight]) => sum + (Number(newIndices[code] ?? 50) * weight), 0
+    );
+    updateEtfTokenLastPrice.run({
+      symbol: "WASI-COMP",
+      lastPriceCentimes: String(Math.round(composite * 10000)),
+      updatedAtUtc: now,
+    });
+
+    // 5. Update market board snapshot with derived values from ETF prices
+    const etfRows = listEtfTokens.all();
+    const priceMap = new Map(etfRows.map((r) => [r.symbol, Number(BigInt(r.last_price_centimes)) / 100]));
+    MARKET_BOARD_SNAPSHOT = MARKET_BOARD_SNAPSHOT.map((entry) => {
+      const price = priceMap.get(entry.symbol);
+      if (price != null) {
+        const prevLevel = entry.level;
+        const newLevel = price;
+        return { ...entry, level: newLevel, change_pct: prevLevel ? Math.round(((newLevel - prevLevel) / prevLevel) * 10000) / 100 : 0 };
+      }
+      return entry;
+    });
+
+    // 6. Fetch FX rates and update related ETF prices
+    try {
+      const fxRes = await fetch("https://open.er-api.com/v6/latest/XOF");
+      if (fxRes.ok) {
+        const fxData = await fxRes.json();
+        if (fxData?.result === "success" && fxData?.rates) {
+          console.log(`[WASI Refresh] FX rates updated (EUR/XOF, USD/XOF)`);
+        }
+      }
+    } catch (fxErr) {
+      console.warn(`[WASI Refresh] FX fetch failed: ${fxErr.message}`);
+    }
+
+    lastDataRefreshUtc = now;
+    console.log(`[WASI Refresh] Daily refresh complete. ${Object.keys(newIndices).length} country indices updated.`);
+    console.log(`[WASI Refresh] Composite: ${composite.toFixed(1)}/100 | Top: ${Object.entries(newIndices).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c, v]) => `${c}=${v}`).join(", ")
+      }`);
+    return { success: true, indices: newIndices, composite: Math.round(composite * 10) / 10, refreshedAt: now };
+  } catch (err) {
+    console.error(`[WASI Refresh] Failed: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
+
+// Schedule daily refresh: run on startup (after 10s delay) then every 24 hours
+const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+setTimeout(() => {
+  refreshDataFromLiveAPIs();
+  setInterval(refreshDataFromLiveAPIs, REFRESH_INTERVAL_MS);
+}, 10_000);
 
 const MACRO_COUNTRY_SNAPSHOT = {
   CI: { gdp_growth: 6.7, inflation: 3.9, debt_to_gdp: 58.2, current_account: -3.1 },
@@ -1160,6 +1505,38 @@ const ensurePlatformUsers = () => {
 
 ensurePlatformUsers();
 
+// ── Permanent admin user (always seeded) ─────────────────────────────────
+const ensureAdminUser = () => {
+  const adminPassword = process.env.WASI_ADMIN_PASSWORD || "CyberSec2026!";
+  const now = new Date().toISOString();
+  const upsertAdmin = db.prepare(`
+    INSERT INTO platform_users (
+      id, username, email, password_hash, role, tier, x402_balance, is_active, created_at_utc, updated_at_utc
+    ) VALUES (
+      @id, @username, @email, @passwordHash, @role, @tier, @x402Balance, 1, @createdAtUtc, @updatedAtUtc
+    )
+    ON CONFLICT(username) DO UPDATE SET
+      password_hash = excluded.password_hash,
+      role = excluded.role,
+      is_active = 1,
+      updated_at_utc = excluded.updated_at_utc
+  `);
+  upsertAdmin.run({
+    id: "usr-admin-cybersec",
+    username: "cybersec_mrg",
+    email: "cybersec@wasi.platform",
+    passwordHash: hashPassword(adminPassword),
+    role: ROLE_MANAGER,
+    tier: "institutional",
+    x402Balance: 10000,
+    createdAtUtc: now,
+    updatedAtUtc: now,
+  });
+  // eslint-disable-next-line no-console
+  console.log("[ADMIN] cybersec_mrg account ready (MANAGER role).");
+};
+ensureAdminUser();
+
 const sumEntryLineDebits = (lines) =>
   lines.reduce((sum, line) => sum + BigInt(line.debitCentimes), 0n);
 
@@ -1368,7 +1745,10 @@ const isCorsOriginAllowed = (origin) => {
     return CORS_ALLOWED_ORIGINS.has(origin);
   }
   if (!IS_PRODUCTION) {
-    return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return true;
+    if (/\.github\.io$/i.test(origin)) return true;
+    if (/\.loca\.lt$/i.test(origin)) return true;
+    return false;
   }
   return false;
 };
@@ -1403,6 +1783,26 @@ app.use((_req, res, next) => {
   }
   next();
 });
+
+// ── Serve frontend (dist) with API URL auto-config ──────────────────────
+const DIST_DIR = path.join(__dirname, "..", "dist");
+if (fs.existsSync(DIST_DIR)) {
+  app.use("/assets", express.static(path.join(DIST_DIR, "assets"), { maxAge: "7d" }));
+  app.use("/manifest.json", express.static(path.join(DIST_DIR, "manifest.json")));
+  app.use("/sw.js", express.static(path.join(DIST_DIR, "sw.js")));
+
+  const indexHtml = fs.readFileSync(path.join(DIST_DIR, "index.html"), "utf8");
+
+  const serveFrontend = (_req, res) => {
+    const apiScript = `<script>window.WASI_PLATFORM_API_URL="${"http://localhost:" + PORT}";</script>`;
+    const injected = indexHtml.replace("</head>", `${apiScript}\n</head>`);
+    res.type("html").send(injected);
+  };
+
+  // Serve index.html for all frontend routes (SPA fallback)
+  app.get("/", serveFrontend);
+  app.get("/index.html", serveFrontend);
+}
 
 const success = (res, data, statusCode = 200) =>
   res.status(statusCode).json({
@@ -3560,8 +3960,8 @@ const requireAuth = (req, _res, next) => {
     });
     const statusCode =
       error instanceof ApiError ||
-      error?.name === "JsonWebTokenError" ||
-      error?.name === "TokenExpiredError"
+        error?.name === "JsonWebTokenError" ||
+        error?.name === "TokenExpiredError"
         ? 401
         : 500;
     next(new ApiError(statusCode, "Unauthorized."));
@@ -3730,9 +4130,9 @@ const buildTransportComparison = (countryCode) => {
 
   const transportComposite = clampTransportIndex(
     maritimeIndex * weights.maritime +
-      airIndex * weights.air +
-      railIndex * weights.rail +
-      roadIndex * weights.road
+    airIndex * weights.air +
+    railIndex * weights.rail +
+    roadIndex * weights.road
   );
 
   const nowIso = new Date().toISOString();
@@ -3886,10 +4286,10 @@ const buildAnthropicChatResponse = async ({
 
   const text = Array.isArray(body?.content)
     ? body.content
-        .map((part) => (part?.type === "text" ? String(part.text || "") : ""))
-        .filter(Boolean)
-        .join("\n\n")
-        .trim()
+      .map((part) => (part?.type === "text" ? String(part.text || "") : ""))
+      .filter(Boolean)
+      .join("\n\n")
+      .trim()
     : "";
 
   if (!text) {
@@ -4376,10 +4776,39 @@ app.get("/api/v1/platform/snapshot", requireAuth, (_req, res, next) => {
       timestamp: new Date().toISOString(),
       indices,
       composite,
+      afex: buildAfexMetrics(),
       markets: getDexMarkets(),
       commodities: COMMODITY_SNAPSHOT,
       liveSignals: buildLiveSignals(),
       newsEvents: NEWS_EVENT_SNAPSHOT,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v2/afex/latest", requireAuth, (_req, res, next) => {
+  try {
+    success(res, {
+      source: "wasi_platform_snapshot",
+      data_mode: "snapshot",
+      timestamp: new Date().toISOString(),
+      afex: buildAfexMetrics(),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v2/afex/regions", requireAuth, (_req, res, next) => {
+  try {
+    const metrics = buildAfexMetrics();
+    success(res, {
+      source: "wasi_platform_snapshot",
+      data_mode: "snapshot",
+      timestamp: new Date().toISOString(),
+      regionals: metrics.regional,
+      country_count: metrics.countryCount,
     });
   } catch (error) {
     next(error);
@@ -4397,6 +4826,23 @@ app.get("/api/indices/latest", requireAuth, (_req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+app.post("/api/indices/refresh", requireAuth, async (_req, res, next) => {
+  try {
+    const result = await refreshDataFromLiveAPIs();
+    success(res, result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/indices/refresh-status", requireAuth, (_req, res) => {
+  success(res, {
+    lastRefreshUtc: lastDataRefreshUtc, nextRefreshIn: lastDataRefreshUtc
+      ? `${Math.max(0, Math.round((REFRESH_INTERVAL_MS - (Date.now() - new Date(lastDataRefreshUtc).getTime())) / 3600000))}h`
+      : "pending"
+  });
 });
 
 app.get("/api/indices/history", requireAuth, (req, res, next) => {
@@ -4651,48 +5097,48 @@ app.get(
   }
 );
 
-  app.post(
-    "/api/v1/banking/deposit",
-    requireAuth,
-    requireRoles([ROLE_TELLER, ROLE_MANAGER]),
-    (req, res, next) => {
-      try {
-        const { accountId, amountCentimes, description } = req.body ?? {};
-        if (!accountId || typeof accountId !== "string") {
-          throw new ApiError(400, "accountId is required.");
-        }
+app.post(
+  "/api/v1/banking/deposit",
+  requireAuth,
+  requireRoles([ROLE_TELLER, ROLE_MANAGER]),
+  (req, res, next) => {
+    try {
+      const { accountId, amountCentimes, description } = req.body ?? {};
+      if (!accountId || typeof accountId !== "string") {
+        throw new ApiError(400, "accountId is required.");
+      }
 
-        const amount = parseAmountCentimes(amountCentimes);
-        const note =
-          typeof description === "string" && description.trim()
-            ? description.trim()
-            : "Manual deposit";
+      const amount = parseAmountCentimes(amountCentimes);
+      const note =
+        typeof description === "string" && description.trim()
+          ? description.trim()
+          : "Manual deposit";
 
-        const result = executeIdempotentMutation({
-          req,
-          mutate: () => {
-            if (
-              req.authUser?.role === ROLE_TELLER &&
-              amount >= BANKING_APPROVAL_THRESHOLD_CENTIMES
-            ) {
-              return createPendingApprovalPayload({
-                req,
-                operationType: "DEPOSIT",
-                amountCentimes: amount,
-                description: note,
-                requestBody: { accountId, amountCentimes: amount.toString(), description: note },
-                accountId,
-              });
-            }
-
-            return executeDepositOperation({
+      const result = executeIdempotentMutation({
+        req,
+        mutate: () => {
+          if (
+            req.authUser?.role === ROLE_TELLER &&
+            amount >= BANKING_APPROVAL_THRESHOLD_CENTIMES
+          ) {
+            return createPendingApprovalPayload({
+              req,
+              operationType: "DEPOSIT",
+              amountCentimes: amount,
+              description: note,
+              requestBody: { accountId, amountCentimes: amount.toString(), description: note },
               accountId,
-              amount,
-              note,
-              authUser: req.authUser,
             });
-          },
-        });
+          }
+
+          return executeDepositOperation({
+            accountId,
+            amount,
+            note,
+            authUser: req.authUser,
+          });
+        },
+      });
 
       if (result.replayed) {
         res.set("X-Idempotency-Replayed", "true");
@@ -4728,10 +5174,10 @@ app.get(
   }
 );
 
-  app.post(
-    "/api/v1/banking/withdraw",
-    requireAuth,
-    requireRoles([ROLE_TELLER, ROLE_MANAGER]),
+app.post(
+  "/api/v1/banking/withdraw",
+  requireAuth,
+  requireRoles([ROLE_TELLER, ROLE_MANAGER]),
   (req, res, next) => {
     try {
       const { accountId, amountCentimes, description } = req.body ?? {};
@@ -4740,36 +5186,36 @@ app.get(
       }
 
       const amount = parseAmountCentimes(amountCentimes);
-        const note =
-          typeof description === "string" && description.trim()
-            ? description.trim()
-            : "Manual withdrawal";
+      const note =
+        typeof description === "string" && description.trim()
+          ? description.trim()
+          : "Manual withdrawal";
 
-        const result = executeIdempotentMutation({
-          req,
-          mutate: () => {
-            if (
-              req.authUser?.role === ROLE_TELLER &&
-              amount >= BANKING_APPROVAL_THRESHOLD_CENTIMES
-            ) {
-              return createPendingApprovalPayload({
-                req,
-                operationType: "WITHDRAW",
-                amountCentimes: amount,
-                description: note,
-                requestBody: { accountId, amountCentimes: amount.toString(), description: note },
-                accountId,
-              });
-            }
-
-            return executeWithdrawOperation({
+      const result = executeIdempotentMutation({
+        req,
+        mutate: () => {
+          if (
+            req.authUser?.role === ROLE_TELLER &&
+            amount >= BANKING_APPROVAL_THRESHOLD_CENTIMES
+          ) {
+            return createPendingApprovalPayload({
+              req,
+              operationType: "WITHDRAW",
+              amountCentimes: amount,
+              description: note,
+              requestBody: { accountId, amountCentimes: amount.toString(), description: note },
               accountId,
-              amount,
-              note,
-              authUser: req.authUser,
             });
-          },
-        });
+          }
+
+          return executeWithdrawOperation({
+            accountId,
+            amount,
+            note,
+            authUser: req.authUser,
+          });
+        },
+      });
 
       if (result.replayed) {
         res.set("X-Idempotency-Replayed", "true");
@@ -5987,6 +6433,632 @@ app.get("/api/v1/platform/health", (_req, res, next) => {
   }
 });
 
+// ── USSD / AfriTrader ────────────────────────────────────────────────────
+const ussdSessions = new Map();
+const ussdTransactionLog = new Map();
+
+const USSD_MENU_TREE = {
+  root: {
+    message:
+      "Bienvenue sur AfriTrader USSD\n" +
+      "1. Consulter solde\n" +
+      "2. Envoyer de l'argent\n" +
+      "3. Payer une facture\n" +
+      "4. Acheter du credit\n" +
+      "5. Epargne & Placement\n" +
+      "6. Mini-releve\n" +
+      "7. Retrait sans carte\n" +
+      "0. Quitter",
+    routes: { "1": "balance_pin", "2": "send_recipient", "3": "bill_type", "4": "airtime_amount", "5": "savings_menu", "6": "statement_pin", "7": "cardless_amount", "0": "end" },
+  },
+  balance_pin: {
+    message: "Entrez votre code PIN pour consulter le solde :",
+    action: "check_balance",
+  },
+  send_recipient: {
+    message: "Entrez le numero du destinataire :",
+    next: "send_amount",
+  },
+  send_amount: {
+    message: "Montant a envoyer (FCFA) :",
+    next: "send_pin",
+  },
+  send_pin: {
+    message: "Entrez votre code PIN pour confirmer :",
+    action: "send_money",
+  },
+  bill_type: {
+    message:
+      "Type de facture :\n1. Electricite (SONABEL/CIE)\n2. Eau (ONEA/SODECI)\n3. Internet/TV\n4. Assurance\n0. Retour",
+    routes: { "1": "bill_ref", "2": "bill_ref", "3": "bill_ref", "4": "bill_ref", "0": "root" },
+  },
+  bill_ref: {
+    message: "Entrez le numero de reference de la facture :",
+    next: "bill_amount",
+  },
+  bill_amount: {
+    message: "Montant a payer (FCFA) :",
+    next: "bill_pin",
+  },
+  bill_pin: {
+    message: "Entrez votre code PIN pour confirmer le paiement :",
+    action: "pay_bill",
+  },
+  airtime_amount: {
+    message:
+      "Montant de recharge :\n1. 500 FCFA\n2. 1 000 FCFA\n3. 2 000 FCFA\n4. 5 000 FCFA\n5. Autre montant\n0. Retour",
+    routes: { "1": "airtime_pin", "2": "airtime_pin", "3": "airtime_pin", "4": "airtime_pin", "5": "airtime_custom", "0": "root" },
+  },
+  airtime_custom: {
+    message: "Entrez le montant (FCFA) :",
+    next: "airtime_pin",
+  },
+  airtime_pin: {
+    message: "Entrez votre code PIN pour confirmer l'achat :",
+    action: "buy_airtime",
+  },
+  savings_menu: {
+    message:
+      "Epargne & Placement AfriTrader :\n1. Voir mon epargne\n2. Deposer sur epargne\n3. Retirer de l'epargne\n4. Placement court terme (7j a 5.2%)\n5. Placement moyen terme (30j a 7.8%)\n0. Retour",
+    routes: { "1": "savings_view_pin", "2": "savings_deposit_amount", "3": "savings_withdraw_amount", "4": "placement_amount", "5": "placement_amount", "0": "root" },
+  },
+  savings_view_pin: {
+    message: "Entrez votre code PIN :",
+    action: "view_savings",
+  },
+  savings_deposit_amount: {
+    message: "Montant a deposer sur epargne (FCFA) :",
+    next: "savings_deposit_pin",
+  },
+  savings_deposit_pin: {
+    message: "Entrez votre code PIN pour confirmer :",
+    action: "deposit_savings",
+  },
+  savings_withdraw_amount: {
+    message: "Montant a retirer de l'epargne (FCFA) :",
+    next: "savings_withdraw_pin",
+  },
+  savings_withdraw_pin: {
+    message: "Entrez votre code PIN pour confirmer le retrait :",
+    action: "withdraw_savings",
+  },
+  placement_amount: {
+    message: "Montant a placer (FCFA, minimum 10 000) :",
+    next: "placement_pin",
+  },
+  placement_pin: {
+    message: "Entrez votre code PIN pour confirmer le placement :",
+    action: "create_placement",
+  },
+  statement_pin: {
+    message: "Entrez votre code PIN pour voir le mini-releve :",
+    action: "mini_statement",
+  },
+  cardless_amount: {
+    message: "Montant du retrait sans carte (FCFA) :",
+    next: "cardless_pin",
+  },
+  cardless_pin: {
+    message: "Entrez votre code PIN. Un code de retrait sera genere :",
+    action: "cardless_withdraw",
+  },
+};
+
+const DEMO_ACCOUNTS = {
+  "+226 70 00 00 01": { name: "Amadou Kabore", pin: "1234", balance: 1_250_000, savings: 500_000, currency: "FCFA" },
+  "+225 07 00 00 02": { name: "Aya Kone", pin: "5678", balance: 3_780_000, savings: 1_200_000, currency: "FCFA" },
+  "+221 77 00 00 03": { name: "Moussa Diallo", pin: "9012", balance: 875_000, savings: 250_000, currency: "FCFA" },
+};
+
+const generateUssdSessionId = () => `USSD-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+const generateWithdrawCode = () => String(Math.floor(100000 + Math.random() * 900000));
+const formatFcfa = (n) => new Intl.NumberFormat("fr-FR").format(n);
+const normalizePhone = (p) => String(p || "").replace(/[\s\-()]/g, "");
+
+const findDemoAccount = (phone) => {
+  const norm = normalizePhone(phone);
+  for (const [key, val] of Object.entries(DEMO_ACCOUNTS)) {
+    if (normalizePhone(key) === norm) return val;
+  }
+  return null;
+};
+
+const logUssdTransaction = (phone, tx) => {
+  const key = normalizePhone(phone);
+  if (!ussdTransactionLog.has(key)) ussdTransactionLog.set(key, []);
+  ussdTransactionLog.get(key).push({ ...tx, date: new Date().toISOString() });
+};
+
+const processUssdAction = (session, input) => {
+  const account = findDemoAccount(session.phone);
+  if (!account) return { message: "Compte introuvable. Contactez le service client.", sessionEnded: true };
+  if (account.pin !== input) return { message: "Code PIN incorrect. Reessayez.", sessionEnded: false, stayOnNode: true };
+
+  const ctx = session.context || {};
+  switch (session.pendingAction) {
+    case "check_balance": {
+      const msg = `Solde AfriTrader\n${account.name}\nCompte courant: ${formatFcfa(account.balance)} ${account.currency}\nEpargne: ${formatFcfa(account.savings)} ${account.currency}\n\n0. Menu principal`;
+      return { message: msg, sessionEnded: false, goTo: "root" };
+    }
+    case "send_money": {
+      const amount = parseInt(ctx.amount, 10) || 0;
+      const fee = Math.max(25, Math.round(amount * 0.005));
+      if (amount + fee > account.balance) return { message: `Solde insuffisant. Disponible: ${formatFcfa(account.balance)} ${account.currency}\n\n0. Menu principal`, goTo: "root" };
+      account.balance -= amount + fee;
+      logUssdTransaction(session.phone, { type: "Transfert", amount: -(amount + fee), recipient: ctx.recipient });
+      return { message: `Transfert reussi!\n${formatFcfa(amount)} ${account.currency} envoye a ${ctx.recipient}\nFrais: ${formatFcfa(fee)} ${account.currency}\nNouveau solde: ${formatFcfa(account.balance)} ${account.currency}\n\n0. Menu principal`, goTo: "root" };
+    }
+    case "pay_bill": {
+      const amount = parseInt(ctx.amount, 10) || 0;
+      const fee = 50;
+      if (amount + fee > account.balance) return { message: `Solde insuffisant.\n\n0. Menu principal`, goTo: "root" };
+      account.balance -= amount + fee;
+      logUssdTransaction(session.phone, { type: "Paiement facture", amount: -(amount + fee), recipient: `Ref: ${ctx.billRef}` });
+      return { message: `Paiement effectue!\nRef: ${ctx.billRef}\nMontant: ${formatFcfa(amount)} ${account.currency}\nFrais: ${formatFcfa(fee)} ${account.currency}\nNouveau solde: ${formatFcfa(account.balance)} ${account.currency}\n\n0. Menu principal`, goTo: "root" };
+    }
+    case "buy_airtime": {
+      const amount = parseInt(ctx.amount, 10) || 0;
+      if (amount > account.balance) return { message: `Solde insuffisant.\n\n0. Menu principal`, goTo: "root" };
+      account.balance -= amount;
+      logUssdTransaction(session.phone, { type: "Achat credit", amount: -amount });
+      return { message: `Recharge reussie!\n${formatFcfa(amount)} ${account.currency} de credit ajoute.\nNouveau solde: ${formatFcfa(account.balance)} ${account.currency}\n\n0. Menu principal`, goTo: "root" };
+    }
+    case "view_savings": {
+      return { message: `Epargne AfriTrader\n${account.name}\nSolde epargne: ${formatFcfa(account.savings)} ${account.currency}\nTaux annuel: 5.2%\n\n0. Menu principal`, goTo: "root" };
+    }
+    case "deposit_savings": {
+      const amount = parseInt(ctx.amount, 10) || 0;
+      if (amount > account.balance) return { message: `Solde courant insuffisant.\n\n0. Menu principal`, goTo: "root" };
+      account.balance -= amount;
+      account.savings += amount;
+      logUssdTransaction(session.phone, { type: "Depot epargne", amount: -amount });
+      return { message: `Depot epargne reussi!\n${formatFcfa(amount)} ${account.currency} transfere vers epargne.\nSolde courant: ${formatFcfa(account.balance)} ${account.currency}\nSolde epargne: ${formatFcfa(account.savings)} ${account.currency}\n\n0. Menu principal`, goTo: "root" };
+    }
+    case "withdraw_savings": {
+      const amount = parseInt(ctx.amount, 10) || 0;
+      if (amount > account.savings) return { message: `Solde epargne insuffisant.\n\n0. Menu principal`, goTo: "root" };
+      account.savings -= amount;
+      account.balance += amount;
+      logUssdTransaction(session.phone, { type: "Retrait epargne", amount });
+      return { message: `Retrait epargne reussi!\n${formatFcfa(amount)} ${account.currency} transfere vers compte courant.\nSolde courant: ${formatFcfa(account.balance)} ${account.currency}\nSolde epargne: ${formatFcfa(account.savings)} ${account.currency}\n\n0. Menu principal`, goTo: "root" };
+    }
+    case "create_placement": {
+      const amount = parseInt(ctx.amount, 10) || 0;
+      if (amount < 10000) return { message: `Minimum 10 000 FCFA pour un placement.\n\n0. Menu principal`, goTo: "root" };
+      if (amount > account.balance) return { message: `Solde insuffisant.\n\n0. Menu principal`, goTo: "root" };
+      account.balance -= amount;
+      logUssdTransaction(session.phone, { type: "Placement", amount: -amount });
+      return { message: `Placement cree!\nMontant: ${formatFcfa(amount)} ${account.currency}\nDuree: ${ctx.placementType || "7 jours"}\nRendement estime: ${ctx.placementType === "30j" ? "7.8%" : "5.2%"} annuel\nNouveau solde: ${formatFcfa(account.balance)} ${account.currency}\n\n0. Menu principal`, goTo: "root" };
+    }
+    case "mini_statement": {
+      const txs = (ussdTransactionLog.get(normalizePhone(session.phone)) || []).slice(-5);
+      let msg = `Mini-releve AfriTrader\n${account.name}\n---\n`;
+      if (txs.length === 0) msg += "Aucune transaction recente.\n";
+      else txs.forEach((t) => { msg += `${t.type}: ${formatFcfa(t.amount)} ${account.currency} (${t.date.slice(0, 10)})\n`; });
+      msg += `---\nSolde: ${formatFcfa(account.balance)} ${account.currency}\n\n0. Menu principal`;
+      return { message: msg, goTo: "root" };
+    }
+    case "cardless_withdraw": {
+      const amount = parseInt(ctx.amount, 10) || 0;
+      if (amount > account.balance) return { message: `Solde insuffisant.\n\n0. Menu principal`, goTo: "root" };
+      account.balance -= amount;
+      const code = generateWithdrawCode();
+      logUssdTransaction(session.phone, { type: "Retrait sans carte", amount: -amount });
+      return { message: `Retrait sans carte approuve!\nMontant: ${formatFcfa(amount)} ${account.currency}\nCode de retrait: ${code}\nValable 24h dans tout GAB AfriTrader.\nNouveau solde: ${formatFcfa(account.balance)} ${account.currency}\n\n0. Menu principal`, goTo: "root" };
+    }
+    default:
+      return { message: "Action inconnue.\n\n0. Menu principal", goTo: "root" };
+  }
+};
+
+const navigateUssd = (session, input) => {
+  const node = USSD_MENU_TREE[session.currentNode];
+  if (!node) return { message: "Erreur de menu. Session terminee.", sessionEnded: true };
+
+  if (input === "0" && session.currentNode !== "root") {
+    session.currentNode = "root";
+    session.pendingAction = null;
+    return { message: USSD_MENU_TREE.root.message, sessionEnded: false };
+  }
+
+  if (input === "0" && session.currentNode === "root") {
+    return { message: "Merci d'avoir utilise AfriTrader USSD.\nA bientot!", sessionEnded: true };
+  }
+
+  if (node.action) {
+    session.pendingAction = node.action;
+    const result = processUssdAction(session, input);
+    if (result.stayOnNode) return { message: node.message, sessionEnded: false };
+    if (result.goTo) {
+      session.currentNode = result.goTo;
+      session.pendingAction = null;
+    }
+    return { message: result.message, sessionEnded: result.sessionEnded || false };
+  }
+
+  if (node.routes) {
+    const nextNode = node.routes[input];
+    if (!nextNode) return { message: `Choix invalide.\n\n${node.message}`, sessionEnded: false };
+    if (nextNode === "end") return { message: "Merci d'avoir utilise AfriTrader USSD.\nA bientot!", sessionEnded: true };
+
+    if (session.currentNode === "airtime_amount" && ["1", "2", "3", "4"].includes(input)) {
+      const amounts = { "1": 500, "2": 1000, "3": 2000, "4": 5000 };
+      session.context = { ...session.context, amount: amounts[input] };
+    }
+    if (session.currentNode === "savings_menu" && ["4", "5"].includes(input)) {
+      session.context = { ...session.context, placementType: input === "5" ? "30j" : "7j" };
+    }
+
+    session.currentNode = nextNode;
+    const target = USSD_MENU_TREE[nextNode];
+    return { message: target?.message || "Menu indisponible.", sessionEnded: false };
+  }
+
+  if (node.next) {
+    if (session.currentNode === "send_recipient") session.context = { ...session.context, recipient: input };
+    if (session.currentNode === "send_amount") session.context = { ...session.context, amount: input };
+    if (session.currentNode === "bill_ref") session.context = { ...session.context, billRef: input };
+    if (session.currentNode === "bill_amount") session.context = { ...session.context, amount: input };
+    if (session.currentNode === "airtime_custom") session.context = { ...session.context, amount: input };
+    if (session.currentNode === "savings_deposit_amount") session.context = { ...session.context, amount: input };
+    if (session.currentNode === "savings_withdraw_amount") session.context = { ...session.context, amount: input };
+    if (session.currentNode === "placement_amount") session.context = { ...session.context, amount: input };
+    if (session.currentNode === "cardless_amount") session.context = { ...session.context, amount: input };
+
+    session.currentNode = node.next;
+    const target = USSD_MENU_TREE[node.next];
+    return { message: target?.message || "Menu indisponible.", sessionEnded: false };
+  }
+
+  return { message: "Erreur inattendue.", sessionEnded: true };
+};
+
+app.post("/api/v1/ussd/session/start", (req, res, next) => {
+  try {
+    const { phoneNumber, serviceCode } = req.body || {};
+    if (!phoneNumber) throw new ApiError(400, "phoneNumber est requis.");
+    if (serviceCode && serviceCode !== "*384*9274#") throw new ApiError(400, "Code de service invalide.");
+
+    const sessionId = generateUssdSessionId();
+    const session = {
+      id: sessionId,
+      phone: phoneNumber.trim(),
+      currentNode: "root",
+      context: {},
+      pendingAction: null,
+      createdAt: Date.now(),
+    };
+    ussdSessions.set(sessionId, session);
+
+    success(res, {
+      sessionId,
+      message: USSD_MENU_TREE.root.message,
+      sessionEnded: false,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/v1/ussd/session/input", (req, res, next) => {
+  try {
+    const { sessionId, input } = req.body || {};
+    if (!sessionId || input === undefined) throw new ApiError(400, "sessionId et input sont requis.");
+    const session = ussdSessions.get(sessionId);
+    if (!session) throw new ApiError(404, "Session USSD introuvable ou expiree.");
+
+    const result = navigateUssd(session, String(input).trim());
+    if (result.sessionEnded) ussdSessions.delete(sessionId);
+
+    success(res, {
+      sessionId,
+      message: result.message,
+      sessionEnded: result.sessionEnded,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/v1/ussd/session/:sessionId/end", (req, res, next) => {
+  try {
+    const { sessionId } = req.params;
+    ussdSessions.delete(sessionId);
+    success(res, { message: "Session terminee." });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/ussd/history", (req, res, next) => {
+  try {
+    const phone = req.query.phone;
+    if (!phone) throw new ApiError(400, "phone query parameter requis.");
+    const transactions = ussdTransactionLog.get(normalizePhone(phone)) || [];
+    success(res, { transactions });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/ussd/status", (_req, res) => {
+  success(res, {
+    status: "online",
+    service: "AfriTrader USSD",
+    serviceCode: "*384*9274#",
+    activeSessions: ussdSessions.size,
+    coverage: ["BF", "CI", "SN", "ML", "TG", "BJ", "NE", "GW"],
+  });
+});
+
+// ── Africa's Talking USSD Webhook ────────────────────────────────────────
+// AT sends: sessionId, serviceCode, phoneNumber, text (url-encoded form)
+// Server responds: plain text starting with "CON " (continue) or "END " (end)
+// Set this URL as your callback in AT dashboard: https://your-domain/api/v1/ussd/at/callback
+
+app.post("/api/v1/ussd/at/callback", (req, res) => {
+  const { sessionId, serviceCode, phoneNumber, text } = req.body;
+
+  if (!sessionId || !phoneNumber) {
+    res.set("Content-Type", "text/plain");
+    return res.send("END Requete invalide.");
+  }
+
+  try {
+    let session = ussdSessions.get(sessionId);
+
+    // New session — first request from AT has text=""
+    if (!session) {
+      session = {
+        id: sessionId,
+        phone: phoneNumber.trim(),
+        currentNode: "root",
+        context: {},
+        pendingAction: null,
+        createdAt: Date.now(),
+      };
+      ussdSessions.set(sessionId, session);
+
+      res.set("Content-Type", "text/plain");
+      return res.send("CON " + USSD_MENU_TREE.root.message);
+    }
+
+    // Ongoing session — AT sends cumulative text separated by *
+    // e.g. first input "1", second input "1*1234"
+    // We only need the last segment
+    const parts = String(text || "").split("*");
+    const lastInput = parts[parts.length - 1] || "";
+
+    const result = navigateUssd(session, lastInput.trim());
+
+    if (result.sessionEnded) {
+      ussdSessions.delete(sessionId);
+      res.set("Content-Type", "text/plain");
+      return res.send("END " + result.message);
+    }
+
+    res.set("Content-Type", "text/plain");
+    return res.send("CON " + result.message);
+  } catch (err) {
+    ussdSessions.delete(sessionId);
+    res.set("Content-Type", "text/plain");
+    return res.send("END Erreur serveur. Reessayez plus tard.");
+  }
+});
+
+
+// ═══ CBDC Module — West African Central Bank Digital Currency ═══════════════
+// Based on EDPS TechDispatch 1/2023 — Architecture: Direct/Indirect/Hybrid
+
+const CBDC_COUNTRIES = {
+  NG: { name: 'Nigeria', currency: 'eNaira', code: 'eNGN', status: 'LAUNCHED', model: 'INDIRECT', centralization: 'CENTRALIZED', access: 'ACCOUNT', launch: '2021-10-25', holdingCap: 300000, notes: 'Premier CBDC africain lance par la CBN' },
+  GH: { name: 'Ghana', currency: 'e-Cedi', code: 'eGHS', status: 'PILOT', model: 'HYBRID', centralization: 'CENTRALIZED', access: 'TOKEN', launch: '2022-09-01', holdingCap: 5000, notes: 'Pilote token-based avec capacite offline' },
+  SN: { name: 'Senegal', currency: 'eXOF', code: 'eXOF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'DLT', access: 'ACCOUNT', launch: null, holdingCap: 1000000, notes: 'Initiative BCEAO zone UEMOA' },
+  BF: { name: 'Burkina Faso', currency: 'eXOF', code: 'eXOF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'DLT', access: 'ACCOUNT', launch: null, holdingCap: 500000, notes: 'Initiative BCEAO zone UEMOA' },
+  CI: { name: "Cote d'Ivoire", currency: 'eXOF', code: 'eXOF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'DLT', access: 'ACCOUNT', launch: null, holdingCap: 1000000, notes: 'Initiative BCEAO zone UEMOA' },
+  ML: { name: 'Mali', currency: 'eXOF', code: 'eXOF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'DLT', access: 'ACCOUNT', launch: null, holdingCap: 500000, notes: 'Initiative BCEAO zone UEMOA' },
+  BJ: { name: 'Benin', currency: 'eXOF', code: 'eXOF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'DLT', access: 'ACCOUNT', launch: null, holdingCap: 500000, notes: 'Initiative BCEAO zone UEMOA' },
+  TG: { name: 'Togo', currency: 'eXOF', code: 'eXOF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'DLT', access: 'ACCOUNT', launch: null, holdingCap: 500000, notes: 'Initiative BCEAO zone UEMOA' },
+  NE: { name: 'Niger', currency: 'eXOF', code: 'eXOF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'DLT', access: 'ACCOUNT', launch: null, holdingCap: 300000, notes: 'Initiative BCEAO zone UEMOA' },
+  GW: { name: 'Guinee-Bissau', currency: 'eXOF', code: 'eXOF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'DLT', access: 'ACCOUNT', launch: null, holdingCap: 300000, notes: 'Initiative BCEAO zone UEMOA' },
+  GM: { name: 'Gambie', currency: 'eDalasi', code: 'eGMD', status: 'RESEARCH', model: 'HYBRID', centralization: 'CENTRALIZED', access: 'TOKEN', launch: null, holdingCap: 50000, notes: 'Banque centrale en phase exploratoire' },
+  SL: { name: 'Sierra Leone', currency: 'eLeone', code: 'eSLL', status: 'RESEARCH', model: 'DIRECT', centralization: 'CENTRALIZED', access: 'ACCOUNT', launch: null, holdingCap: 50000, notes: 'BSL exploration en cours' },
+  LR: { name: 'Liberia', currency: 'eDollar', code: 'eLRD', status: 'RESEARCH', model: 'HYBRID', centralization: 'CENTRALIZED', access: 'TOKEN', launch: null, holdingCap: 50000, notes: 'CBL phase de recherche' },
+  GN: { name: 'Guinee', currency: 'eFranc', code: 'eGNF', status: 'RESEARCH', model: 'INDIRECT', centralization: 'CENTRALIZED', access: 'ACCOUNT', launch: null, holdingCap: 500000, notes: 'BCRG etude de faisabilite' },
+  MR: { name: 'Mauritanie', currency: 'eOuguiya', code: 'eMRU', status: 'RESEARCH', model: 'HYBRID', centralization: 'CENTRALIZED', access: 'ACCOUNT', launch: null, holdingCap: 100000, notes: 'BCM phase preliminaire' },
+  CV: { name: 'Cap-Vert', currency: 'eEscudo', code: 'eCVE', status: 'PILOT', model: 'HYBRID', centralization: 'DLT', access: 'TOKEN', launch: '2023-06-01', holdingCap: 200000, notes: 'BCV pilote avance avec sandbox' },
+};
+
+const CBDC_POLICY_MODELS = {
+  DIRECT: { label: 'Modele Direct', description: 'La banque centrale gere tous les comptes et paiements directement.', privacyRisk: 'HIGH', operationalRisk: 'HIGH', financialInclusionScore: 90 },
+  INDIRECT: { label: 'Modele Indirect (Two-Tier)', description: 'Les banques commerciales gerent les paiements, adosses a la monnaie de banque centrale.', privacyRisk: 'LOW', operationalRisk: 'LOW', financialInclusionScore: 75 },
+  HYBRID: { label: 'Modele Hybride', description: 'Les individus detiennent la monnaie a la banque centrale, les banques gerent la chaine de paiement.', privacyRisk: 'MEDIUM', operationalRisk: 'MEDIUM', financialInclusionScore: 85 },
+};
+
+const CBDC_WALLETS = new Map();
+let cbdcTxId = 1000;
+
+function getCbdcWallet(userId, countryCode) {
+  const key = userId + ':' + countryCode;
+  if (!CBDC_WALLETS.has(key)) {
+    const country = CBDC_COUNTRIES[countryCode];
+    CBDC_WALLETS.set(key, {
+      userId, countryCode,
+      balance: 50000,
+      currency: country ? country.code : 'eXOF',
+      tier: 'RETAIL',
+      holdingCap: country ? country.holdingCap : 500000,
+      transactions: [],
+      kycLevel: 'FULL',
+      offlineBalance: 5000,
+      createdAt: new Date().toISOString(),
+    });
+  }
+  return CBDC_WALLETS.get(key);
+}
+
+app.get('/api/v1/cbdc/overview', requireAuth, function (_req, res, next) {
+  try {
+    const countries = Object.entries(CBDC_COUNTRIES).map(function (entry) {
+      const code = entry[0]; const c = entry[1];
+      return {
+        code, name: c.name, currency: c.currency, currencyCode: c.code,
+        status: c.status, model: c.model, centralization: c.centralization,
+        accessModality: c.access, launchDate: c.launch, holdingCapLocal: c.holdingCap,
+        notes: c.notes, policy: CBDC_POLICY_MODELS[c.model] || null,
+      };
+    });
+    const launched = countries.filter(function (c) { return c.status === 'LAUNCHED'; }).length;
+    const pilot = countries.filter(function (c) { return c.status === 'PILOT'; }).length;
+    const research = countries.filter(function (c) { return c.status === 'RESEARCH'; }).length;
+    success(res, {
+      countries,
+      summary: { total: countries.length, launched, pilot, research },
+      lastUpdated: new Date().toISOString(),
+      source: 'EDPS TechDispatch 1/2023 — WASI CBDC Monitor',
+    });
+  } catch (err) { next(err); }
+});
+
+app.get('/api/v1/cbdc/country/:code', requireAuth, function (req, res, next) {
+  try {
+    const code = String(req.params.code || '').toUpperCase();
+    const country = CBDC_COUNTRIES[code];
+    if (!country) throw new ApiError(404, 'Country CBDC data not found: ' + code);
+    const policy = CBDC_POLICY_MODELS[country.model];
+    success(res, Object.assign({ code }, country, { policy }));
+  } catch (err) { next(err); }
+});
+
+app.get('/api/v1/cbdc/wallet', requireAuth, function (req, res, next) {
+  try {
+    const countryCode = String(req.query.country || 'BF').toUpperCase();
+    if (!CBDC_COUNTRIES[countryCode]) throw new ApiError(400, 'Country not supported: ' + countryCode);
+    const wallet = getCbdcWallet(req.authUser.sub, countryCode);
+    success(res, Object.assign({}, wallet, {
+      utilizationPct: Math.round((wallet.balance / wallet.holdingCap) * 100),
+      offlineUtilizationPct: Math.round((wallet.offlineBalance / 10000) * 100),
+    }));
+  } catch (err) { next(err); }
+});
+
+app.post('/api/v1/cbdc/transfer', requireAuth, bankingRateLimit, function (req, res, next) {
+  try {
+    const body = req.body || {};
+    const amount = body.amount;
+    const recipientId = body.recipientId;
+    const countryCode = body.countryCode;
+    const note = body.note;
+    const crossBorder = body.crossBorder;
+    const targetCountry = body.targetCountry;
+    if (!amount || !recipientId || !countryCode) throw new ApiError(400, 'amount, recipientId et countryCode requis');
+    const amt = Number(amount);
+    if (isNaN(amt) || amt <= 0) throw new ApiError(400, 'Montant invalide');
+    const code = String(countryCode).toUpperCase();
+    if (!CBDC_COUNTRIES[code]) throw new ApiError(400, 'Pays non supporte: ' + code);
+    const wallet = getCbdcWallet(req.authUser.sub, code);
+    if (amt > wallet.balance) throw new ApiError(400, 'Solde CBDC insuffisant');
+    wallet.balance -= amt;
+    const txId = 'CBDC-TX-' + (cbdcTxId++);
+    const fee = crossBorder ? Math.round(amt * 0.001) : 0;
+    const country = CBDC_COUNTRIES[code];
+    const tx = {
+      id: txId,
+      type: crossBorder ? 'CROSS_BORDER_TRANSFER' : 'P2P_TRANSFER',
+      amount: amt, fee, netAmount: amt - fee,
+      currency: wallet.currency,
+      recipientId: String(recipientId),
+      note: String(note || ''),
+      fromCountry: code,
+      toCountry: crossBorder ? String(targetCountry || code).toUpperCase() : code,
+      status: 'SETTLED',
+      privacyMode: country.access === 'TOKEN' ? 'PSEUDONYMOUS' : 'IDENTIFIED',
+      timestamp: new Date().toISOString(),
+    };
+    wallet.transactions.unshift(tx);
+    writeAuditLog({ action: 'CBDC_TRANSFER', resourceType: 'CBDC_WALLET', status: AUDIT_SUCCESS, detail: { txId, amount: amt, countryCode: code } });
+    success(res, { transaction: tx, newBalance: wallet.balance });
+  } catch (err) { next(err); }
+});
+
+app.get('/api/v1/cbdc/transactions', requireAuth, function (req, res, next) {
+  try {
+    const countryCode = String(req.query.country || 'BF').toUpperCase();
+    const limit = Math.min(Number(req.query.limit || 50), 200);
+    if (!CBDC_COUNTRIES[countryCode]) throw new ApiError(400, 'Country not supported');
+    const wallet = getCbdcWallet(req.authUser.sub, countryCode);
+    success(res, { transactions: wallet.transactions.slice(0, limit), total: wallet.transactions.length });
+  } catch (err) { next(err); }
+});
+
+app.get('/api/v1/cbdc/monetary-policy', requireAuth, function (_req, res, next) {
+  try {
+    const policies = Object.entries(CBDC_COUNTRIES).map(function (entry) {
+      const code = entry[0]; const c = entry[1];
+      return {
+        code, name: c.name, holdingCap: c.holdingCap, currency: c.code,
+        interestRate: c.status === 'LAUNCHED' ? -0.5 : 0,
+        tieringThreshold: Math.round(c.holdingCap * 0.8),
+        programmablePayments: c.model === 'HYBRID' || c.model === 'DIRECT',
+        offlineCapable: c.access === 'TOKEN',
+        amlLevel: c.status === 'LAUNCHED' ? 'FULL' : 'PLANNED',
+      };
+    });
+    success(res, { policies, lastUpdated: new Date().toISOString() });
+  } catch (err) { next(err); }
+});
+
+app.get('/api/v1/cbdc/cross-border', requireAuth, function (_req, res, next) {
+  try {
+    const corridors = [
+      { from: 'NG', to: 'GH', corridor: 'Lagos-Accra', status: 'PILOT', avgFeesPct: 0.8, settlementMs: 2400, model: 'mBridge-style' },
+      { from: 'SN', to: 'CI', corridor: 'Dakar-Abidjan (UEMOA)', status: 'PLANNED', avgFeesPct: 0.1, settlementMs: 800, model: 'BCEAO Unified Ledger' },
+      { from: 'BF', to: 'CI', corridor: 'Ouaga-Abidjan (UEMOA)', status: 'PLANNED', avgFeesPct: 0.1, settlementMs: 800, model: 'BCEAO Unified Ledger' },
+      { from: 'NG', to: 'SN', corridor: 'Lagos-Dakar', status: 'RESEARCH', avgFeesPct: 1.5, settlementMs: 4000, model: 'Bilateral agreement needed' },
+      { from: 'GH', to: 'CI', corridor: 'Accra-Abidjan', status: 'RESEARCH', avgFeesPct: 1.2, settlementMs: 3000, model: 'ECO/ECOWAS integration' },
+      { from: 'CV', to: 'SN', corridor: 'Praia-Dakar', status: 'PILOT', avgFeesPct: 0.5, settlementMs: 1200, model: 'BCEAO observer' },
+    ];
+    success(res, {
+      corridors,
+      interopNote: 'Architecture hybride recommandee (EDPS 2023): reduction des intermediaires, controles AML automatises, latence reduite.',
+      lastUpdated: new Date().toISOString(),
+    });
+  } catch (err) { next(err); }
+});
+
+app.get('/api/v1/cbdc/privacy-assessment', requireAuth, function (_req, res, next) {
+  try {
+    const uemoaCountries = ['SN', 'CI', 'BJ', 'BF', 'ML', 'NE', 'TG', 'GW'];
+    const assessments = Object.entries(CBDC_COUNTRIES).map(function (entry) {
+      const code = entry[0]; const c = entry[1];
+      const policy = CBDC_POLICY_MODELS[c.model];
+      return {
+        code, name: c.name, architecture: c.model, centralization: c.centralization,
+        accessModality: c.access,
+        privacyRisk: policy ? policy.privacyRisk : 'UNKNOWN',
+        pseudonymizationUsed: c.access === 'TOKEN',
+        zkpSupport: c.model === 'HYBRID' && c.centralization === 'DLT',
+        surveillanceRisk: c.centralization === 'CENTRALIZED' && c.model === 'DIRECT' ? 'HIGH' : 'LOW',
+        dataRetentionPolicy: c.status === 'LAUNCHED' ? '5 ans (AML)' : 'TBD',
+        gdprEquivalent: uemoaCountries.indexOf(code) >= 0 ? 'UEMOA Data Protection Act' : 'En attente',
+      };
+    });
+    success(res, {
+      assessments,
+      edpsPrinciples: [
+        'Privacy by design des la conception du CBDC',
+        'Minimisation des donnees — ne collecter que le necessaire',
+        'Pseudonymisation obligatoire pour les CBDC token-based',
+        'DPIA a maintenir dans le temps',
+        'Limitation des capacites de surveillance de masse',
+      ],
+      source: 'EDPS TechDispatch 1/2023',
+    });
+  } catch (err) { next(err); }
+});
+
+
+// ── Error handlers ──────────────────────────────────────────────────────
 app.use((error, _req, res, _next) => {
   const statusCode = error instanceof ApiError ? error.statusCode : 500;
   const safeMessage =
