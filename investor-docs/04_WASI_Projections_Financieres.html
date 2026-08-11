@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>04_WASI_Projections_Financieres</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #fff; color: #1a1a2e;
+  max-width: 800px; margin: 0 auto; padding: 48px 40px;
+  font-size: 13px; line-height: 1.7;
+}
+h1 { font-size: 24px; font-weight: 700; color: #0a1628; margin: 32px 0 16px; border-bottom: 3px solid #C8922A; padding-bottom: 8px; }
+h2 { font-size: 18px; font-weight: 600; color: #0a1628; margin: 28px 0 12px; }
+h3 { font-size: 14px; font-weight: 600; color: #333; margin: 20px 0 8px; }
+p { margin: 8px 0; }
+ul, ol { margin: 8px 0 8px 24px; }
+li { margin: 4px 0; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+th { background: #0a1628; color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 8px 12px; border-bottom: 1px solid #e5e5e5; }
+tr:nth-child(even) td { background: #f8f7f5; }
+tr:hover td { background: #f0ede8; }
+blockquote { border-left: 4px solid #C8922A; padding: 12px 16px; margin: 16px 0; background: #faf8f4; color: #555; font-style: italic; }
+code { background: #f4f2ee; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-family: 'Consolas', monospace; }
+pre { background: #0a1628; color: #e8e6e3; padding: 16px; border-radius: 6px; margin: 16px 0; overflow-x: auto; }
+pre code { background: none; color: inherit; padding: 0; }
+hr { border: none; border-top: 2px solid #C8922A; margin: 32px 0; }
+strong { color: #0a1628; }
+em { color: #555; }
+.header-bar { background: #0a1628; color: #C8922A; padding: 12px 20px; margin: -48px -40px 32px; font-family: 'Consolas', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+@media print {
+  body { padding: 20px; font-size: 11px; }
+  h1 { font-size: 20px; }
+  h2 { font-size: 15px; }
+  table { font-size: 10px; }
+  pre { font-size: 10px; }
+}
+</style>
+
+</head>
+<body>
+<div class="header-bar">WASI — Whole African Strategic Intelligence &bull; Confidentiel Investisseur</div>
+<h1>WASI -- Projections Financieres</h1>
+<p><strong>Document confidentiel -- Usage reserve aux investisseurs</strong>
+<strong>Version 1.0 -- Mars 2026</strong></p>
+<hr />
+<h2>Table des matieres</h2>
+<ol>
+<li>Hypotheses cles</li>
+<li>Croissance du portefeuille microfinance</li>
+<li>Revenus consolides</li>
+<li>Structure des couts</li>
+<li>Utilisation des fonds</li>
+<li>Indicateurs de suivi (KPIs)</li>
+</ol>
+<hr />
+<h2>1. Hypotheses cles</h2>
+<p>Les projections ci-dessous reposent sur trois piliers de revenus distincts, chacun soumis a des hypotheses conservatrices validees par des donnees terrain.</p>
+<h3>1.1 Microfinance</h3>
+<table>
+<thead>
+<tr>
+<th>Parametre</th>
+<th>Hypothese</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Montant moyen du pret</td>
+<td>350 USD</td>
+</tr>
+<tr>
+<td>Rendement du portefeuille (portfolio yield)</td>
+<td>28 -- 34 % annualise</td>
+</tr>
+<tr>
+<td>PAR30 cible (portefeuille a risque &gt; 30 jours)</td>
+<td>&lt; 5 %</td>
+</tr>
+<tr>
+<td>Taux de perte (write-off) An 1</td>
+<td>2,5 -- 3,5 %</td>
+</tr>
+<tr>
+<td>Taux de perte An 2+</td>
+<td>Decroissant grace au scoring predictif</td>
+</tr>
+<tr>
+<td>Duree moyenne des prets</td>
+<td>3 -- 6 mois</td>
+</tr>
+<tr>
+<td>Taux de renouvellement attendu</td>
+<td>&gt; 60 % des emprunteurs</td>
+</tr>
+</tbody>
+</table>
+<p>La reduction progressive du taux de perte est rendue possible par l'amelioration continue du modele de credit scoring WASI, alimente par les donnees de remboursement accumulees au fil des cycles.</p>
+<h3>1.2 SaaS Intelligence</h3>
+<table>
+<thead>
+<tr>
+<th>Parametre</th>
+<th>Hypothese</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modele de tarification</td>
+<td>Abonnement mensuel / annuel</td>
+</tr>
+<tr>
+<td>Licences API</td>
+<td>Facturation a l'usage (pay-per-call) et forfaits</td>
+</tr>
+<tr>
+<td>Marche cible</td>
+<td>IMF, cooperatives, banques digitales, ONG</td>
+</tr>
+<tr>
+<td>Taux de conversion essai vers abonnement</td>
+<td>15 -- 25 %</td>
+</tr>
+</tbody>
+</table>
+<h3>1.3 AFEX (Africa Export Index Family)</h3>
+<table>
+<thead>
+<tr>
+<th>Parametre</th>
+<th>Hypothese</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Licences de donnees</td>
+<td>Revenus recurrents issus de l'acces aux profils d'indices et a leurs series historiques</td>
+</tr>
+<tr>
+<td>Frais de gestion (management fees)</td>
+<td>0,50 -- 0,65 % des actifs sous gestion</td>
+</tr>
+<tr>
+<td>Marche cible</td>
+<td>Fonds d'investissement, DFI, gestionnaires d'actifs</td>
+</tr>
+<tr>
+<td>Actif deja constitue</td>
+<td>43 profils pays detailles, ponderations calculees sur statistiques douanieres officielles (UN Comtrade)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>2. Croissance du portefeuille microfinance</h2>
+<h3>2.1 Annee 1 -- Trajectoire mensuelle</h3>
+<table>
+<thead>
+<tr>
+<th>Mois</th>
+<th>Emprunteurs actifs</th>
+<th>Portefeuille encours (USD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M01</td>
+<td>80</td>
+<td>25 600</td>
+</tr>
+<tr>
+<td>M02</td>
+<td>120</td>
+<td>39 200</td>
+</tr>
+<tr>
+<td>M03</td>
+<td>170</td>
+<td>56 000</td>
+</tr>
+<tr>
+<td>M04</td>
+<td>230</td>
+<td>78 400</td>
+</tr>
+<tr>
+<td>M05</td>
+<td>300</td>
+<td>105 000</td>
+</tr>
+<tr>
+<td>M06</td>
+<td>400</td>
+<td>140 000</td>
+</tr>
+<tr>
+<td>M07</td>
+<td>500</td>
+<td>180 000</td>
+</tr>
+<tr>
+<td>M08</td>
+<td>600</td>
+<td>220 000</td>
+</tr>
+<tr>
+<td>M09</td>
+<td>700</td>
+<td>260 000</td>
+</tr>
+<tr>
+<td>M10</td>
+<td>800</td>
+<td>300 000</td>
+</tr>
+<tr>
+<td>M11</td>
+<td>900</td>
+<td>340 000</td>
+</tr>
+<tr>
+<td>M12</td>
+<td>1 000</td>
+<td>380 000</td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 Annees 2 et 3 -- Trajectoire trimestrielle</h3>
+<table>
+<thead>
+<tr>
+<th>Periode</th>
+<th>Emprunteurs actifs</th>
+<th>Portefeuille encours (USD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Annee 2</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>T1 (debut)</td>
+<td>1 400</td>
+<td>546 000</td>
+</tr>
+<tr>
+<td>T2</td>
+<td>1 900</td>
+<td>760 000</td>
+</tr>
+<tr>
+<td>T3</td>
+<td>2 600</td>
+<td>1 050 000</td>
+</tr>
+<tr>
+<td>T4 (fin)</td>
+<td>3 500</td>
+<td>1 500 000</td>
+</tr>
+<tr>
+<td><strong>Annee 3</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>T1 (debut)</td>
+<td>4 500</td>
+<td>2 000 000</td>
+</tr>
+<tr>
+<td>T2</td>
+<td>5 500</td>
+<td>2 750 000</td>
+</tr>
+<tr>
+<td>T3</td>
+<td>6 800</td>
+<td>3 600 000</td>
+</tr>
+<tr>
+<td>T4 (fin)</td>
+<td>8 000</td>
+<td>4 600 000</td>
+</tr>
+</tbody>
+</table>
+<h3>2.3 Synthese de la croissance</h3>
+<table>
+<thead>
+<tr>
+<th>Indicateur</th>
+<th>An 1 (fin)</th>
+<th>An 2 (fin)</th>
+<th>An 3 (fin)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Emprunteurs actifs</td>
+<td>1 000</td>
+<td>3 500</td>
+<td>8 000</td>
+</tr>
+<tr>
+<td>Portefeuille encours (USD)</td>
+<td>380 000</td>
+<td>1 500 000</td>
+<td>4 600 000</td>
+</tr>
+<tr>
+<td>Croissance annuelle emprunteurs</td>
+<td>--</td>
+<td>+250 %</td>
+<td>+129 %</td>
+</tr>
+<tr>
+<td>Croissance annuelle portefeuille</td>
+<td>--</td>
+<td>+295 %</td>
+<td>+207 %</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. Revenus consolides</h2>
+<h3>3.1 Projection sur trois ans</h3>
+<table>
+<thead>
+<tr>
+<th>Source de revenus</th>
+<th>An 1 (USD)</th>
+<th>An 2 (USD)</th>
+<th>An 3 (USD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microfinance (interets et frais)</td>
+<td>95 000</td>
+<td>420 000</td>
+<td>1 300 000</td>
+</tr>
+<tr>
+<td>Intelligence SaaS (abonnements et API)</td>
+<td>30 000</td>
+<td>120 000</td>
+<td>350 000</td>
+</tr>
+<tr>
+<td>AFEX (licences de donnees et frais de gestion)</td>
+<td>10 000</td>
+<td>80 000</td>
+<td>300 000</td>
+</tr>
+<tr>
+<td><strong>Total revenus</strong></td>
+<td><strong>135 000</strong></td>
+<td><strong>620 000</strong></td>
+<td><strong>1 950 000</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>3.2 Repartition des revenus par source</h3>
+<table>
+<thead>
+<tr>
+<th>Source de revenus</th>
+<th>Part An 1</th>
+<th>Part An 2</th>
+<th>Part An 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microfinance</td>
+<td>70,4 %</td>
+<td>67,7 %</td>
+<td>66,7 %</td>
+</tr>
+<tr>
+<td>Intelligence SaaS</td>
+<td>22,2 %</td>
+<td>19,4 %</td>
+<td>17,9 %</td>
+</tr>
+<tr>
+<td>AFEX</td>
+<td>7,4 %</td>
+<td>12,9 %</td>
+<td>15,4 %</td>
+</tr>
+</tbody>
+</table>
+<p>La microfinance reste le moteur principal de revenus sur l'horizon de projection. La part relative de l'AFEX progresse de maniere significative, refletant la montee en puissance des licences de donnees et la croissance des actifs sous gestion.</p>
+<h3>3.3 Taux de croissance annuel des revenus</h3>
+<table>
+<thead>
+<tr>
+<th>Indicateur</th>
+<th>An 1 vers An 2</th>
+<th>An 2 vers An 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Croissance revenus totaux</td>
+<td>+359 %</td>
+<td>+215 %</td>
+</tr>
+<tr>
+<td>Croissance microfinance</td>
+<td>+342 %</td>
+<td>+210 %</td>
+</tr>
+<tr>
+<td>Croissance SaaS</td>
+<td>+300 %</td>
+<td>+192 %</td>
+</tr>
+<tr>
+<td>Croissance AFEX</td>
+<td>+700 %</td>
+<td>+275 %</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>4. Structure des couts</h2>
+<h3>4.1 Charges operationnelles (OPEX)</h3>
+<table>
+<thead>
+<tr>
+<th>Poste de depense</th>
+<th>An 1 (USD)</th>
+<th>An 2 (USD)</th>
+<th>An 3 (USD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Agents de credit et operations terrain</td>
+<td>150 000</td>
+<td>195 000</td>
+<td>290 000</td>
+</tr>
+<tr>
+<td>Technologie et infrastructure</td>
+<td>130 000</td>
+<td>160 000</td>
+<td>210 000</td>
+</tr>
+<tr>
+<td>Equipe data science et produit</td>
+<td>90 000</td>
+<td>120 000</td>
+<td>175 000</td>
+</tr>
+<tr>
+<td>Conformite reglementaire et juridique</td>
+<td>50 000</td>
+<td>65 000</td>
+<td>90 000</td>
+</tr>
+<tr>
+<td>Administration et fonctions support</td>
+<td>45 000</td>
+<td>60 000</td>
+<td>85 000</td>
+</tr>
+<tr>
+<td>Marketing et acquisition</td>
+<td>35 000</td>
+<td>54 000</td>
+<td>100 000</td>
+</tr>
+<tr>
+<td><strong>Total OPEX</strong></td>
+<td><strong>~500 000</strong></td>
+<td><strong>~654 000</strong></td>
+<td><strong>~950 000</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>4.2 Trajectoire vers la rentabilite</h3>
+<table>
+<thead>
+<tr>
+<th>Indicateur</th>
+<th>An 1</th>
+<th>An 2</th>
+<th>An 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revenus totaux</td>
+<td>135 000</td>
+<td>620 000</td>
+<td>1 950 000</td>
+</tr>
+<tr>
+<td>OPEX total</td>
+<td>~500 000</td>
+<td>~654 000</td>
+<td>~950 000</td>
+</tr>
+<tr>
+<td>Resultat operationnel</td>
+<td>(365 000)</td>
+<td>(34 000)</td>
+<td>1 000 000</td>
+</tr>
+<tr>
+<td>Marge operationnelle</td>
+<td>-270 %</td>
+<td>-5,5 %</td>
+<td>+51,3 %</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Le break-even operationnel est vise en Annee 3.</strong> La trajectoire montre une reduction rapide des pertes en Annee 2, portee par l'effet de levier operationnel : les couts croissent lineairement tandis que les revenus beneficient d'une croissance exponentielle du portefeuille et de la base d'abonnes.</p>
+<hr />
+<h2>5. Utilisation des fonds</h2>
+<h3>Levee ciblee : 1 200 000 USD</h3>
+<table>
+<thead>
+<tr>
+<th>Allocation</th>
+<th>Part (%)</th>
+<th>Montant (USD)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Portefeuille de prets</td>
+<td>45 %</td>
+<td>540 000</td>
+<td>Capital destine au decaissement des microprets</td>
+</tr>
+<tr>
+<td>Operations et talents</td>
+<td>22 %</td>
+<td>264 000</td>
+<td>Recrutement agents de credit, equipe locale, formation</td>
+</tr>
+<tr>
+<td>Technologie et data</td>
+<td>15 %</td>
+<td>180 000</td>
+<td>Developpement plateforme, modeles IA, infrastructure cloud</td>
+</tr>
+<tr>
+<td>Risque et conformite</td>
+<td>8 %</td>
+<td>96 000</td>
+<td>Licences reglementaires, audit, systemes anti-fraude</td>
+</tr>
+<tr>
+<td>Education financiere</td>
+<td>5 %</td>
+<td>60 000</td>
+<td>Programmes de litteratie financiere pour les emprunteurs</td>
+</tr>
+<tr>
+<td>Reserve de contingence</td>
+<td>5 %</td>
+<td>60 000</td>
+<td>Matelas de securite pour risques imprevus</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>100 %</strong></td>
+<td><strong>1 200 000</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3>Principes directeurs de l'allocation</h3>
+<ul>
+<li><strong>Priorite au deploiement de capital productif.</strong> Avec 45 % des fonds diriges vers le portefeuille de prets, WASI maximise le potentiel de generation de revenus des la premiere annee.</li>
+<li><strong>Investissement technologique calibre.</strong> Les 15 % alloues a la technologie couvrent le developpement des modeles de scoring, l'infrastructure de collecte de donnees et l'integration API, creant un avantage concurrentiel durable.</li>
+<li><strong>Gestion prudente du risque.</strong> La combinaison de l'allocation conformite (8 %) et de la reserve de contingence (5 %) assure une marge de manoeuvre face aux aleas reglementaires et operationnels.</li>
+</ul>
+<hr />
+<h2>6. Indicateurs de suivi (KPIs)</h2>
+<h3>6.1 Indicateurs microfinance</h3>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Definition</th>
+<th>Cible An 1</th>
+<th>Cible An 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PAR30</td>
+<td>Portefeuille a risque &gt; 30 jours / portefeuille total</td>
+<td>&lt; 5 %</td>
+<td>&lt; 3,5 %</td>
+</tr>
+<tr>
+<td>Taux de remboursement</td>
+<td>Montants rembourses / montants exigibles</td>
+<td>&gt; 95 %</td>
+<td>&gt; 97 %</td>
+</tr>
+<tr>
+<td>Cout par emprunteur</td>
+<td>OPEX terrain / nombre d'emprunteurs actifs</td>
+<td>&lt; 150 USD</td>
+<td>&lt; 50 USD</td>
+</tr>
+<tr>
+<td>Taux de renouvellement</td>
+<td>Emprunteurs renouvelant un pret / emprunteurs eligibles</td>
+<td>&gt; 50 %</td>
+<td>&gt; 70 %</td>
+</tr>
+<tr>
+<td>Rendement du portefeuille</td>
+<td>Interets percus / encours moyen</td>
+<td>28 -- 34 %</td>
+<td>30 -- 36 %</td>
+</tr>
+</tbody>
+</table>
+<h3>6.2 Indicateurs SaaS et AFEX</h3>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Definition</th>
+<th>Cible An 1</th>
+<th>Cible An 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MRR (Monthly Recurring Revenue)</td>
+<td>Revenus mensuels recurrents SaaS</td>
+<td>2 500 USD</td>
+<td>29 000 USD</td>
+</tr>
+<tr>
+<td>Nombre d'abonnes API</td>
+<td>Clients actifs avec licence API</td>
+<td>10</td>
+<td>80</td>
+</tr>
+<tr>
+<td>Taux de retention SaaS</td>
+<td>Clients renouveles / clients totaux (annuel)</td>
+<td>&gt; 80 %</td>
+<td>&gt; 90 %</td>
+</tr>
+<tr>
+<td>ARPU (Average Revenue Per User)</td>
+<td>Revenu moyen par abonne</td>
+<td>250 USD/mois</td>
+<td>365 USD/mois</td>
+</tr>
+<tr>
+<td>AUM AFEX</td>
+<td>Actifs sous gestion sur la plateforme AFEX</td>
+<td>2 M USD</td>
+<td>50 M USD</td>
+</tr>
+</tbody>
+</table>
+<h3>6.3 Indicateurs financiers globaux</h3>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Definition</th>
+<th>Cible An 1</th>
+<th>Cible An 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Burn rate mensuel</td>
+<td>Tresorerie consommee par mois</td>
+<td>&lt; 42 000 USD</td>
+<td>N/A (rentable)</td>
+</tr>
+<tr>
+<td>Runway</td>
+<td>Mois de tresorerie disponibles</td>
+<td>&gt; 18 mois</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Ratio revenus / OPEX</td>
+<td>Efficacite operationnelle</td>
+<td>0,27</td>
+<td>2,05</td>
+</tr>
+<tr>
+<td>CAC (Cout d'Acquisition Client)</td>
+<td>Depenses marketing / nouveaux clients</td>
+<td>A etablir</td>
+<td>&lt; 30 USD</td>
+</tr>
+</tbody>
+</table>
+<h3>6.4 Frequence de reporting</h3>
+<table>
+<thead>
+<tr>
+<th>Rapport</th>
+<th>Frequence</th>
+<th>Destinataires</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tableau de bord operationnel</td>
+<td>Hebdomadaire</td>
+<td>Direction, equipe operations</td>
+</tr>
+<tr>
+<td>Rapport financier</td>
+<td>Mensuel</td>
+<td>Investisseurs, conseil d'administration</td>
+</tr>
+<tr>
+<td>Revue de portefeuille credit</td>
+<td>Mensuel</td>
+<td>Comite de risque</td>
+</tr>
+<tr>
+<td>Audit des indicateurs SaaS</td>
+<td>Trimestriel</td>
+<td>Direction produit, investisseurs</td>
+</tr>
+<tr>
+<td>Rapport annuel consolide</td>
+<td>Annuel</td>
+<td>Toutes parties prenantes</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>Avertissement.</strong> Les projections presentees dans ce document sont fondees sur des hypotheses raisonnables au moment de leur elaboration. Les resultats reels peuvent differer en fonction des conditions de marche, de l'environnement reglementaire et de la vitesse d'execution. Ce document ne constitue ni une offre de vente ni une sollicitation d'achat de titres.</p>
+<hr />
+<p><em>WASI -- Projections Financieres -- Document confidentiel</em>
+<em>Mars 2026</em></p>
+</body>
+</html>
