@@ -53,6 +53,13 @@ __pycache__/
 *.md
 !WASI_Audit_Interne_Controle_Interne_2026.md
 !DEPLOYMENT_CHECKLIST.md
+# Investor deliverables are versioned: the .md is the SOURCE the .html and
+# .pdf are generated from, so ignoring it left the generated files with no
+# traceable origin.
+!investor-docs/*.md
 
 # Claude
 .claude/
+
+# OneDrive sync-conflict quarantine (see _conflict-archive/DIFF-REPORT.md)
+_conflict-archive/
