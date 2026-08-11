@@ -1,4 +1,4 @@
-﻿# OS
+# OS
 .DS_Store
 Thumbs.db
 
@@ -53,18 +53,11 @@ __pycache__/
 *.md
 !WASI_Audit_Interne_Controle_Interne_2026.md
 !DEPLOYMENT_CHECKLIST.md
+# Investor deliverables are versioned: the .md is the SOURCE the .html and
+# .pdf are generated from, so ignoring it left the generated files with no
+# traceable origin.
+!investor-docs/*.md
 
 # Claude
 .claude/
 
-# WASI Intelligence
-wasi-intelligence/node_modules/
-wasi-intelligence/data/wasi-core.db
-wasi-intelligence/data/wasi-core.db-shm
-wasi-intelligence/data/wasi-core.db-wal
-wasi-intelligence/*.log
-wasi-intelligence/*.err.log
-# Archives
-archives-bf-ai/node_modules/
-archives-bf-ai/data/document-cache/
-archives-bf-ai/data/law-cache/

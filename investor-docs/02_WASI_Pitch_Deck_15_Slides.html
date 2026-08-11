@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02_WASI_Pitch_Deck_15_Slides</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #fff; color: #1a1a2e;
+  max-width: 800px; margin: 0 auto; padding: 48px 40px;
+  font-size: 13px; line-height: 1.7;
+}
+h1 { font-size: 24px; font-weight: 700; color: #0a1628; margin: 32px 0 16px; border-bottom: 3px solid #C8922A; padding-bottom: 8px; }
+h2 { font-size: 18px; font-weight: 600; color: #0a1628; margin: 28px 0 12px; }
+h3 { font-size: 14px; font-weight: 600; color: #333; margin: 20px 0 8px; }
+p { margin: 8px 0; }
+ul, ol { margin: 8px 0 8px 24px; }
+li { margin: 4px 0; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+th { background: #0a1628; color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 8px 12px; border-bottom: 1px solid #e5e5e5; }
+tr:nth-child(even) td { background: #f8f7f5; }
+tr:hover td { background: #f0ede8; }
+blockquote { border-left: 4px solid #C8922A; padding: 12px 16px; margin: 16px 0; background: #faf8f4; color: #555; font-style: italic; }
+code { background: #f4f2ee; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-family: 'Consolas', monospace; }
+pre { background: #0a1628; color: #e8e6e3; padding: 16px; border-radius: 6px; margin: 16px 0; overflow-x: auto; }
+pre code { background: none; color: inherit; padding: 0; }
+hr { border: none; border-top: 2px solid #C8922A; margin: 32px 0; }
+strong { color: #0a1628; }
+em { color: #555; }
+.header-bar { background: #0a1628; color: #C8922A; padding: 12px 20px; margin: -48px -40px 32px; font-family: 'Consolas', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+@media print {
+  body { padding: 20px; font-size: 11px; }
+  h1 { font-size: 20px; }
+  h2 { font-size: 15px; }
+  table { font-size: 10px; }
+  pre { font-size: 10px; }
+}
+</style>
+
+</head>
+<body>
+<div class="header-bar">WASI — Whole African Strategic Intelligence &bull; Confidentiel Investisseur</div>
+<h1>WASI — Pitch Deck Investisseur</h1>
+<hr />
+<h2>Slide 1 — Couverture</h2>
+<p><strong>WASI</strong>
+Whole African Strategic Intelligence</p>
+<p><em>Infrastructure financiere et intelligence economique pour l'Afrique</em></p>
+<p>Levee : 1,2 M USD — Pre-seed / Seed
+Mars 2026</p>
+<hr />
+<h2>Slide 2 — Le Probleme</h2>
+<p><strong>L'Afrique manque d'infrastructure financiere souveraine</strong></p>
+<ul>
+<li>54 pays, 42 devises, 17 bourses — aucun outil unifie pour les investisseurs</li>
+<li>600M+ d'adultes sans acces bancaire formel</li>
+<li>Les matieres premieres africaines sont cotees a Londres/Chicago — jamais a Abidjan ou Lagos</li>
+<li>Les micro-entrepreneurs sont exclus du credit formel faute de garanties classiques</li>
+<li>Les donnees pays sont fragmentees, couteuses, et souvent obsoletes</li>
+</ul>
+<blockquote>
+<p><em>Le continent le plus riche en ressources n'a pas d'indice qui lui appartient.</em></p>
+</blockquote>
+<hr />
+<h2>Slide 3 — La Solution</h2>
+<p><strong>WASI = 3 produits integres sur 1 plateforme</strong></p>
+<table>
+<thead>
+<tr>
+<th>Produit</th>
+<th>Description</th>
+<th>Statut</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>WASI Intelligence</strong></td>
+<td>Scoring souverain 54 pays, IA conversationnelle, indices composites</td>
+<td>Live</td>
+</tr>
+<tr>
+<td><strong>AFEX — Africa Export Index Family</strong></td>
+<td>54 fonds indiciels matieres premieres, 5 sous-familles regionales</td>
+<td>4 prototypes detailles</td>
+</tr>
+<tr>
+<td><strong>WASI Microfinance</strong></td>
+<td>Micro-credit, epargne, education financiere pour entrepreneurs exclus</td>
+<td>Phase pilote</td>
+</tr>
+</tbody>
+</table>
+<p>Les 3 produits partagent les memes donnees, la meme plateforme, et la meme infrastructure.</p>
+<hr />
+<h2>Slide 4 — Marche Cible</h2>
+<p><strong>TAM — SAM — SOM</strong></p>
+<table>
+<thead>
+<tr>
+<th>Niveau</th>
+<th>Segment</th>
+<th>Taille</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TAM</strong></td>
+<td>Services financiers Afrique</td>
+<td>230 Mds USD</td>
+</tr>
+<tr>
+<td><strong>SAM</strong></td>
+<td>Intelligence + indices + microfinance Afrique de l'Ouest</td>
+<td>8 Mds USD</td>
+</tr>
+<tr>
+<td><strong>SOM</strong></td>
+<td>BF + CI + Ghana + Nigeria (Phase 1-2)</td>
+<td>400 M USD</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>420M+ habitants en Afrique de l'Ouest</li>
+<li>Croissance demographique la plus rapide au monde</li>
+<li>Adoption mobile money la plus elevee (53% en UEMOA)</li>
+</ul>
+<hr />
+<h2>Slide 5 — Produit : WASI Intelligence</h2>
+<p><strong>Scoring souverain pour 54 pays africains</strong></p>
+<ul>
+<li>Indice composite /100 par pays (politique, economie, infrastructure, integration, capital humain)</li>
+<li>Chat IA pour analyse contextuelle en temps reel</li>
+<li>Detection de coups d'etat et instabilite</li>
+<li>Feed FX live et flux crypto (CoinGecko)</li>
+<li>17 bourses africaines avec donnees de marche</li>
+</ul>
+<p><strong>Cas d'usage :</strong> Due diligence, allocation pays, monitoring portefeuille, conseil aux institutions</p>
+<p><strong>Demo live :</strong> https://atarawendesidkabore-hash.github.io/wasi-platform/index.html</p>
+<hr />
+<h2>Slide 6 — Produit : AFEX (54 Fonds Indices)</h2>
+<p><strong>Le premier systeme d'indices d'exportation de matieres premieres couvrant 54 etats africains</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metrique</th>
+<th>Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pays couverts</td>
+<td>54 etats souverains</td>
+</tr>
+<tr>
+<td>Sous-familles</td>
+<td>5 (NAEX, WAEX, CAEX, EAEX, SAEX)</td>
+</tr>
+<tr>
+<td>Prototypes detailles</td>
+<td>4 (CIREX, BUREX, GHAEX, NGAEX)</td>
+</tr>
+<tr>
+<td>Commodites trackees</td>
+<td>82 matieres premieres</td>
+</tr>
+<tr>
+<td>Devises</td>
+<td>42</td>
+</tr>
+<tr>
+<td>Methodologie</td>
+<td>Tonnage export moyen glissant 20 ans</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Modele de revenus AFEX :</strong>
+- Licence donnees (institutions, fonds)
+- Frais de gestion sur vehicule d'investissement (0.50-0.65%)
+- API payante pour plateformes tierces</p>
+<hr />
+<h2>Slide 7 — Zoom : 4 Prototypes Detailles</h2>
+<table>
+<thead>
+<tr>
+<th>Fonds</th>
+<th>Pays</th>
+<th>Ancre</th>
+<th>Top Matiere</th>
+<th>Regulateur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CIREX</strong></td>
+<td>Cote d'Ivoire</td>
+<td>Cacao 34%</td>
+<td>11 constituants</td>
+<td>CREPMF</td>
+</tr>
+<tr>
+<td><strong>BUREX</strong></td>
+<td>Burkina Faso</td>
+<td>Graines oleagineuses</td>
+<td>6 constituants</td>
+<td>CREPMF</td>
+</tr>
+<tr>
+<td><strong>GHAEX</strong></td>
+<td>Ghana</td>
+<td>Cacao 28% + Manganese 22%</td>
+<td>6 constituants</td>
+<td>SEC Ghana</td>
+</tr>
+<tr>
+<td><strong>NGAEX</strong></td>
+<td>Nigeria</td>
+<td>Petrole 58% + GNL 28%</td>
+<td>6 constituants</td>
+<td>SEC Nigeria</td>
+</tr>
+</tbody>
+</table>
+<p>Chaque prototype comprend : identite fonds, methodologie, constituants avec poids illustratifs, positionnement reglementaire, couche technologique (tokenisation, CBDC, x402).</p>
+<hr />
+<h2>Slide 8 — Produit : WASI Microfinance</h2>
+<p><strong>Credit productif pour entrepreneurs exclus du systeme formel</strong></p>
+<table>
+<thead>
+<tr>
+<th>Produit</th>
+<th>Montant</th>
+<th>Cible</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Micro-credit groupe</td>
+<td>100 - 800 USD</td>
+<td>Femmes commercantes, agriculteurs</td>
+</tr>
+<tr>
+<td>Credit fonds de roulement</td>
+<td>800 - 5 000 USD</td>
+<td>PME, transport, artisanat</td>
+</tr>
+<tr>
+<td>Epargne d'engagement</td>
+<td>Lie au profil credit</td>
+<td>Tous emprunteurs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mecanismes de controle :</strong>
+- Scoring base flux de tresorerie (pas de garantie classique)
+- Education financiere obligatoire avant deblocage
+- Collecte mobile money (Orange Money, MTN MoMo, Wave)
+- PAR30 cible &lt; 5%, taux remboursement &gt; 93%</p>
+<hr />
+<h2>Slide 9 — Modele Economique</h2>
+<p><strong>3 sources de revenus convergentes</strong></p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>An 1</th>
+<th>An 2</th>
+<th>An 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microfinance (rendement portefeuille)</td>
+<td>95K USD</td>
+<td>420K USD</td>
+<td>1.3M USD</td>
+</tr>
+<tr>
+<td>Intelligence (SaaS + API)</td>
+<td>30K USD</td>
+<td>120K USD</td>
+<td>350K USD</td>
+</tr>
+<tr>
+<td>AFEX (licences + frais gestion)</td>
+<td>10K USD</td>
+<td>80K USD</td>
+<td>300K USD</td>
+</tr>
+<tr>
+<td><strong>Total revenus</strong></td>
+<td><strong>135K USD</strong></td>
+<td><strong>620K USD</strong></td>
+<td><strong>1.95M USD</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Trajectoire vers autosuffisance operationnelle en Annee 3.</p>
+<hr />
+<h2>Slide 10 — Traction &amp; Preuves</h2>
+<p><strong>Ce qui existe aujourd'hui :</strong></p>
+<ul>
+<li>Plateforme live deployee (Intelligence, DEX, Banking, Bourse, Comptabilite OHADA)</li>
+<li>54 profils instruments AFEX publies (JSON + MD + CLI)</li>
+<li>43 profils detailles avec ponderations d'indice calculees sur les statistiques douanieres officielles (UN Comtrade) et metriques de concentration</li>
+<li>CLI operationnel (<code>wasi status</code>, <code>wasi show</code>, <code>wasi compare</code>, <code>wasi map</code>)</li>
+<li>Modele financier 36 mois valide</li>
+<li>Dossier investisseur complet (FR + EN)</li>
+<li>Architecture multi-module en production : PWA autonome deployee, pipelines de donnees automatises (Banque mondiale, Comtrade, veille legislative quotidienne), IA Anthropic via proxy securise</li>
+<li>Feuille de route financee : comptes et abonnements (Supabase), paiements (Stripe, PayDunya, mobile money)</li>
+</ul>
+<hr />
+<h2>Slide 11 — Go-To-Market</h2>
+<p><strong>Phase 1 (0-12 mois) — Burkina Faso</strong>
+- 1 000 emprunteurs actifs
+- Pilote microfinance Ouagadougou + 2 corridors
+- AFEX : BUREX + CIREX en profondeur
+- Intelligence : scoring 54 pays live</p>
+<p><strong>Phase 2 (12-24 mois) — Cote d'Ivoire + Ghana</strong>
+- 3 500 emprunteurs
+- GHAEX + CIREX operationnels
+- SaaS Intelligence en distribution B2B</p>
+<p><strong>Phase 3 (24-36 mois) — Nigeria + Scale</strong>
+- 8 000 emprunteurs
+- NGAEX + ETF NGX listing
+- API AFEX en distribution institutionnelle</p>
+<hr />
+<h2>Slide 12 — Avantage Competitif</h2>
+<p><strong>Pourquoi WASI gagne :</strong></p>
+<ol>
+<li><strong>Donnees souveraines</strong> — indices construits depuis les ports africains, pas depuis Londres</li>
+<li><strong>Plateforme unifiee</strong> — Intelligence + Indices + Microfinance sur 1 infrastructure</li>
+<li><strong>Couverture continentale</strong> — 54 pays des le jour 1, pas de fragmentation</li>
+<li><strong>Technologie-ready</strong> — tokenisation, CBDC (eCedi, eNaira), x402, API-first</li>
+<li><strong>Ancrage local</strong> — equipe basee en Afrique de l'Ouest, connaissance terrain</li>
+<li><strong>Conformite native</strong> — OHADA, BCEAO, SEC Ghana, SEC Nigeria integres</li>
+</ol>
+<hr />
+<h2>Slide 13 — Equipe</h2>
+<p><strong>Fondateur</strong>
+- [Nom] — [Experience pertinente]
+- Expertise : finance, technologie, Afrique de l'Ouest</p>
+<p><strong>Conseillers</strong>
+- [Conseiller 1] — [Domaine]
+- [Conseiller 2] — [Domaine]</p>
+<p><em>A completer avec les profils reels de l'equipe.</em></p>
+<hr />
+<h2>Slide 14 — Demande de Financement</h2>
+<p><strong>Levee : 1,2 M USD (Pre-seed / Seed)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Allocation</th>
+<th>%</th>
+<th>Montant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Portefeuille de prets</td>
+<td>45%</td>
+<td>540K USD</td>
+</tr>
+<tr>
+<td>Operations &amp; talents</td>
+<td>22%</td>
+<td>264K USD</td>
+</tr>
+<tr>
+<td>Technologie &amp; data</td>
+<td>15%</td>
+<td>180K USD</td>
+</tr>
+<tr>
+<td>Risque, conformite, audit</td>
+<td>8%</td>
+<td>96K USD</td>
+</tr>
+<tr>
+<td>Education financiere &amp; acquisition</td>
+<td>5%</td>
+<td>60K USD</td>
+</tr>
+<tr>
+<td>Reserve de contingence</td>
+<td>5%</td>
+<td>60K USD</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Jalons cles :</strong>
+- M6 : licence reglementaire, equipe cle, pilote controle
+- M12 : 1 000 emprunteurs, PAR &lt; 5%, plateforme stable
+- M18 : expansion CI/Ghana, preparation Serie A</p>
+<hr />
+<h2>Slide 15 — Contact &amp; Demo</h2>
+<p><strong>Plateforme live :</strong>
+https://atarawendesidkabore-hash.github.io/wasi-platform/index.html
+Mot de passe demo : <code>WASI-DEMO-DM01</code></p>
+<p><strong>AFEX Explorer :</strong>
+https://atarawendesidkabore-hash.github.io/wasi-platform-next/dex</p>
+<p><strong>Contact :</strong>
+- Email : kabore.tara@gmail.com
+- GitHub : github.com/atarawendesidkabore-hash</p>
+<p><strong>CLI :</strong></p>
+<pre><code>node wasi-cli/wasi.js status
+node wasi-cli/wasi.js show CIREX
+node wasi-cli/wasi.js compare GHAEX NGAEX
+</code></pre>
+<hr />
+<p><em>WASI — Whole African Strategic Intelligence</em>
+<em>L'infrastructure financiere que l'Afrique construit pour elle-meme.</em></p>
+</body>
+</html>
