@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03_AFEX_Fiche_Produit</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #fff; color: #1a1a2e;
+  max-width: 800px; margin: 0 auto; padding: 48px 40px;
+  font-size: 13px; line-height: 1.7;
+}
+h1 { font-size: 24px; font-weight: 700; color: #0a1628; margin: 32px 0 16px; border-bottom: 3px solid #C8922A; padding-bottom: 8px; }
+h2 { font-size: 18px; font-weight: 600; color: #0a1628; margin: 28px 0 12px; }
+h3 { font-size: 14px; font-weight: 600; color: #333; margin: 20px 0 8px; }
+p { margin: 8px 0; }
+ul, ol { margin: 8px 0 8px 24px; }
+li { margin: 4px 0; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+th { background: #0a1628; color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 8px 12px; border-bottom: 1px solid #e5e5e5; }
+tr:nth-child(even) td { background: #f8f7f5; }
+tr:hover td { background: #f0ede8; }
+blockquote { border-left: 4px solid #C8922A; padding: 12px 16px; margin: 16px 0; background: #faf8f4; color: #555; font-style: italic; }
+code { background: #f4f2ee; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-family: 'Consolas', monospace; }
+pre { background: #0a1628; color: #e8e6e3; padding: 16px; border-radius: 6px; margin: 16px 0; overflow-x: auto; }
+pre code { background: none; color: inherit; padding: 0; }
+hr { border: none; border-top: 2px solid #C8922A; margin: 32px 0; }
+strong { color: #0a1628; }
+em { color: #555; }
+.header-bar { background: #0a1628; color: #C8922A; padding: 12px 20px; margin: -48px -40px 32px; font-family: 'Consolas', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+@media print {
+  body { padding: 20px; font-size: 11px; }
+  h1 { font-size: 20px; }
+  h2 { font-size: 15px; }
+  table { font-size: 10px; }
+  pre { font-size: 10px; }
+}
+</style>
+
+</head>
+<body>
+<div class="header-bar">WASI — Whole African Strategic Intelligence &bull; Confidentiel Investisseur</div>
+<h1>AFEX -- Africa Export Index Family</h1>
+<h2>Fiche Produit Investisseur</h2>
+<p><strong>Emetteur :</strong> West Africa Structured Index Ltd (WASI)
+<strong>Classe d'actifs :</strong> Indices de matieres premieres souveraines
+<strong>Univers :</strong> 54 Etats africains souverains
+<strong>Devise de reference continentale :</strong> USD
+<strong>Statut :</strong> En cours de structuration</p>
+<hr />
+<h2>1. Presentation Generale</h2>
+<p>L'AFEX (Africa Export Index Family) est une famille d'indices de matieres premieres couvrant l'ensemble du continent africain. Chaque indice national reflete la composition reelle des exportations d'un Etat souverain, ponderee par la part moyenne de chaque poste dans la valeur exportee sur une periode glissante de 10 ans.</p>
+<p>L'AFEX permet aux investisseurs, gestionnaires d'actifs et institutions de disposer d'un outil de reference transparent, replicable et comparable en USD a l'echelle continentale.</p>
+<p><strong>Base de ponderation -- valeur, et non tonnage.</strong> La ponderation par tonnage exporte reste la cible methodologique, mais elle n'est pas calculable a ce jour : les Nations Unies (UN Comtrade) ne recoivent <strong>aucun poids net declare</strong> de la majorite des Etats africains (Burkina Faso 2022 : 0 ligne douaniere sur 86 comporte un tonnage). Les ponderations publiees sont donc calculees sur la <strong>valeur exportee en USD</strong>, integralement declaree et verifiable, et chaque profil pays porte explicitement cette mention. Le passage au tonnage se fera pays par pays, a mesure que les instituts nationaux de statistique fourniront des series exploitables.</p>
+<p><strong>Etat d'avancement.</strong> 47 pays disposent de profils calcules a partir des statistiques douanieres officielles, dont <strong>43 profils detailles</strong> (au moins 5 annees de donnees et 3 postes d'exportation). Les 11 pays restants conservent un profil de depart : 4 par insuffisance d'historique (Algerie, Libye, Guinee, Djibouti) et 7 parce qu'ils ne declarent pas leurs exportations a Comtrade (Soudan, Tchad, Guinee equatoriale, Erythree, Ethiopie, Somalie, Soudan du Sud).</p>
+<hr />
+<h2>2. Architecture de l'AFEX</h2>
+<h3>2.1 Sous-familles regionales</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Region</th>
+<th>Pays couverts</th>
+<th>Nombre de pays</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NAEX</td>
+<td>Afrique du Nord</td>
+<td>Maroc, Algerie, Tunisie, Libye, Egypte, Mauritanie</td>
+<td>6</td>
+</tr>
+<tr>
+<td>WAEX</td>
+<td>Afrique de l'Ouest</td>
+<td>Senegal, Mali, Burkina Faso, Cote d'Ivoire, Ghana, Nigeria, etc.</td>
+<td>16</td>
+</tr>
+<tr>
+<td>CAEX</td>
+<td>Afrique Centrale</td>
+<td>Cameroun, Gabon, Congo, RDC, Tchad, etc.</td>
+<td>8</td>
+</tr>
+<tr>
+<td>EAEX</td>
+<td>Afrique de l'Est</td>
+<td>Kenya, Tanzanie, Ethiopie, Ouganda, Rwanda, etc.</td>
+<td>11</td>
+</tr>
+<tr>
+<td>SAEX</td>
+<td>Afrique Australe</td>
+<td>Afrique du Sud, Mozambique, Zambie, Zimbabwe, etc.</td>
+<td>13</td>
+</tr>
+<tr>
+<td><strong>AFEX</strong></td>
+<td><strong>Continent</strong></td>
+<td><strong>Total</strong></td>
+<td><strong>54</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 Donnees cles</h3>
+<table>
+<thead>
+<tr>
+<th>Parametre</th>
+<th>Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Matieres premieres distinctes suivies</td>
+<td>82</td>
+</tr>
+<tr>
+<td>Devises couvertes</td>
+<td>42</td>
+</tr>
+<tr>
+<td>Methodologie de ponderation</td>
+<td>Moyenne glissante 10 ans de la part dans la valeur exportee (source : UN Comtrade)</td>
+</tr>
+<tr>
+<td>Cible methodologique</td>
+<td>Tonnage exporte, sous reserve de disponibilite des statistiques nationales</td>
+</tr>
+<tr>
+<td>Profils detailles publies</td>
+<td>43 sur 54</td>
+</tr>
+<tr>
+<td>Metriques de concentration</td>
+<td>HHI, part du premier poste, part des 5 premiers</td>
+</tr>
+<tr>
+<td>Reconstitution</td>
+<td>Annuelle</td>
+</tr>
+<tr>
+<td>Reequilibrage</td>
+<td>Trimestriel</td>
+</tr>
+<tr>
+<td>Comparaison continentale</td>
+<td>En USD</td>
+</tr>
+</tbody>
+</table>
+<h3>2.3 Modeles methodologiques</h3>
+<p>Trois modeles distincts sont appliques selon la geographie du pays :</p>
+<table>
+<thead>
+<tr>
+<th>Modele</th>
+<th>Type de pays</th>
+<th>Logique de calcul</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Coastal</strong></td>
+<td>Pays cotiers avec acces portuaire</td>
+<td>Modele port-led : prix FOB port de reference</td>
+</tr>
+<tr>
+<td><strong>Landlocked</strong></td>
+<td>Pays enclaves</td>
+<td>Modele corridor : prix ajuste des couts de transit terrestre</td>
+</tr>
+<tr>
+<td><strong>Island</strong></td>
+<td>Etats insulaires</td>
+<td>Modele maritime/aerien : logistique mixte mer-air</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. Prototypes Detailles</h2>
+<p>Les ponderations ci-dessous sont <strong>calculees</strong>, non illustratives : part moyenne de chaque chapitre douanier (HS2) dans la valeur exportee, 2014-2023, source UN Comtrade, renormalisee sur les postes retenus. Elles sont reproductibles a partir des donnees publiees dans la plateforme.</p>
+<h3>3.1 CIREX -- Cote d'Ivoire (XOF)</h3>
+<table>
+<thead>
+<tr>
+<th>Rang</th>
+<th>Poste d'exportation</th>
+<th>Ponderation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Cacao et preparations de cacao</td>
+<td>43,03%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Combustibles mineraux, petrole et gaz</td>
+<td>16,67%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Pierres et metaux precieux</td>
+<td>10,04%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Fruits et fruits a coque comestibles (dont cajou)</td>
+<td>9,72%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Caoutchouc</td>
+<td>8,52%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Navires et bateaux</td>
+<td>3,66%</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Coton</td>
+<td>2,67%</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Graisses et huiles vegetales (dont palme)</td>
+<td>2,28%</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Concentration :</strong> HHI 1 900 -- concentre ; premier poste 37,99% du panier</li>
+<li><strong>Exportations annuelles :</strong> 18,4 Mds USD (2023) -- 10 annees de donnees</li>
+<li><strong>Devise locale :</strong> XOF (Franc CFA BCEAO) | <strong>Modele :</strong> Coastal (port-led)</li>
+<li><strong>Regulateur :</strong> CREPMF (Conseil Regional de l'Epargne Publique et des Marches Financiers)</li>
+</ul>
+<h3>3.2 BUREX -- Burkina Faso (XOF)</h3>
+<table>
+<thead>
+<tr>
+<th>Rang</th>
+<th>Poste d'exportation</th>
+<th>Ponderation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Pierres et metaux precieux (or)</td>
+<td>71,69%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Coton</td>
+<td>11,79%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Graines oleagineuses (dont sesame)</td>
+<td>5,12%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Fruits et fruits a coque comestibles (cajou)</td>
+<td>4,28%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Zinc</td>
+<td>2,65%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Combustibles mineraux</td>
+<td>1,14%</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Concentration :</strong> HHI 4 945 -- tres concentre ; premier poste 69,02% du panier</li>
+<li><strong>Exportations annuelles :</strong> 4,5 Mds USD (2023) -- 10 annees de donnees</li>
+<li><strong>Devise locale :</strong> XOF (Franc CFA BCEAO)</li>
+<li><strong>Modele :</strong> Landlocked (corridor) -- pays enclave, transit via les ports d'Abidjan, Lome et Tema</li>
+<li><strong>Regulateur :</strong> CREPMF</li>
+</ul>
+<h3>3.3 GHAEX -- Ghana (GHS)</h3>
+<table>
+<thead>
+<tr>
+<th>Rang</th>
+<th>Poste d'exportation</th>
+<th>Ponderation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Pierres et metaux precieux (or)</td>
+<td>40,80%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Combustibles mineraux, petrole et gaz</td>
+<td>28,33%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Cacao et preparations de cacao</td>
+<td>18,69%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Fruits et fruits a coque comestibles</td>
+<td>3,85%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Matieres plastiques</td>
+<td>1,83%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Bois d'oeuvre</td>
+<td>1,67%</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Minerais, scories et cendres (dont manganese)</td>
+<td>1,59%</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Concentration :</strong> HHI 2 372 -- concentre ; premier poste 37,24% du panier</li>
+<li><strong>Exportations annuelles :</strong> 16,9 Mds USD (2023) -- 9 annees de donnees</li>
+<li><strong>Devise locale :</strong> GHS (Cedi ghanaen) | <strong>Modele :</strong> Coastal (port-led)</li>
+<li><strong>Regulateur :</strong> SEC Ghana (Securities and Exchange Commission)</li>
+</ul>
+<h3>3.4 NGAEX -- Nigeria (NGN)</h3>
+<table>
+<thead>
+<tr>
+<th>Rang</th>
+<th>Poste d'exportation</th>
+<th>Ponderation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Combustibles mineraux, petrole et gaz</td>
+<td>93,27%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Navires et bateaux</td>
+<td>2,85%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Cacao et preparations de cacao</td>
+<td>0,96%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Engrais (dont uree)</td>
+<td>0,87%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Graines oleagineuses (dont sesame)</td>
+<td>0,70%</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Concentration :</strong> HHI 8 338 -- tres concentre ; premier poste 91,26% du panier. <strong>Avertissement : mono-exportateur.</strong> L'indice NGAEX est de fait un indice petrole-gaz.</li>
+<li><strong>Exportations annuelles :</strong> 65,1 Mds USD (2023) -- 10 annees de donnees</li>
+<li><strong>Devise locale :</strong> NGN (Naira nigerian) | <strong>Modele :</strong> Coastal (port-led)</li>
+<li><strong>Regulateur :</strong> SEC Nigeria / NGX (Nigerian Exchange Group)</li>
+<li><strong>Cadre reglementaire :</strong> Petroleum Industry Act (PIA) 2021</li>
+</ul>
+<blockquote>
+<p>Note de lecture : les postes suivent la nomenclature douaniere harmonisee au niveau chapitre (HS2). L'or et les diamants relevent du meme chapitre « Pierres et metaux precieux », le petrole et le gaz du meme chapitre « Combustibles mineraux ». Une decomposition par produit (HS6) est possible pays par pays sur demande.</p>
+</blockquote>
+<hr />
+<h2>4. Modele de Revenus</h2>
+<table>
+<thead>
+<tr>
+<th>Source de revenus</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Licences de donnees</td>
+<td>Acces aux donnees d'indices pour institutions financieres, gestionnaires d'actifs et chercheurs</td>
+</tr>
+<tr>
+<td>Frais de gestion</td>
+<td>0,50% a 0,65% appliques aux produits structures replicant les indices AFEX</td>
+</tr>
+<tr>
+<td>Acces API</td>
+<td>Flux de donnees en temps reel et historiques via interface programmatique</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Infrastructure Technologique</h2>
+<table>
+<thead>
+<tr>
+<th>Capacite</th>
+<th>Statut</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pipeline de donnees automatise</td>
+<td><strong>En production</strong> -- statistiques douanieres UN Comtrade, indicateurs Banque mondiale, veille legislative quotidienne</td>
+</tr>
+<tr>
+<td>Publication des profils d'indices</td>
+<td><strong>En production</strong> -- 54 profils publies (JSON, Markdown, API fichier), 43 detailles</td>
+</tr>
+<tr>
+<td>Acces API programmatique</td>
+<td><strong>A construire</strong> -- les donnees sont aujourd'hui publiees en fichiers statiques versionnes</td>
+</tr>
+<tr>
+<td>Tokenisation</td>
+<td><strong>A l'etude</strong> -- non implemente ; aucune emission de token adossee aux indices a ce stade</td>
+</tr>
+<tr>
+<td>Integration CBDC (eCedi, eNaira)</td>
+<td><strong>A l'etude</strong> -- non implemente ; depend du calendrier des banques centrales concernees</td>
+</tr>
+<tr>
+<td>Couche de micropaiement (x402)</td>
+<td><strong>A l'etude</strong> -- non implemente</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>6. Synthese</h2>
+<table>
+<thead>
+<tr>
+<th>Critere</th>
+<th>AFEX</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Couverture</td>
+<td>54 Etats souverains africains</td>
+</tr>
+<tr>
+<td>Sous-familles</td>
+<td>5 (NAEX, WAEX, CAEX, EAEX, SAEX)</td>
+</tr>
+<tr>
+<td>Modeles</td>
+<td>3 (Coastal, Landlocked, Island)</td>
+</tr>
+<tr>
+<td>Matieres premieres</td>
+<td>82</td>
+</tr>
+<tr>
+<td>Devises</td>
+<td>42</td>
+</tr>
+<tr>
+<td>Ponderation</td>
+<td>Part dans la valeur exportee, moyenne glissante 10 ans (UN Comtrade)</td>
+</tr>
+<tr>
+<td>Profils detailles</td>
+<td>43 sur 54</td>
+</tr>
+<tr>
+<td>Reconstitution / Reequilibrage</td>
+<td>Annuel / Trimestriel</td>
+</tr>
+<tr>
+<td>Frais de gestion</td>
+<td>0,50% -- 0,65%</td>
+</tr>
+<tr>
+<td>Technologie en production</td>
+<td>Pipelines de donnees automatises, publication versionnee des profils</td>
+</tr>
+<tr>
+<td>Technologie a l'etude</td>
+<td>API programmatique, tokenisation, CBDC, x402</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Document a usage des investisseurs. Ne constitue pas une offre de souscription. WASI -- West Africa Structured Index Ltd.</em></p>
+</body>
+</html>
