@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import RiskCartography from "./RiskCartography";
 
 function BarChart({ data, color, maxVal }) {
   return (
@@ -606,6 +607,7 @@ export function CountryDashboard({ country, indexValue, onClose, bankContext, tr
             <div style={{ fontSize: 16, color: "#7f8fa6", marginBottom: 16, lineHeight: 1.7 }}>
               Principaux risques identifiÃƒÂ©s pour {country.name} Ã¢â‚¬â€ Impact potentiel sur l'indice WASI
             </div>
+            <RiskCartography code={country.code} name={country.name} td={td} />
             {td.risks.map((r, i) => (
               <div key={i} style={{ marginBottom: 12, padding: "18px 22px", background: "rgba(239,68,68,0.05)", border: "1px solid #ff2d6f44", borderRadius: 4 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
